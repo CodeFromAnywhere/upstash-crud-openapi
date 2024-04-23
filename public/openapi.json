@@ -1,0 +1,70 @@
+{
+  "$schema": "https://raw.githubusercontent.com/CodeFromAnywhere/ActionSchema/main/schemas/openapi.schema.json",
+  "openapi": "3.0.0",
+  "info": {
+    "title": "OpenAPI Combination Proxy",
+    "version": "1.0",
+    "description": "ActionSchema"
+  },
+  "servers": [
+    {
+      "url": "https://proxy.actionschema.com",
+      "description": "Production server"
+    }
+  ],
+  "paths": {
+    "/makeProxyOpenapi": {
+      "post": {
+        "summary": "Makes an openapi from an OpenAPI Proxy specification.",
+        "operationId": "makeProxyOpenapi",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "context": {
+                    "$comment": "THIS IS NOT WORKING WITH REDOCLY CLI. BUG!",
+                    "$ref": "https://raw.githubusercontent.com/CodeFromAnywhere/ActionSchema/main/schemas/openapi-proxy.schema.json#/definitions/PartialApi"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Standard response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StandardResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "StandardResponse": {
+        "type": "object",
+        "required": ["isSuccessful"],
+        "properties": {
+          "isSuccessful": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "priceCredit": {
+            "type": "number"
+          }
+        }
+      }
+    }
+  }
+}
