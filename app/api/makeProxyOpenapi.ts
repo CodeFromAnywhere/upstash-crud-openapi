@@ -1,20 +1,19 @@
-"use server";
+import { Endpoint } from "./[[...path]]/route";
 import {
-  Info,
+  Components,
   OpenAPIDocument,
-  OpenapiProxySchema,
   SecurityRequirement,
 } from "actionschema/types";
 
-export const makeProxyOpenapi = async (context: {
-  proxy: OpenapiProxySchema;
-}) => {
+export const makeProxyOpenapi: Endpoint<"makeProxyOpenapi"> = async (
+  context,
+) => {
   const {
     proxy: { id, info, apiKey, partialApis },
   } = context;
 
   // TODO: Connect with KV store, Check if ID is available
-  const idNotAvailable = false;
+  const idNotAvailable = id !== "api" && false;
 
   if (idNotAvailable) {
     return { isSuccessful: false, message: "Id is not available" };
@@ -28,19 +27,27 @@ export const makeProxyOpenapi = async (context: {
   const paths = {};
 
   const security: SecurityRequirement[] = [apiKey ? { apiKey: [] } : {}];
+  const components: Components = apiKey
+    ? {
+        securitySchemes: { apiKey: { type: "http", description: "API Key" } },
+      }
+    : {};
 
   const openapi: OpenAPIDocument = {
-    info,
     $schema:
       "https://raw.githubusercontent.com/CodeFromAnywhere/ActionSchema/main/schemas/openapi.schema.json",
     openapi: "3.0.0",
     "x-actionschema": "0.0.1",
-    paths,
-    security,
     servers: [{ url: "https://proxy.actionschema.com/" + id }],
+    info,
+    security,
+    components,
+    paths,
   };
 
-  // TODO: Store this
+  // TODO: Store it
+  // 1. Store this openapi + the proxy + admin token into KV store under key [id]
+  // 2. Store key [admin token] value [id]
 
   return {
     isSuccessful: true,
