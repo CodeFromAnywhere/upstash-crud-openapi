@@ -37,7 +37,7 @@ const HomePage = () => {
                 </div>
 
                 <input
-                  className="my-2 p-2 border border-black"
+                  className="my-2 p-2 border border-black bg-transparent"
                   value={url}
                   name={`url${index}`}
                   placeholder="OpenAPI Url"
