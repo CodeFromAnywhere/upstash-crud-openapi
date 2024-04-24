@@ -6,25 +6,31 @@ import {
   SecurityRequirement,
 } from "actionschema/types";
 
-export const makeProxyOpenapi = async (formData: FormData) => {
-  const id = formData.get("id");
-  const info = formData.get("info");
-  const apiKey = formData.get("apiKey");
-  const partialApis = formData.get("partialApis");
+export const makeProxyOpenapi = async (context: {
+  proxy: OpenapiProxySchema;
+}) => {
+  const {
+    proxy: { id, info, apiKey, partialApis },
+  } = context;
 
-  console.log("HEY HEY");
+  // TODO: Connect with KV store, Check if ID is available
   const idNotAvailable = false;
 
   if (idNotAvailable) {
     return { isSuccessful: false, message: "Id is not available" };
   }
 
+  // 1. load in all openapiUrls
+
+  // 2. go over all operations. Incase path isn't unique, suffix them and fill `proxyPath`
+
+  // 3. put them into this paths object.
   const paths = {};
 
   const security: SecurityRequirement[] = [apiKey ? { apiKey: [] } : {}];
 
   const openapi: OpenAPIDocument = {
-    info: info as unknown as Info,
+    info,
     $schema:
       "https://raw.githubusercontent.com/CodeFromAnywhere/ActionSchema/main/schemas/openapi.schema.json",
     openapi: "3.0.0",
