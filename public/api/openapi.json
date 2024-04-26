@@ -24,11 +24,11 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "context": {
-                    "$comment": "THIS IS NOT WORKING WITH REDOCLY CLI. BUG!",
-                    "$ref": "https://raw.githubusercontent.com/CodeFromAnywhere/ActionSchema/main/schemas/openapi-proxy.schema.json#/definitions/PartialApi"
+                  "proxy": {
+                    "$ref": "https://raw.githubusercontent.com/CodeFromAnywhere/ActionSchema/main/schemas/openapi-proxy.schema.json#"
                   }
-                }
+                },
+                "required": ["proxy"]
               }
             }
           }

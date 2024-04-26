@@ -1,8 +1,7 @@
 import { OpenAPIDocument, Operation } from "actionschema/types";
-import { Json, O } from "from-anywhere";
-
-import { tryValidateSchema } from "./tryValidateSchema";
 import { tryGetOperationBodySchema } from "./tryGetOperationBodySchema";
+import { tryValidateSchema } from "./tryValidateSchema";
+import { Json } from "from-anywhere";
 
 /**
  * Function that turns a regular function into an endpoint. If the function is available in the OpenAPI (with function name equalling the operationId), the input will be validated.
@@ -14,7 +13,11 @@ export const resolveOpenapiAppRequest = async (
   method: string,
   config: {
     openapi: OpenAPIDocument;
-    functions: { [functionName: string]: (jsonBody: any) => O | Promise<O> };
+    functions: {
+      [functionName: string]: (
+        jsonBody: any,
+      ) => Json | undefined | Promise<Json | undefined>;
+    };
   },
 ) => {
   const { functions, openapi } = config;
@@ -33,6 +36,41 @@ export const resolveOpenapiAppRequest = async (
   const openapiPathname = restPathname;
   // TODO: Match restPathname against the paths
 
+  // DISABLED Path validation for now, until we implement it
+
+  // const operation = (openapi as any).paths?.[pathname]?.[method] as
+  //   | undefined
+  //   | {};
+
+  // if (!operation) {
+  //   const allowedMethods = [
+  //     "get",
+  //     "post",
+  //     "put",
+  //     "patch",
+  //     "delete",
+  //     "head",
+  //     "options",
+  //   ];
+  //   const methods = mergeObjectsArray(
+  //     Object.keys(openapi.paths).map((path) => {
+  //       return {
+  //         [path]: Object.keys((openapi as any).paths[path]).filter((method) =>
+  //           allowedMethods.includes(method),
+  //         ),
+  //       };
+  //     }),
+  //   );
+
+  //   return Response.json(
+  //     {
+  //       message: `Invalid method. More info at ${urlObject.origin}/${key}.json`,
+  //       methods,
+  //       openapiPath,
+  //     },
+  //     defaultResponseInit,
+  //   );
+  // }
   const operation = (openapi.paths as any)?.[openapiPathname]?.[method] as
     | Operation
     | undefined;

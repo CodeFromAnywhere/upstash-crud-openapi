@@ -1,6 +1,6 @@
-import { resolveReferenceOrContinue } from "./resolver";
 import { JSONSchemaType } from "ajv";
 import { OpenAPIDocument, Operation, Reference } from "actionschema/types";
+import { resolveReferenceOrContinue } from "./resolveReferenceOrContinue";
 
 export const tryGetOperationBodySchema = async (
   openapi: OpenAPIDocument,

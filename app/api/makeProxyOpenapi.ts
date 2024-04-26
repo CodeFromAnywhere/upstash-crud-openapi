@@ -1,19 +1,15 @@
 import { Endpoint } from "./[[...path]]/route";
 import {
+  SecurityRequirement,
   Components,
   OpenAPIDocument,
-  SecurityRequirement,
 } from "actionschema/types";
 
-export const makeProxyOpenapi: Endpoint<"makeProxyOpenapi"> = async (
-  context,
-) => {
-  const {
-    proxy: { id, info, apiKey, partialApis },
-  } = context;
-
+export const makeProxyOpenapi: Endpoint<"makeProxyOpenapi"> = async ({
+  proxy: { info, apiKey, name, partialApis },
+}) => {
   // TODO: Connect with KV store, Check if ID is available
-  const idNotAvailable = id !== "api" && false;
+  const idNotAvailable = name !== "api" && false;
 
   if (idNotAvailable) {
     return { isSuccessful: false, message: "Id is not available" };
@@ -38,8 +34,10 @@ export const makeProxyOpenapi: Endpoint<"makeProxyOpenapi"> = async (
       "https://raw.githubusercontent.com/CodeFromAnywhere/ActionSchema/main/schemas/openapi.schema.json",
     openapi: "3.0.0",
     "x-actionschema": "0.0.1",
-    servers: [{ url: "https://proxy.actionschema.com/" + id }],
+    servers: [{ url: "https://proxy.actionschema.com/" + name }],
+    //@ts-ignore
     info,
+
     security,
     components,
     paths,

@@ -6,7 +6,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "types": "npx openapi-fetch-typescript ./public/openapi.json ./src/openapi-types.ts OpenApiTypes",
+    "types": "npx openapi-fetch-typescript ./public/api/openapi.json ./app/openapi-types.ts OpenApiTypes",
     "watch-types": "nodemon --watch public/openapi.json --exec \"npm run types\"",
     "next-dev": "next dev",
     "dev": "concurrently \"next dev\" \"npm:watch-types\""

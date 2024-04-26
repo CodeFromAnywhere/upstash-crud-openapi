@@ -1,8 +1,8 @@
 import { OpenAPIDocument } from "actionschema/types";
-import { resolveOpenapiAppRequest } from "@/util/resolveOpenapiAppRequest";
 import { makeProxyOpenapi } from "../makeProxyOpenapi";
 import { operations } from "../../openapi-types";
 import untypedOpenapi from "../../../public/api/openapi.json";
+import { resolveOpenapiAppRequest } from "@/openapi-util/resolveOpenapiAppRequest";
 
 const openapi = untypedOpenapi as unknown as OpenAPIDocument;
 
