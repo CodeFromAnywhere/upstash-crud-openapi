@@ -12,9 +12,9 @@
     "dev": "concurrently \"next dev\" \"npm:watch-types\""
   },
   "dependencies": {
-    "actionschema": "^0.0.34",
+    "actionschema": "^0.0.38",
     "ajv": "^8.12.0",
-    "from-anywhere": "^0.0.21",
+    "from-anywhere": "^0.0.28",
     "json-schema": "^0.4.0",
     "next": "14.2.1",
     "openapi-types": "^12.1.3",
