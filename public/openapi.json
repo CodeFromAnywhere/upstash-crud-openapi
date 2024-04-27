@@ -9,6 +9,10 @@
   },
   "servers": [{ "url": "https://data.actionschema.com" }],
   "paths": {
+    "/test": {
+      "$ref": "https://data.actionschema.com/openapi.json#/paths/test",
+      "x-proxy": {}
+    },
     "/root/createOrUpdateDatabase": {
       "post": {
         "summary": "",

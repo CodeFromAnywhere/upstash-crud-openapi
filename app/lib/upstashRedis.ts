@@ -1,6 +1,5 @@
 import { O, mergeObjectsArray, notEmpty, tryParseJson } from "from-anywhere";
 import { Redis } from "@upstash/redis";
-import { upstashKeys } from "./state";
 
 /**
  * Represents the details of a database including its identification, configuration,
@@ -378,10 +377,6 @@ export const deleteUpstashRedisRange = async (context: {
   });
 
   const amountRemoved = await redis.del(...keys);
-
-  if (upstashKeys.isDataKey(baseKey)) {
-    await redis.set(upstashKeys.dataUpdatedAt, Date.now());
-  }
 
   return amountRemoved;
 };
