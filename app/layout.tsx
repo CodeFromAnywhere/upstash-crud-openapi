@@ -1,6 +1,6 @@
 export const metadata = {
-  title: "OpenAPI Combination Proxy",
-  description: "Combine mutliple (subsets of) OpenAPIs into one.",
+  title: "OpenAPI CRUD",
+  description: "Create a simple CRUD OpenAPI for any schema with ease.",
 };
 import "./globals.css";
 

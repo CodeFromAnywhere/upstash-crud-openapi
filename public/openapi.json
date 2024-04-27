@@ -1,0 +1,462 @@
+{
+  "x-actionschema": "0.0.1",
+  "$schema": "https://raw.githubusercontent.com/CodeFromAnywhere/ActionSchema/main/schemas/openapi.schema.json",
+  "openapi": "3.0.0",
+  "info": {
+    "title": "OpenAPI CRUD",
+    "version": "1.0",
+    "description": ""
+  },
+  "servers": [{ "url": "https://data.actionschema.com" }],
+  "paths": {
+    "/root/createOrUpdateDatabase": {
+      "post": {
+        "summary": "",
+        "operationId": "createOrUpdateDatabase",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "databaseId": { "type": "string" },
+                  "schemaString": { "type": "string" }
+                },
+                "required": ["databaseId", "schemaString"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Standard response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StandardResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/{databaseId}/openapi.json": {
+      "get": {
+        "summary": "Get openapi for this database table alone",
+        "operationId": "renderCrudOpenapi",
+
+        "responses": {
+          "200": {
+            "description": "OpenAPI",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "https://raw.githubusercontent.com/CodeFromAnywhere/ActionSchema/main/schemas/openapi.schema.json"
+                    },
+                    { "type": "object", "additionalProperties": true }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "parameters": [
+        {
+          "in": "header",
+          "required": false,
+          "name": "X-UPSTASH-EMAIL",
+          "schema": { "type": "string" }
+        },
+        {
+          "in": "header",
+          "required": false,
+          "name": "X-UPSTASH-API-KEY",
+          "schema": { "type": "string" }
+        },
+        {
+          "in": "path",
+          "name": "databaseId",
+          "schema": { "type": "string" },
+          "required": true
+        }
+      ]
+    },
+    "/{databaseId}/read": {
+      "parameters": [
+        {
+          "in": "path",
+          "name": "databaseId",
+          "schema": { "type": "string" },
+          "required": true
+        }
+      ],
+      "post": {
+        "summary": "",
+        "operationId": "read",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ReadContext" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OpenAPI",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ReadResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/{databaseId}/create": {
+      "parameters": [
+        {
+          "in": "path",
+          "name": "databaseId",
+          "schema": { "type": "string" },
+          "required": true
+        }
+      ],
+      "post": {
+        "summary": "",
+        "operationId": "create",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreateContext" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OpenAPI",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CreateResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/{databaseId}/remove": {
+      "parameters": [
+        {
+          "in": "path",
+          "name": "databaseId",
+          "schema": { "type": "string" },
+          "description": "Upstash ID of the database",
+          "required": true
+        }
+      ],
+      "post": {
+        "summary": "",
+        "operationId": "remove",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/RemoveContext" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OpenAPI",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/RemoveResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/{databaseId}/update": {
+      "parameters": [
+        {
+          "in": "path",
+          "name": "databaseId",
+          "schema": { "type": "string" },
+          "required": true
+        }
+      ],
+      "post": {
+        "summary": "",
+        "operationId": "update",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UpdateContext" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OpenAPI",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/UpdateResponse" }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "CreateResponse": {
+        "type": "object",
+        "properties": {
+          "isSuccessful": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "result": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "The rowIds created"
+          }
+        },
+        "required": ["isSuccessful", "message"]
+      },
+      "CreateContext": {
+        "type": "object",
+        "properties": {
+          "databaseId": {
+            "type": "string"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "description": "If items in this array contain `__id`, it will be overwriting that item if it's already there."
+            }
+          }
+        },
+        "required": ["databaseId", "items"]
+      },
+      "Sort": {
+        "type": "object",
+        "properties": {
+          "sortDirection": {
+            "type": "string",
+            "enum": ["ascending", "descending"]
+          },
+          "objectParameterKey": {
+            "type": "string"
+          }
+        },
+        "required": ["sortDirection", "objectParameterKey"]
+      },
+      "Filter": {
+        "type": "object",
+        "properties": {
+          "operator": {
+            "type": "string",
+            "enum": [
+              "equal",
+              "notEqual",
+              "endsWith",
+              "startsWith",
+              "includes",
+              "includesLetters",
+              "greaterThan",
+              "lessThan",
+              "greaterThanOrEqual",
+              "lessThanOrEqual",
+              "isIncludedIn",
+              "isFalsy",
+              "isTruthy"
+            ]
+          },
+          "value": {
+            "type": "string"
+          },
+          "objectParameterKey": {
+            "type": "string"
+          }
+        },
+        "required": ["operator", "value", "objectParameterKey"]
+      },
+      "ReadResponse": {
+        "type": "object",
+        "properties": {
+          "isSuccessful": {
+            "type": "boolean"
+          },
+          "databaseId": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "$schema": {
+            "type": "string"
+          },
+          "items": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "schema": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "canWrite": {
+            "type": "boolean"
+          },
+          "hasMore": {
+            "type": "boolean"
+          }
+        },
+        "required": ["isSuccessful", "databaseId", "message"]
+      },
+      "ReadContext": {
+        "type": "object",
+        "properties": {
+          "databaseId": {
+            "type": "string"
+          },
+          "search": {
+            "type": "string"
+          },
+          "rowIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "startFromIndex": {
+            "type": "integer"
+          },
+          "maxRows": {
+            "type": "integer"
+          },
+          "filter": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Filter"
+            }
+          },
+          "sort": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Sort"
+            }
+          },
+          "objectParameterKeys": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "ignoreObjectParameterKeys": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": ["databaseId"]
+      },
+
+      "UpdateContext": {
+        "type": "object",
+        "properties": {
+          "databaseId": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string",
+            "description": "The id (indexed key) of the item to update. Update that functions as upsert. If the id didn't exist, it will be created."
+          },
+          "partialItem": {
+            "type": "object",
+            "description": "New (partial) value of the item. Will update all keys provided here. Please note that it cannot be set to 'undefined' as this doesn't transfer over JSON, but if you set it to 'null', the value will be removed from the database."
+          }
+        },
+        "required": ["databaseId", "id", "partialItem"]
+      },
+      "UpdateResponse": {
+        "type": "object",
+        "properties": {
+          "isSuccessful": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": ["isSuccessful", "message"]
+      },
+      "RemoveContext": {
+        "type": "object",
+        "properties": {
+          "rowIds": {
+            "description": "Which IDs should be removed",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "databaseId": {
+            "type": "string"
+          }
+        },
+        "required": ["rowIds", "databaseId"]
+      },
+      "RemoveResponse": {
+        "type": "object",
+        "properties": {
+          "isSuccessful": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "deleteCount": {
+            "type": "integer",
+            "description": "The number of items deleted"
+          }
+        },
+        "required": ["isSuccessful", "message"]
+      },
+
+      "StandardResponse": {
+        "type": "object",
+        "required": ["isSuccessful"],
+        "properties": {
+          "isSuccessful": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "priceCredit": {
+            "type": "number"
+          }
+        }
+      }
+    }
+  }
+}

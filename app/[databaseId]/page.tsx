@@ -1,5 +1,5 @@
-export default function ProxyHomepage(props: { params: { id: string } }) {
-  const openapiUrl = `https://${props.params.id}/openapi.json`;
+export default function Homepage(props: { params: { databaseId: string } }) {
+  const openapiUrl = `https://data.actionschema.com/${props.params.databaseId}/openapi.json`;
   const links = [
     {
       title: "Swagger",
@@ -31,7 +31,7 @@ export default function ProxyHomepage(props: { params: { id: string } }) {
 
   return (
     <div className="p-10">
-      <h1 className="text-3xl py-10">{props.params.id}</h1>
+      <h1 className="text-3xl py-10">{props.params.databaseId}</h1>
       <div className="flex flex-row flex-wrap">
         {links.map((link) => {
           return (
@@ -44,21 +44,17 @@ export default function ProxyHomepage(props: { params: { id: string } }) {
             </a>
           );
         })}
-        {/* <button
-          onClick={() => {
-            revalidateOpenapi(openapiDetails.openapiUrl);
-          }}
-        >
-          Refresh
-        </button> */}
       </div>
       <div>
         <p className="text-2xl py-4">Edit</p>
         <p>
-          Editing the proxy should be possible using the same form, if you have
-          a correct admin secret (should also be stored locally)
+          Editing the CRUD should be possible using the same form, if you have a
+          correct admin secret (should also be stored locally)
         </p>
-        <input className="p-2 mt-4 rounded-sm" placeholder="Admin Secret" />
+        <input
+          className="p-2 mt-4 rounded-sm bg-transparent"
+          placeholder="Admin Secret"
+        />
       </div>
     </div>
   );
