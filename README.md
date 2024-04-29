@@ -1,44 +1,35 @@
 # OpenCRUD
 
-Serverless Redis CRUD Server that generates OpenAPI
+Serverless Redis CRUD Server that generates OpenAPI.
 
 # Goals
 
 - Easy creation of authenticated, scalable CRUD Server with a realtime database (without coding)
+- Intended to be used for agentic AI
 - Perfect model-specific OpenAPI specification
 - Ability for user to bring their own Redis, or clone the repo and change anything.
 
 # Non-goals
 
 - 🔥 For now, forget ActionSchema and focus on a JSON-Schema CRUD. Having an ability to quickly create this is very useful.
-
 - ❗️ Having users with ratelimits or stuff like that is not the goal! This is just a demo and intention is for it to be used via a clone with your own db behind it.
 
-# TODO
+# Installation
 
-✅ Take `actionschema-core/crude` and where it defines the openapi, and implement something similar but without execution
+You can use the demo to create your CRUD via my root database. You can use your own Upstash by providing these headers.
 
-✅ Refactor kvRead
+If you want to host this yourself, simply clone this and host it on Vercel.
 
-✅ Refactor kvCreate
+Please ensure to provide upstash credentials in `.env.local`:
 
-✅ Refactor kvDelete
+```
+X_UPSTASH_EMAIL=
+X_UPSTASH_API_KEY=
+```
 
-✅ Refactor kvUpdate
+You still need more credentials though. After putting these creds, please run ` npm run init-db` to create the root db with credentials.
 
-✅ Put all in next.js project (copy from one with same routing)
-
-✅ Put all schemas into an openapi JSON and make the types
-
-In `resolveOpenapiAppRequest` - fix resolving the parameters in path, cookie, header, and query, and ensure they are provided as context of the function as well.
-
-🟠 Render whatever comes back from `renderCrudOpenapi` at `data.actionschema.com/[databaseId]/openapi.json`
-
-🟠 Make function `createOrUpdateDatabase`: takes in a JSON-Schema string of a single item, and stores that with an authToken and [databaseId]
-
-Render a form at `app/page.tsx` to submit `createOrUpdateDatabase`.
-
-Make this CRUD for `{proxy,openapi}` with token `adminToken`
+When deploying, copy the settings into your production environment variables as well.
 
 # Ideas
 

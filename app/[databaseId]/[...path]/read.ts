@@ -5,12 +5,10 @@ import {
   objectMapSync,
   removeOptionalKeysFromObjectStrings,
 } from "from-anywhere";
-import {
-  getUpstashRedisDatabase,
-  upstashRedisGetRange,
-} from "@/lib/upstashRedis";
+import { getUpstashRedisDatabase, upstashRedisGetRange } from "@/upstashRedis";
 import { Endpoint } from "@/client";
 import { Filter, Sort } from "@/openapi-types";
+import { getDatabaseDetails } from "@/getDatabaseDetails";
 
 const sortData = (sort: Sort[] | undefined, data: { [key: string]: O }) => {
   if (!sort?.length) {
@@ -170,7 +168,6 @@ export type ModelKey = string;
 
 export const read: Endpoint<"read"> = async (context) => {
   const {
-    databaseId,
     rowIds,
     search,
     startFromIndex,
@@ -179,42 +176,32 @@ export const read: Endpoint<"read"> = async (context) => {
     sort,
     objectParameterKeys,
     ignoreObjectParameterKeys,
+    databaseSlug,
+    Authorization,
   } = context;
 
-  const upstashEmail = context["X-UPSTASH-API-KEY"];
-  const upstashApiKey = context["X-UPSTASH-EMAIL"];
+  const { databaseDetails } = await getDatabaseDetails(databaseSlug);
 
-  if (!upstashApiKey || !upstashEmail) {
-    return {
-      isSuccessful: false,
-      message: "Please provide your upstash details environment variables",
-      databaseId,
-    };
+  if (!databaseDetails) {
+    return { isSuccessful: false, message: "Couldn't find database details" };
   }
 
-  // step 2: validate authToken and find db name.
-  const db = await getUpstashRedisDatabase({
-    upstashEmail,
-    upstashApiKey,
-    databaseId,
-  });
-
-  if (!db) {
-    return {
-      isSuccessful: false,
-      message: "Could not find db",
-      databaseId,
-    };
+  if (
+    databaseDetails.authToken !== undefined &&
+    databaseDetails.authToken !== "" &&
+    Authorization !== `Bearer ${databaseDetails.authToken}`
+  ) {
+    return { isSuccessful: false, message: "Unauthorized" };
   }
 
   const result = await upstashRedisGetRange({
-    redisRestToken: db.rest_token,
-    redisRestUrl: db.endpoint,
+    redisRestToken: databaseDetails.rest_token,
+    redisRestUrl: databaseDetails.endpoint,
     baseKey: undefined,
   });
 
   if (!result) {
-    return { isSuccessful: false, message: "No result", databaseId };
+    return { isSuccessful: false, message: "No result" };
   }
 
   // TODO: make this more efficient
@@ -226,7 +213,6 @@ export const read: Endpoint<"read"> = async (context) => {
   const filteredData = filterData(filter, searchedData);
 
   // NB: sort the filtered data, if needed
-
   const sortedData = sortData(sort, filteredData);
 
   const subsetData = objectParameterKeys?.length
@@ -270,7 +256,6 @@ export const read: Endpoint<"read"> = async (context) => {
     isSuccessful: true,
     message: "Found json and schema",
     hasMore,
-    databaseId,
     items: finalData,
     // $schema,
     // schema,

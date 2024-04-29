@@ -21,26 +21,17 @@ type MergeIntersection<U> = UnionToIntersection<U> extends infer O
 
 type MergeParameters<P> = MergeIntersection<Extract<P, {}>>;
 
-/** Endpoint Function types creator: Takes the parameters and body into a merged object.*/
-
-export type EnvObject = {
-  /** Can also be set by header */
-  "X-UPSTASH-API-KEY"?: string;
-  /** Can also be set by header */
-  "X-UPSTASH-EMAIL"?: string;
-};
-
 export type EndpointBody<T extends keyof operations> =
   (operations[T]["requestBody"] extends {}
     ? operations[T]["requestBody"]["content"]["application/json"]
     : {}) &
     MergeParameters<GetParameters<T>>;
 
-export type EndpointContext<T extends keyof operations> = EnvObject &
-  (operations[T]["requestBody"] extends {}
-    ? operations[T]["requestBody"]["content"]["application/json"]
+export type EndpointContext<K extends keyof operations> =
+  (operations[K]["requestBody"] extends {}
+    ? operations[K]["requestBody"]["content"]["application/json"]
     : {}) &
-  MergeParameters<GetParameters<T>>;
+    MergeParameters<GetParameters<K>>;
 
 export type ResponseType<T extends keyof operations> =
   operations[T]["responses"][200]["content"]["application/json"];

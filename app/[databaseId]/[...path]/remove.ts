@@ -1,6 +1,7 @@
 import { Redis } from "@upstash/redis";
-import { getUpstashRedisDatabase } from "@/lib/upstashRedis";
+import { getUpstashRedisDatabase } from "@/upstashRedis";
 import { Endpoint, EndpointContext } from "@/client";
+import { getDatabaseDetails } from "@/getDatabaseDetails";
 
 export type ActionSchemaDeleteResponse = {
   isSuccessful: boolean;
@@ -9,36 +10,29 @@ export type ActionSchemaDeleteResponse = {
 };
 
 export const remove: Endpoint<"remove"> = async (context) => {
-  const { rowIds, databaseId } = context;
-  const upstashEmail = context["X-UPSTASH-API-KEY"];
-  const upstashApiKey = context["X-UPSTASH-EMAIL"];
+  const { rowIds, databaseSlug, Authorization } = context;
 
-  if (!upstashApiKey || !upstashEmail) {
-    return {
-      isSuccessful: false,
-      message: "Please provide your upstash details environment variables",
-    };
+  const { databaseDetails } = await getDatabaseDetails(databaseSlug);
+
+  if (!databaseDetails) {
+    return { isSuccessful: false, message: "Couldn't find database details" };
   }
+
+  if (
+    databaseDetails.authToken !== undefined &&
+    databaseDetails.authToken !== "" &&
+    Authorization !== `Bearer ${databaseDetails.authToken}`
+  ) {
+    return { isSuccessful: false, message: "Unauthorized" };
+  }
+
   if (rowIds === undefined || rowIds.length === 0) {
     return { isSuccessful: false, message: "Invalid inputs" };
   }
 
-  const db = await getUpstashRedisDatabase({
-    upstashEmail,
-    upstashApiKey,
-    databaseId,
-  });
-
-  if (!db) {
-    return {
-      isSuccessful: false,
-      message: "Could not find db",
-    };
-  }
-
   const redis = new Redis({
-    url: `https://${db.endpoint}`,
-    token: db.rest_token,
+    url: `https://${databaseDetails.endpoint}`,
+    token: databaseDetails.rest_token,
   });
 
   const deleteCount = await redis.del(...rowIds);

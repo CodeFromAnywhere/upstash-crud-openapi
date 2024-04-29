@@ -277,9 +277,16 @@ export const getUpstashRedisDatabase = async (context: {
       "Content-Type": "application/json",
     },
   })
-    .then(
-      (response) => response.json() as Promise<UpstashRedisGetDatabaseResponse>,
-    )
+    .then(async (response) => {
+      const json = await response.json();
+
+      if (json.error) {
+        console.log("UpstashError", json.error);
+        return;
+      }
+
+      return json as UpstashRedisGetDatabaseResponse;
+    })
     .catch((error) => {
       console.error("Error:", error);
       return undefined;

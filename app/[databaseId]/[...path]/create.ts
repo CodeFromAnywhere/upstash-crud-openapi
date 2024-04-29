@@ -1,10 +1,7 @@
-import { O, StandardResponse } from "from-anywhere/types";
-import {
-  upstashRedisSetItems,
-  getUpstashRedisDatabase,
-} from "@/lib/upstashRedis";
-import { generateId, mergeObjectsArray } from "from-anywhere";
 import { Endpoint } from "@/client";
+import { getDatabaseDetails } from "@/getDatabaseDetails";
+import { upstashRedisSetItems } from "@/upstashRedis";
+import { generateId, mergeObjectsArray } from "from-anywhere";
 
 export const create: Endpoint<"create"> = async (
   context,
@@ -14,34 +11,26 @@ export const create: Endpoint<"create"> = async (
   /** The rowIds created */
   result?: string[];
 }> => {
-  const { items, databaseId } = context;
+  const { items, databaseSlug, Authorization } = context;
 
-  const { upstashApiKey, upstashEmail } = process.env;
+  const { databaseDetails } = await getDatabaseDetails(databaseSlug);
 
-  if (!upstashApiKey || !upstashEmail) {
-    return {
-      isSuccessful: false,
-      message: "Please provide your upstash details environment variables",
-    };
+  if (!databaseDetails) {
+    return { isSuccessful: false, message: "Couldn't find database details" };
   }
+
+  if (
+    databaseDetails.authToken !== undefined &&
+    databaseDetails.authToken !== "" &&
+    Authorization !== `Bearer ${databaseDetails.authToken}`
+  ) {
+    return { isSuccessful: false, message: "Unauthorized" };
+  }
+
   if (!items || !Array.isArray(items) || items.length === 0) {
     return {
       isSuccessful: false,
       message: "No items",
-    };
-  }
-
-  // step 2: validate authToken and find db name.
-  const db = await getUpstashRedisDatabase({
-    upstashEmail,
-    upstashApiKey,
-    databaseId,
-  });
-
-  if (!db) {
-    return {
-      isSuccessful: false,
-      message: "Could not find db",
     };
   }
 
@@ -52,8 +41,8 @@ export const create: Endpoint<"create"> = async (
   );
 
   await upstashRedisSetItems({
-    redisRestToken: db.rest_token,
-    redisRestUrl: db.endpoint,
+    redisRestToken: databaseDetails.rest_token,
+    redisRestUrl: databaseDetails.endpoint,
     items: mappedItems,
   });
 

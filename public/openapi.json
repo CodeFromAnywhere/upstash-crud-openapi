@@ -1,6 +1,8 @@
 {
   "x-actionschema": "0.0.1",
   "$schema": "https://raw.githubusercontent.com/CodeFromAnywhere/ActionSchema/main/schemas/openapi.schema.json",
+  "$source": "This ref can't be resolved it seems. Why not? https://data.actionschema.com/openapi.json#/paths/test",
+
   "openapi": "3.0.0",
   "info": {
     "title": "OpenAPI CRUD",
@@ -9,11 +11,27 @@
   },
   "servers": [{ "url": "https://data.actionschema.com" }],
   "paths": {
-    "/test": {
-      "$ref": "https://data.actionschema.com/openapi.json#/paths/test",
-      "x-proxy": {}
-    },
     "/root/createOrUpdateDatabase": {
+      "parameters": [
+        {
+          "in": "header",
+          "required": false,
+          "name": "X_UPSTASH_EMAIL",
+          "schema": { "type": "string" }
+        },
+        {
+          "in": "header",
+          "required": false,
+          "name": "X_UPSTASH_API_KEY",
+          "schema": { "type": "string" }
+        },
+        {
+          "in": "header",
+          "required": false,
+          "name": "X_ADMIN_AUTH_TOKEN",
+          "schema": { "type": "string" }
+        }
+      ],
       "post": {
         "summary": "",
         "operationId": "createOrUpdateDatabase",
@@ -24,10 +42,22 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "databaseId": { "type": "string" },
-                  "schemaString": { "type": "string" }
+                  "schemaString": { "type": "string" },
+                  "databaseSlug": { "type": "string" },
+                  "authToken": { "type": "string" },
+                  "region": {
+                    "description": "Can be set for a new database. Cannot be changed",
+                    "type": "string",
+                    "enum": [
+                      "eu-west-1",
+                      "us-east-1",
+                      "us-west-1",
+                      "ap-northeast-1",
+                      "us-central1"
+                    ]
+                  }
                 },
-                "required": ["databaseId", "schemaString"]
+                "required": ["schemaString", "databaseSlug"]
               }
             }
           }
@@ -46,7 +76,7 @@
         }
       }
     },
-    "/{databaseId}/openapi.json": {
+    "/{databaseSlug}/openapi.json": {
       "get": {
         "summary": "Get openapi for this database table alone",
         "operationId": "renderCrudOpenapi",
@@ -72,31 +102,33 @@
       "parameters": [
         {
           "in": "header",
+          "name": "Authorization",
+          "schema": { "type": "string" },
           "required": false,
-          "name": "X-UPSTASH-EMAIL",
-          "schema": { "type": "string" }
-        },
-        {
-          "in": "header",
-          "required": false,
-          "name": "X-UPSTASH-API-KEY",
-          "schema": { "type": "string" }
+          "description": "Bearer authorization"
         },
         {
           "in": "path",
-          "name": "databaseId",
+          "name": "databaseSlug",
           "schema": { "type": "string" },
           "required": true
         }
       ]
     },
-    "/{databaseId}/read": {
+    "/{databaseSlug}/read": {
       "parameters": [
         {
           "in": "path",
-          "name": "databaseId",
+          "name": "databaseSlug",
           "schema": { "type": "string" },
           "required": true
+        },
+        {
+          "in": "header",
+          "name": "Authorization",
+          "schema": { "type": "string" },
+          "required": false,
+          "description": "Bearer authorization"
         }
       ],
       "post": {
@@ -122,13 +154,20 @@
         }
       }
     },
-    "/{databaseId}/create": {
+    "/{databaseSlug}/create": {
       "parameters": [
         {
           "in": "path",
-          "name": "databaseId",
+          "name": "databaseSlug",
           "schema": { "type": "string" },
           "required": true
+        },
+        {
+          "in": "header",
+          "name": "Authorization",
+          "schema": { "type": "string" },
+          "required": false,
+          "description": "Bearer authorization"
         }
       ],
       "post": {
@@ -154,14 +193,21 @@
         }
       }
     },
-    "/{databaseId}/remove": {
+    "/{databaseSlug}/remove": {
       "parameters": [
         {
           "in": "path",
-          "name": "databaseId",
+          "name": "databaseSlug",
           "schema": { "type": "string" },
           "description": "Upstash ID of the database",
           "required": true
+        },
+        {
+          "in": "header",
+          "name": "Authorization",
+          "schema": { "type": "string" },
+          "required": false,
+          "description": "Bearer authorization"
         }
       ],
       "post": {
@@ -187,13 +233,20 @@
         }
       }
     },
-    "/{databaseId}/update": {
+    "/{databaseSlug}/update": {
       "parameters": [
         {
           "in": "path",
-          "name": "databaseId",
+          "name": "databaseSlug",
           "schema": { "type": "string" },
           "required": true
+        },
+        {
+          "in": "header",
+          "name": "Authorization",
+          "schema": { "type": "string" },
+          "required": false,
+          "description": "Bearer authorization"
         }
       ],
       "post": {
@@ -244,7 +297,7 @@
       "CreateContext": {
         "type": "object",
         "properties": {
-          "databaseId": {
+          "databaseSlug": {
             "type": "string"
           },
           "items": {
@@ -255,7 +308,7 @@
             }
           }
         },
-        "required": ["databaseId", "items"]
+        "required": ["databaseSlug", "items"]
       },
       "Sort": {
         "type": "object",
@@ -306,9 +359,7 @@
           "isSuccessful": {
             "type": "boolean"
           },
-          "databaseId": {
-            "type": "string"
-          },
+
           "message": {
             "type": "string"
           },
@@ -333,12 +384,12 @@
             "type": "boolean"
           }
         },
-        "required": ["isSuccessful", "databaseId", "message"]
+        "required": ["isSuccessful", "databaseSlug", "message"]
       },
       "ReadContext": {
         "type": "object",
         "properties": {
-          "databaseId": {
+          "databaseSlug": {
             "type": "string"
           },
           "search": {
@@ -381,13 +432,13 @@
             }
           }
         },
-        "required": ["databaseId"]
+        "required": ["databaseSlug"]
       },
 
       "UpdateContext": {
         "type": "object",
         "properties": {
-          "databaseId": {
+          "databaseSlug": {
             "type": "string"
           },
           "id": {
@@ -399,7 +450,7 @@
             "description": "New (partial) value of the item. Will update all keys provided here. Please note that it cannot be set to 'undefined' as this doesn't transfer over JSON, but if you set it to 'null', the value will be removed from the database."
           }
         },
-        "required": ["databaseId", "id", "partialItem"]
+        "required": ["databaseSlug", "id", "partialItem"]
       },
       "UpdateResponse": {
         "type": "object",
@@ -423,11 +474,11 @@
               "type": "string"
             }
           },
-          "databaseId": {
+          "databaseSlug": {
             "type": "string"
           }
         },
-        "required": ["rowIds", "databaseId"]
+        "required": ["rowIds", "databaseSlug"]
       },
       "RemoveResponse": {
         "type": "object",

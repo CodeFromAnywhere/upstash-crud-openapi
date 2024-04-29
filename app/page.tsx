@@ -1,5 +1,4 @@
 "use client";
-import { Info } from "actionschema/types";
 import { Suspense, useState } from "react";
 import { client } from "./client";
 import { makeArray } from "from-anywhere";
@@ -28,7 +27,12 @@ const HomePage = () => {
         <div
           onClick={async () => {
             const result = await client("createOrUpdateDatabase", {
-              databaseId,
+              databaseSlug,
+              authToken,
+              region,
+              X_ADMIN_AUTH_TOKEN,
+              X_UPSTASH_API_KEY,
+              X_UPSTASH_EMAIL,
               schemaString,
             });
 

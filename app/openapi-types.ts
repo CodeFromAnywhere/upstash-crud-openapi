@@ -2,7 +2,11 @@ export interface paths {
     "/root/createOrUpdateDatabase": {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                X_UPSTASH_EMAIL?: string;
+                X_UPSTASH_API_KEY?: string;
+                X_ADMIN_AUTH_TOKEN?: string;
+            };
             path?: never;
             cookie?: never;
         };
@@ -15,15 +19,15 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/{databaseId}/openapi.json": {
+    "/{databaseSlug}/openapi.json": {
         parameters: {
             query?: never;
             header?: {
-                "X-UPSTASH-EMAIL"?: string;
-                "X-UPSTASH-API-KEY"?: string;
+                /** @description Bearer authorization */
+                Authorization?: string;
             };
             path: {
-                databaseId: string;
+                databaseSlug: string;
             };
             cookie?: never;
         };
@@ -37,12 +41,15 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/{databaseId}/read": {
+    "/{databaseSlug}/read": {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /** @description Bearer authorization */
+                Authorization?: string;
+            };
             path: {
-                databaseId: string;
+                databaseSlug: string;
             };
             cookie?: never;
         };
@@ -55,12 +62,15 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/{databaseId}/create": {
+    "/{databaseSlug}/create": {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /** @description Bearer authorization */
+                Authorization?: string;
+            };
             path: {
-                databaseId: string;
+                databaseSlug: string;
             };
             cookie?: never;
         };
@@ -73,13 +83,16 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/{databaseId}/remove": {
+    "/{databaseSlug}/remove": {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /** @description Bearer authorization */
+                Authorization?: string;
+            };
             path: {
                 /** @description Upstash ID of the database */
-                databaseId: string;
+                databaseSlug: string;
             };
             cookie?: never;
         };
@@ -92,12 +105,15 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/{databaseId}/update": {
+    "/{databaseSlug}/update": {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /** @description Bearer authorization */
+                Authorization?: string;
+            };
             path: {
-                databaseId: string;
+                databaseSlug: string;
             };
             cookie?: never;
         };
@@ -121,7 +137,7 @@ export interface components {
             result?: string[];
         };
         CreateContext: {
-            databaseId: string;
+            databaseSlug: string;
             items: Record<string, never>[];
         };
         Sort: {
@@ -137,7 +153,6 @@ export interface components {
         };
         ReadResponse: {
             isSuccessful: boolean;
-            databaseId: string;
             message: string;
             $schema?: string;
             items?: {
@@ -152,7 +167,7 @@ export interface components {
             hasMore?: boolean;
         };
         ReadContext: {
-            databaseId: string;
+            databaseSlug: string;
             search?: string;
             rowIds?: string[];
             startFromIndex?: number;
@@ -163,7 +178,7 @@ export interface components {
             ignoreObjectParameterKeys?: string[];
         };
         UpdateContext: {
-            databaseId: string;
+            databaseSlug: string;
             /** @description The id (indexed key) of the item to update. Update that functions as upsert. If the id didn't exist, it will be created. */
             id: string;
             /** @description New (partial) value of the item. Will update all keys provided here. Please note that it cannot be set to 'undefined' as this doesn't transfer over JSON, but if you set it to 'null', the value will be removed from the database. */
@@ -176,7 +191,7 @@ export interface components {
         RemoveContext: {
             /** @description Which IDs should be removed */
             rowIds: string[];
-            databaseId: string;
+            databaseSlug: string;
         };
         RemoveResponse: {
             isSuccessful: boolean;
@@ -389,15 +404,25 @@ export interface operations {
     createOrUpdateDatabase: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                X_UPSTASH_EMAIL?: string;
+                X_UPSTASH_API_KEY?: string;
+                X_ADMIN_AUTH_TOKEN?: string;
+            };
             path?: never;
             cookie?: never;
         };
         requestBody: {
             content: {
                 "application/json": {
-                    databaseId: string;
                     schemaString: string;
+                    databaseSlug: string;
+                    authToken?: string;
+                    /**
+                     * @description Can be set for a new database. Cannot be changed
+                     * @enum {string}
+                     */
+                    region?: "eu-west-1" | "us-east-1" | "us-west-1" | "ap-northeast-1" | "us-central1";
                 };
             };
         };
@@ -417,11 +442,11 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
-                "X-UPSTASH-EMAIL"?: string;
-                "X-UPSTASH-API-KEY"?: string;
+                /** @description Bearer authorization */
+                Authorization?: string;
             };
             path: {
-                databaseId: string;
+                databaseSlug: string;
             };
             cookie?: never;
         };
@@ -443,9 +468,12 @@ export interface operations {
     read: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /** @description Bearer authorization */
+                Authorization?: string;
+            };
             path: {
-                databaseId: string;
+                databaseSlug: string;
             };
             cookie?: never;
         };
@@ -469,9 +497,12 @@ export interface operations {
     create: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /** @description Bearer authorization */
+                Authorization?: string;
+            };
             path: {
-                databaseId: string;
+                databaseSlug: string;
             };
             cookie?: never;
         };
@@ -495,10 +526,13 @@ export interface operations {
     remove: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /** @description Bearer authorization */
+                Authorization?: string;
+            };
             path: {
                 /** @description Upstash ID of the database */
-                databaseId: string;
+                databaseSlug: string;
             };
             cookie?: never;
         };
@@ -522,9 +556,12 @@ export interface operations {
     update: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /** @description Bearer authorization */
+                Authorization?: string;
+            };
             path: {
-                databaseId: string;
+                databaseSlug: string;
             };
             cookie?: never;
         };
@@ -567,23 +604,23 @@ export const operationUrlObject = {
   },
   "renderCrudOpenapi": {
     "method": "get",
-    "path": "/{databaseId}/openapi.json"
+    "path": "/{databaseSlug}/openapi.json"
   },
   "read": {
     "method": "post",
-    "path": "/{databaseId}/read"
+    "path": "/{databaseSlug}/read"
   },
   "create": {
     "method": "post",
-    "path": "/{databaseId}/create"
+    "path": "/{databaseSlug}/create"
   },
   "remove": {
     "method": "post",
-    "path": "/{databaseId}/remove"
+    "path": "/{databaseSlug}/remove"
   },
   "update": {
     "method": "post",
-    "path": "/{databaseId}/update"
+    "path": "/{databaseSlug}/update"
   }
 }
 export const operationKeys = Object.keys(operationUrlObject);
