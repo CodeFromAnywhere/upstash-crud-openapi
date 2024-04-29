@@ -14,22 +14,25 @@ Serverless Redis CRUD Server that generates OpenAPI.
 - 🔥 For now, forget ActionSchema and focus on a JSON-Schema CRUD. Having an ability to quickly create this is very useful.
 - ❗️ Having users with ratelimits or stuff like that is not the goal! This is just a demo and intention is for it to be used via a clone with your own db behind it.
 
-# Installation
+# Getting started
 
-You can use the demo to create your CRUD via my root database. You can use your own Upstash by providing these headers.
+To try this out, simply navigate to https://data.actionschema.com and follow the steps there.
 
-If you want to host this yourself, simply clone this and host it on Vercel.
+# Privacy
 
-Please ensure to provide upstash credentials in `.env.local`:
+By default, your databases with provided schemas will be stored in a central Upstash Redis KV database. When creating your database, you can change the region as you wish.
 
-```
-X_UPSTASH_EMAIL=
-X_UPSTASH_API_KEY=
-```
+It's possible to use the OpenCRUD with your own Upstash credentials so your data will stay in your own data store. However, we will still store your upstash credentials in our main store, so beware.
 
-You still need more credentials though. After putting these creds, please run ` npm run init-db` to create the root db with credentials.
+If you really want it to be private from us, you can self-host this by cloning the repo and hosting it on a serverless hosting service for Next.js projects (like Vercel).
 
-When deploying, copy the settings into your production environment variables as well.
+# Self-hosting
+
+1. `git clone https://github.com/CodeFromAnywhere/opencrud.git`
+2. `cd opencrud && npm i`
+3. `cp .env.local.example .env.local` and provide the credentials needed
+4. Run `npm run init-db` to create the root-db (and regenerate `.env.local`)
+5. When deploying, copy the settings into your production environment variables as well.
 
 # Ideas
 
