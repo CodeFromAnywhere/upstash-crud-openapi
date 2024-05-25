@@ -37,3 +37,4 @@ If you really want it to be private from us, you can self-host this by cloning t
 # Ideas
 
 - Use the default Vercel upstash if that has a good free plan and can be easily set up.
+- Encrypt the `DatabaseDetails` when storing them into Upstash globalstore with a private-key hosted on Vercel. This way, someone getting into Upstash doesn't get into the data. However, it's still possible if people hack into Vercel.

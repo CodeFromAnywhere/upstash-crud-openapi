@@ -1,5 +1,5 @@
 {
-  "name": "openapi-crud",
+  "name": "opencrud",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -9,21 +9,23 @@
     "types": "npx openapi-fetch-typescript ./public/openapi.json ./app/openapi-types.ts OpenApiTypes",
     "watch-types": "nodemon --watch public/openapi.json --exec \"npm run types\"",
     "next-dev": "next dev",
-    "init-db": "bun run makeRootDb.cli.ts",
+    "init-db": "bun run app/makeRootDb.cli.ts",
     "dev": "concurrently \"next dev\" \"npm:watch-types\""
   },
   "dependencies": {
     "actionschema": "^0.0.38",
     "ajv": "^8.12.0",
-    "from-anywhere": "^0.0.28",
+    "from-anywhere": "^0.0.29",
     "json-schema": "^0.4.0",
     "next": "14.2.1",
+    "openapi-for-humans-react": "^0.0.39",
     "openapi-types": "^12.1.3",
     "openapi-typescript": "^6.7.5",
-    "openapi-util": "^0.0.9",
+    "openapi-util": "^0.0.20",
     "qs": "^6.12.1",
     "react": "^18",
-    "react-dom": "^18"
+    "react-dom": "^18",
+    "react-openapi-form": "^0.0.4"
   },
   "devDependencies": {
     "@types/ajv": "^1.0.0",

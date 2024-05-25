@@ -34,19 +34,25 @@
 
 ✅ Update all endpoints with the right map and auth
 
-## Create/update database form
+## Create/update Database Form
 
-Make a function `getFormSchema(openapi,path,method)` combines schemas from parameters and body - and turns it into a single schema.
+✅ Render a form at `opencrud/app/page.tsx` to submit `createDatabase`.
 
-Render a form at `app/page.tsx` to submit `createOrUpdateDatabase`.
+✅ Refactor; install `react-openapi-form` in `opencrud`
 
-Confirm the root-db gets the details, and the child-db gets the db itself.
+Add proper `description`s in `openapi.json#paths/createDatabase`
+
+Submit `createDatabase` and confirm it works, db gets created in upstash
+
+Confirm the root-db gets the details, and the child-db gets the db itself (check it in upstash).
 
 After form-submission - keep a `localStorage` with the `databaseSlug, adminToken, authToken, schemaString` so from `data.actionschema.com` all your databases can be listed.
 
-Render form at `data.actionschema.com/[databaseSlug]` as well incase adminToken exists in localStorage. Prefil forms with localStorage-values
+Make new function `updateDatabase` and simplify `createDatabase`
 
-List the databases + auth with links to the openapi, swagger, and edit (from localStorage).
+Render form for `updateDatabase` `data.actionschema.com/[databaseSlug]` as well incase adminToken exists in localStorage. Prefil forms with localStorage-values.
+
+List the databases + auth with links to the openapi, swagger, and edit (from `localStorage`).
 
 ## openapi.json generation
 
@@ -67,3 +73,7 @@ Use data.actionschema.com to create CRUD openapis to keep a global state for:
 - AgentOpenapi: https://agent.actionschema.com/[agentSlug]/openapi.json
 
 Now I can make those and add those endpoints into my own openapi there via the new `x-proxy` standard.
+
+Now I can also use forms in explorer. It'd be perfect to test things a little.
+
+Now I can also use forms in all of the above.

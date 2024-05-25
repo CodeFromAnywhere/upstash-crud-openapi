@@ -9,9 +9,7 @@ import {
 import { generateId, tryParseJson } from "from-anywhere";
 import { JSONSchema7 } from "json-schema";
 
-export const createOrUpdateDatabase: Endpoint<
-  "createOrUpdateDatabase"
-> = async (context) => {
+export const createDatabase: Endpoint<"createDatabase"> = async (context) => {
   const {
     databaseSlug,
     schemaString,
@@ -115,10 +113,6 @@ export const createOrUpdateDatabase: Endpoint<
   } else {
     databaseDetails = {
       ...previousDatabaseDetails,
-      // adminAuthToken: previousDatabaseDetails.adminAuthToken,
-      // database_id: previousDatabaseDetails.database_id,
-      // endpoint:previousDatabaseDetails.endpoint,
-      // rest_token:previousDatabaseDetails.rest_token,
 
       authToken: authToken || previousDatabaseDetails.authToken,
 
@@ -133,7 +127,7 @@ export const createOrUpdateDatabase: Endpoint<
 
   return {
     isSuccessful: false,
-    message: !previousDatabaseDetails ? "Database created" : "Database updated",
+    message: "Database created",
     authToken: databaseDetails.authToken,
   };
 };

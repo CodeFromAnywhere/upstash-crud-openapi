@@ -1,8 +1,10 @@
 "use client";
-import { Suspense, useState } from "react";
-import { client } from "./client";
+import { Suspense } from "react";
 import { makeArray } from "from-anywhere";
+import { OpenapiForm } from "react-openapi-form";
 import { makeComplexUrlStore } from "./makeComplexUrlStore";
+import openapi from "../public/openapi.json";
+import "react-openapi-form/css.css";
 
 const HomePage = () => {
   const useStore = makeComplexUrlStore<{
@@ -10,39 +12,22 @@ const HomePage = () => {
   }>();
   const [url, setUrl] = useStore("url");
   const urls = makeArray(url);
-  const [databaseId, setDatabaseId] = useState<string>("");
-  const [schemaString, setSchemaString] = useState<string>("");
 
   return (
-    <div className="h-full p-4">
+    <div className="h-full p-4 lg:px-32 lg:py-20">
       <h1 className="text-3xl">OpenAPI CRUD Generator</h1>
       <p>Create a new CRUD OpenAPI</p>
 
-      <p>
-        TODO: Need a form for createOrUpdateDatabase that includes the
-        parameters taken from the openapi specification.
-      </p>
-
-      <div className="flex flex-row gap-2">
-        <div
-          onClick={async () => {
-            const result = await client("createOrUpdateDatabase", {
-              databaseSlug,
-              authToken,
-              region,
-              X_ADMIN_AUTH_TOKEN,
-              X_UPSTASH_API_KEY,
-              X_UPSTASH_EMAIL,
-              schemaString,
-            });
-
-            console.log({ result });
-          }}
-          className="cursor-pointer border border-black p-2 rounded-sm"
-        >
-          Create
-        </div>
-      </div>
+      <OpenapiForm
+        openapi={openapi as any}
+        path="/root/createDatabase"
+        method="post"
+        uiSchema={{
+          schemaString: {
+            "ui:widget": "textarea",
+          },
+        }}
+      />
     </div>
   );
 };

@@ -1,8 +1,9 @@
 import { JSONSchema7 } from "json-schema";
 
-/** Details that are found in the KV store after de-serialisation
+/**
+ * Details that are found in the KV store after de-serialisation
  *
- * Key should be a database slug
+ * Key should be a databaseSlug, then these values should be there
  */
 export type DatabaseDetails = {
   upstashApiKey: string;

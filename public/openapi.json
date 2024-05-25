@@ -1,8 +1,6 @@
 {
   "x-actionschema": "0.0.1",
   "$schema": "https://raw.githubusercontent.com/CodeFromAnywhere/ActionSchema/main/schemas/openapi.schema.json",
-  "$source": "This ref can't be resolved it seems. Why not? https://data.actionschema.com/openapi.json#/paths/test",
-
   "openapi": "3.0.0",
   "info": {
     "title": "OpenAPI CRUD",
@@ -11,7 +9,7 @@
   },
   "servers": [{ "url": "https://data.actionschema.com" }],
   "paths": {
-    "/root/createOrUpdateDatabase": {
+    "/root/createDatabase": {
       "parameters": [
         {
           "in": "header",
@@ -32,9 +30,11 @@
           "schema": { "type": "string" }
         }
       ],
+
       "post": {
         "summary": "",
-        "operationId": "createOrUpdateDatabase",
+        "operationId": "createDatabase",
+
         "requestBody": {
           "required": true,
           "content": {

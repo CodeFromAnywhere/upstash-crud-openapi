@@ -1,8 +1,8 @@
-import { rootDatabaseName } from "@/lib/state";
+import { rootDatabaseName } from "@/state";
 import {
   createUpstashRedisDatabase,
   listUpstashRedisDatabases,
-} from "@/lib/upstashRedis";
+} from "@/upstashRedis";
 import { writeFileSync, writeSync } from "fs";
 
 const makeRootDb = async () => {

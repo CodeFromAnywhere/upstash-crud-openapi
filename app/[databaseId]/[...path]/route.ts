@@ -1,11 +1,12 @@
-import { OpenapiDocument, resolveOpenapiAppRequest } from "openapi-util";
+import { OpenapiDocument } from "openapi-util";
+import { resolveOpenapiAppRequest } from "openapi-util/build/node/resolveOpenapiAppRequest";
 import { create } from "./create";
 import { read } from "./read";
 import { update } from "./update";
 import { remove } from "./remove";
 import { renderCrudOpenapi } from "./renderCrudOpenapi";
 import openapi from "../../../public/openapi.json";
-import { createOrUpdateDatabase } from "./createOrUpdateDatabase";
+import { createDatabase } from "./createDatabase";
 
 /** function creator to DRY */
 const getHandler = (method: string) => (request: Request) =>
@@ -17,7 +18,7 @@ const getHandler = (method: string) => (request: Request) =>
       update,
       remove,
       renderCrudOpenapi,
-      createOrUpdateDatabase,
+      createDatabase,
     },
   });
 

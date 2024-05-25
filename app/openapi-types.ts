@@ -1,5 +1,5 @@
 export interface paths {
-    "/root/createOrUpdateDatabase": {
+    "/root/createDatabase": {
         parameters: {
             query?: never;
             header?: {
@@ -12,7 +12,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["createOrUpdateDatabase"];
+        post: operations["createDatabase"];
         delete?: never;
         options?: never;
         head?: never;
@@ -401,7 +401,7 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
-    createOrUpdateDatabase: {
+    createDatabase: {
         parameters: {
             query?: never;
             header?: {
@@ -598,9 +598,9 @@ export type RemoveResponse = components["schemas"]["RemoveResponse"]
 export type StandardResponse = components["schemas"]["StandardResponse"]
   
 export const operationUrlObject = {
-  "createOrUpdateDatabase": {
+  "createDatabase": {
     "method": "post",
-    "path": "/root/createOrUpdateDatabase"
+    "path": "/root/createDatabase"
   },
   "renderCrudOpenapi": {
     "method": "get",
