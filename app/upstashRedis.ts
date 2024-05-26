@@ -425,7 +425,7 @@ export const upstashRedisGetRange = async (context: {
     return;
   }
 
-  const mgetResult = (await redis.mget(...allKeys)) as string[];
+  const mgetResult = (await redis.mget(...allKeys)) as O[];
 
   console.log({ mgetResult });
   const allValues = mergeObjectsArray(
