@@ -41,6 +41,7 @@ export const CreateDatabaseForm = () => {
             const databaseSlug = bodyData?.databaseSlug as string;
 
             if (!adminToken || !authToken || !databaseSlug) {
+              alert(requestResponse?.message);
               return;
             }
             const newDatabases = databases
