@@ -86,25 +86,20 @@
 
 ✅ Ensure databaseSlug isn't required in the body (it's a parameter).
 
-Try to use the openapi spec to do stuff in swagger.
+✅ Try to use the openapi spec to do stuff in swagger.
 
-# Unauthorized APIs
+# More Requirements
 
-If `authToken` is left empty, do not put any authToken.
+Test the entire app and also ensure the below requirements get built in.
 
-## Own upstash
+- If `authToken` is left empty, do not put any authToken.
+- Confirm it works with a secondary upstash as well.
+- Ensure keys root and root-db and ones that already existed cannot be picked.
+- Ensure at the `/update` endpoint required is removed from the type interface.
 
-Confirm it works with a secondary upstash as well.
-
-## Reserved db keys
-
-Ensure keys root and root-db and ones that already existed cannot be picked.
+See if I can make a simple people db and use it in an agent to test it. Test if dereferencing things before returning the MODEL openapi.json did make it more stable/easier.
 
 # Agenda OpenAPI in an agent
-
-See if I can make a simple people db and use it in an agent to test it.
-
-Test if dereferencing things before returning the MODEL openapi.json could make it more stable.
 
 Think about different use-cases for LLM
 
@@ -119,6 +114,10 @@ In explorer, add button to fill your own URL.
 Add ability to prefil fields in explorer with query parameters and ensure that gets cached into localStorage, and do this with the `authToken`
 
 Ideally, from explorer I can get all rows with 1 click of a button.
+
+# Source of truth file system
+
+Let's make a simple cli `opencrud` that pushes my db models to the cloud with the right settings
 
 # After that works...
 
