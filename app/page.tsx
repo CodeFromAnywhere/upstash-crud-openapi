@@ -21,6 +21,8 @@ const HomePage = () => {
     <StoreProvider>
       <div className="h-full p-4 lg:px-32 lg:py-20">
         <h1 className="text-3xl">OpenAPI CRUD Generator</h1>
+        <p>Create a new CRUD OpenAPI</p>
+
         <iframe
           src="https://ghbtns.com/github-btn.html?user=codefromanywhere&repo=opencrud&type=star&count=true&size=large"
           frameBorder="0"
@@ -30,7 +32,6 @@ const HomePage = () => {
           className="my-2 p-2 bg-white rounded-md"
           title="GitHub"
         ></iframe>
-        <p>Create a new CRUD OpenAPI</p>
 
         <DatabaseOverview />
 

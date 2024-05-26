@@ -439,10 +439,16 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": {
-                    /** @description JSON of the schema you want the database to refer to. Should be a Object JSON Schema. */
-                    schemaString: string;
-                    /** @description Unique slug for the database to be used as prefix to the endpoints. */
+                    /**
+                     * Database ID
+                     * @description Unique slug for the database to be used as prefix to the endpoints.
+                     */
                     databaseSlug: string;
+                    /**
+                     * Schema
+                     * @description JSON of the schema you want the database to refer to. Should be a Object JSON Schema.
+                     */
+                    schemaString: string;
                     /** @description Token required to authrorize using the CRUD endpoints. Will be generated if not given. */
                     authToken?: string;
                     /**
