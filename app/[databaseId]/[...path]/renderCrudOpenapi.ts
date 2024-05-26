@@ -3,6 +3,7 @@ import { getDatabaseDetails } from "@/getDatabaseDetails";
 import {
   O,
   getSubsetFromObject,
+  removeOptionalKeysFromObject,
   removeOptionalKeysFromObjectStrings,
 } from "from-anywhere";
 import { OpenapiSchemaObject } from "from-anywhere/types";
@@ -13,6 +14,7 @@ import {
   SchemaObject,
 } from "openapi-typescript";
 import openapi from "../../../public/openapi.json";
+import { OpenapiDocument } from "openapi-util";
 
 export const withoutProperties = (
   schema: OpenapiSchemaObject,
@@ -83,40 +85,42 @@ export const renderCrudOpenapi: Endpoint<"renderCrudOpenapi"> = async (
     };
   }
 
-  const withoutParameter = (operation: any, parameterName: string) => {
-    return {
-      ...operation,
-      parameters: Array.isArray(operation.parameters)
-        ? operation.parameters.filter((x: any) => x.name !== parameterName)
-        : [],
-    };
-  };
-
   const crudPaths = {
-    "/create": withoutParameter(
+    "/create": removeOptionalKeysFromObjectStrings(
       openapi.paths["/{databaseSlug}/create"],
-      "databaseSlug",
+      ["parameters"],
     ),
-    "/read": withoutParameter(
+
+    "/read": removeOptionalKeysFromObjectStrings(
       openapi.paths["/{databaseSlug}/read"],
-      "databaseSlug",
+      ["parameters"],
     ),
-    "/update": withoutParameter(
+    "/update": removeOptionalKeysFromObjectStrings(
       openapi.paths["/{databaseSlug}/update"],
-      "databaseSlug",
+      ["parameters"],
     ),
-    "/remove": withoutParameter(
+    "/remove": removeOptionalKeysFromObjectStrings(
       openapi.paths["/{databaseSlug}/remove"],
-      "databaseSlug",
+      ["parameters"],
     ),
   };
 
-  // TODO: respond with a subset of belows openapi specific to 'databaseDetails.schema'
-  console.log({ schema: databaseDetails.schema });
   return {
     ...openapi,
+    components: {
+      ...openapi.components,
+      securitySchemes: {
+        bearerAuth: {
+          type: "http",
+          scheme: "bearer",
+          bearerFormat: "Bearer",
+          description: "Your authToken should be provided",
+        },
+      },
+    },
     paths: crudPaths,
     info: { title: `${databaseSlug} CRUD`, version: "1.0", description: "" },
     servers: [{ url: `/${databaseSlug}` }],
+    security: [{ bearerAuth: [] }],
   };
 };
