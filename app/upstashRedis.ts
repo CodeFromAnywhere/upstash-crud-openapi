@@ -420,23 +420,22 @@ export const upstashRedisGetRange = async (context: {
 
   const allKeys = await getUpstashRedisRangeKeys(context);
 
+  console.log({ allKeys });
   if (allKeys.length === 0) {
     return;
   }
+
+  const mgetResult = (await redis.mget(...allKeys)) as string[];
+
+  console.log({ mgetResult });
   const allValues = mergeObjectsArray(
-    ((await redis.mget(...allKeys)) as string[])
+    mgetResult
       .map((value, index) => {
         if (!value) {
           return null;
         }
 
-        const json = tryParseJson<O>(value);
-
-        if (!json) {
-          return;
-        }
-
-        return { [allKeys[index]]: json };
+        return { [allKeys[index]]: value };
       })
       .filter(notEmpty),
   );

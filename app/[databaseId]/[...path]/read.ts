@@ -252,6 +252,7 @@ export const read: Endpoint<"read"> = async (context) => {
 
   const finalData = slicedLimitData;
 
+  console.log({ result });
   return {
     isSuccessful: true,
     message: "Found json and schema",
