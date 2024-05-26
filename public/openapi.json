@@ -171,7 +171,18 @@
                     {
                       "$ref": "https://raw.githubusercontent.com/CodeFromAnywhere/ActionSchema/main/schemas/openapi.schema.json"
                     },
-                    { "type": "object", "additionalProperties": true }
+                    {
+                      "type": "object",
+                      "required": ["isSuccessful"],
+                      "properties": {
+                        "isSuccessful": {
+                          "type": "boolean"
+                        },
+                        "message": {
+                          "type": "string"
+                        }
+                      }
+                    }
                   ]
                 }
               }
@@ -188,6 +199,7 @@
         }
       ]
     },
+
     "/{databaseSlug}/read": {
       "parameters": [
         {
@@ -227,6 +239,7 @@
         }
       }
     },
+
     "/{databaseSlug}/create": {
       "parameters": [
         {
@@ -370,18 +383,15 @@
       "CreateContext": {
         "type": "object",
         "properties": {
-          "databaseSlug": {
-            "type": "string"
-          },
           "items": {
             "type": "array",
             "items": {
-              "type": "object",
+              "$ref": "#/components/schemas/ModelItem",
               "description": "If items in this array contain `__id`, it will be overwriting that item if it's already there."
             }
           }
         },
-        "required": ["databaseSlug", "items"]
+        "required": ["items"]
       },
       "Sort": {
         "type": "object",
@@ -441,15 +451,14 @@
           },
           "items": {
             "type": "object",
-            "additionalProperties": {
-              "type": "object",
-              "additionalProperties": true
-            }
+            "additionalProperties": { "$ref": "#/components/schemas/ModelItem" }
           },
+
           "schema": {
             "type": "object",
             "additionalProperties": true
           },
+
           "canWrite": {
             "type": "boolean"
           },
@@ -457,14 +466,11 @@
             "type": "boolean"
           }
         },
-        "required": ["isSuccessful", "databaseSlug", "message"]
+        "required": ["isSuccessful", "message"]
       },
       "ReadContext": {
         "type": "object",
         "properties": {
-          "databaseSlug": {
-            "type": "string"
-          },
           "search": {
             "type": "string"
           },
@@ -504,27 +510,24 @@
               "type": "string"
             }
           }
-        },
-        "required": ["databaseSlug"]
+        }
       },
 
       "UpdateContext": {
         "type": "object",
         "properties": {
-          "databaseSlug": {
-            "type": "string"
-          },
           "id": {
             "type": "string",
             "description": "The id (indexed key) of the item to update. Update that functions as upsert. If the id didn't exist, it will be created."
           },
           "partialItem": {
-            "type": "object",
+            "$ref": "#/components/schemas/ModelItem",
             "description": "New (partial) value of the item. Will update all keys provided here. Please note that it cannot be set to 'undefined' as this doesn't transfer over JSON, but if you set it to 'null', the value will be removed from the database."
           }
         },
-        "required": ["databaseSlug", "id", "partialItem"]
+        "required": ["id", "partialItem"]
       },
+
       "UpdateResponse": {
         "type": "object",
         "properties": {
@@ -537,6 +540,21 @@
         },
         "required": ["isSuccessful", "message"]
       },
+      "ModelItem": {
+        "type": "object",
+        "properties": { "__id": { "type": "string" } },
+        "additionalProperties": {
+          "oneOf": [
+            { "type": "string" },
+            { "type": "object" },
+            { "type": "array" },
+            { "type": "boolean" },
+            { "type": "integer" },
+            { "type": "number" }
+          ]
+        }
+      },
+
       "RemoveContext": {
         "type": "object",
         "properties": {
@@ -546,12 +564,9 @@
             "items": {
               "type": "string"
             }
-          },
-          "databaseSlug": {
-            "type": "string"
           }
         },
-        "required": ["rowIds", "databaseSlug"]
+        "required": ["rowIds"]
       },
       "RemoveResponse": {
         "type": "object",

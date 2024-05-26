@@ -78,29 +78,47 @@
 
 ✅ Make openapi returned the pruned version: crud only
 
-Deploy everything so it works remotely.
+✅ Deploy everything so it works remotely.
 
-Adapt CRUD operations to refer to `$ref:ModelItem`
+✅ Adapt CRUD operations to refer to `$ref:ModelItem`
 
-Ensure `ModelItem` is replaced with the actual model item.
+✅ Ensure `ModelItem` is replaced with the actual model item.
+
+✅ Ensure databaseSlug isn't required in the body (it's a parameter).
 
 Try to use the openapi spec to do stuff in swagger.
 
+# Unauthorized APIs
+
+If `authToken` is left empty, do not put any authToken.
+
+## Own upstash
+
 Confirm it works with a secondary upstash as well.
+
+## Reserved db keys
+
+Ensure keys root and root-db and ones that already existed cannot be picked.
+
+# Agenda OpenAPI in an agent
+
+See if I can make a simple people db and use it in an agent to test it.
+
+Test if dereferencing things before returning the MODEL openapi.json could make it more stable.
+
+Think about different use-cases for LLM
+
+Figure out what would be needed to make this work on a per-user basis, and what would be the best way to make that scale, assuming users don't need each other but the scheme is the same.
 
 ## Data exploration
 
 On database-page, add a link to `explorer.actionschema.com/{openapi}` and confirm it works.
 
+In explorer, add button to fill your own URL.
+
 Add ability to prefil fields in explorer with query parameters and ensure that gets cached into localStorage, and do this with the `authToken`
 
 Ideally, from explorer I can get all rows with 1 click of a button.
-
-# Agenda OpenAPI in an agent
-
-See if I can make a simple calendar one and use it in an agent to test it.
-
-Figure out what would be needed to make this work on a per-user basis, and what would be the best way to make that scale, assuming users don't need each other but the scheme is the same.
 
 # After that works...
 

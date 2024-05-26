@@ -1,18 +1,10 @@
-import { Endpoint } from "@/client";
+import { Endpoint, ResponseType } from "@/client";
 import { getDatabaseDetails } from "@/getDatabaseDetails";
-import {
-  O,
-  getSubsetFromObject,
-  removeOptionalKeysFromObject,
-  removeOptionalKeysFromObjectStrings,
-} from "from-anywhere";
+import { O, removeOptionalKeysFromObjectStrings } from "from-anywhere";
 import { OpenapiSchemaObject } from "from-anywhere/types";
 import { JSONSchema7 } from "json-schema";
-import {
-  OperationObject,
-  ParameterObject,
-  SchemaObject,
-} from "openapi-typescript";
+import { SchemaObject } from "openapi-typescript";
+import { resolveSchemaRecursive } from "openapi-util/build/resolveSchemaRecursive";
 import openapi from "../../../public/openapi.json";
 import { OpenapiDocument } from "openapi-util";
 
@@ -105,10 +97,19 @@ export const renderCrudOpenapi: Endpoint<"renderCrudOpenapi"> = async (
     ),
   };
 
-  return {
+  const origin =
+    process.env.NODE_ENV === "development"
+      ? "http://localhost:3000"
+      : "https://data.actionschema.com";
+
+  const improved = {
     ...openapi,
     components: {
       ...openapi.components,
+      schemas: {
+        ...openapi.components.schemas,
+        ModelItem: databaseDetails.schema,
+      },
       securitySchemes: {
         bearerAuth: {
           type: "http",
@@ -120,7 +121,27 @@ export const renderCrudOpenapi: Endpoint<"renderCrudOpenapi"> = async (
     },
     paths: crudPaths,
     info: { title: `${databaseSlug} CRUD`, version: "1.0", description: "" },
-    servers: [{ url: `/${databaseSlug}` }],
+    servers: [{ url: `${origin}/${databaseSlug}` }],
     security: [{ bearerAuth: [] }],
   };
+
+  const dereferenced = (await resolveSchemaRecursive({
+    document: improved,
+    shouldDereference: true,
+  })) as typeof improved | undefined;
+
+  if (!dereferenced) {
+    return { isSuccessful: false, message: "Dereferencing didn't work out" };
+  }
+
+  const componentsWithoutSchemas = removeOptionalKeysFromObjectStrings(
+    dereferenced.components,
+    ["schemas"],
+  ) as OpenapiDocument["components"];
+
+  return {
+    ...dereferenced,
+    components: componentsWithoutSchemas,
+    // bit ugly but couldn't find another way
+  } as unknown as ResponseType<"renderCrudOpenapi">;
 };

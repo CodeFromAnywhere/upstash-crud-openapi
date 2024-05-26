@@ -155,8 +155,7 @@ export interface components {
             result?: string[];
         };
         CreateContext: {
-            databaseSlug: string;
-            items: Record<string, never>[];
+            items: components["schemas"]["ModelItem"][];
         };
         Sort: {
             /** @enum {string} */
@@ -174,9 +173,7 @@ export interface components {
             message: string;
             $schema?: string;
             items?: {
-                [key: string]: {
-                    [key: string]: unknown;
-                } | undefined;
+                [key: string]: components["schemas"]["ModelItem"] | undefined;
             };
             schema?: {
                 [key: string]: unknown;
@@ -185,7 +182,6 @@ export interface components {
             hasMore?: boolean;
         };
         ReadContext: {
-            databaseSlug: string;
             search?: string;
             rowIds?: string[];
             startFromIndex?: number;
@@ -196,20 +192,22 @@ export interface components {
             ignoreObjectParameterKeys?: string[];
         };
         UpdateContext: {
-            databaseSlug: string;
             /** @description The id (indexed key) of the item to update. Update that functions as upsert. If the id didn't exist, it will be created. */
             id: string;
             /** @description New (partial) value of the item. Will update all keys provided here. Please note that it cannot be set to 'undefined' as this doesn't transfer over JSON, but if you set it to 'null', the value will be removed from the database. */
-            partialItem: Record<string, never>;
+            partialItem: components["schemas"]["ModelItem"];
         };
         UpdateResponse: {
             isSuccessful: boolean;
             message: string;
         };
+        ModelItem: {
+            __id?: string;
+            [key: string]: (string | Record<string, never> | unknown[] | boolean | number) | undefined;
+        };
         RemoveContext: {
             /** @description Which IDs should be removed */
             rowIds: string[];
-            databaseSlug: string;
         };
         RemoveResponse: {
             isSuccessful: boolean;
@@ -522,7 +520,8 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["openapi.schema"] | {
-                        [key: string]: unknown;
+                        isSuccessful: boolean;
+                        message?: string;
                     };
                 };
             };
@@ -656,6 +655,7 @@ export type ReadResponse = components["schemas"]["ReadResponse"]
 export type ReadContext = components["schemas"]["ReadContext"]
 export type UpdateContext = components["schemas"]["UpdateContext"]
 export type UpdateResponse = components["schemas"]["UpdateResponse"]
+export type ModelItem = components["schemas"]["ModelItem"]
 export type RemoveContext = components["schemas"]["RemoveContext"]
 export type RemoveResponse = components["schemas"]["RemoveResponse"]
 export type CreateDatabaseResponse = components["schemas"]["CreateDatabaseResponse"]
