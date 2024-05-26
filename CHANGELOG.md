@@ -34,37 +34,79 @@
 
 ✅ Update all endpoints with the right map and auth
 
+# May 2024
+
 ## Create/update Database Form
 
 ✅ Render a form at `opencrud/app/page.tsx` to submit `createDatabase`.
 
 ✅ Refactor; install `react-openapi-form` in `opencrud`
 
-Add proper `description`s in `openapi.json#paths/createDatabase`
+✅ Add proper `description`s in `openapi.json#paths/createDatabase`
 
-Submit `createDatabase` and confirm it works, db gets created in upstash
+✅ Submit `createDatabase` and confirm it works, db gets created in upstash
 
-Confirm the root-db gets the details, and the child-db gets the db itself (check it in upstash).
+✅ Confirm the root-db gets the details, and the child-db gets the db itself (check it in upstash).
 
-After form-submission - keep a `localStorage` with the `databaseSlug, adminToken, authToken, schemaString` so from `data.actionschema.com` all your databases can be listed.
+✅ After form-submission - keep a `localStorage` with the `databaseSlug, adminToken, authToken, schemaString` so from `data.actionschema.com` all your databases can be listed.
 
-Make new function `updateDatabase` and simplify `createDatabase`
+# Overview
 
-Render form for `updateDatabase` `data.actionschema.com/[databaseSlug]` as well incase adminToken exists in localStorage. Prefil forms with localStorage-values.
+✅ List the databases (from `localStorage`).
 
-List the databases + auth with links to the openapi, swagger, and edit (from `localStorage`).
+✅ Link to `/{slug}`
+
+✅ On dbpage, show links
+
+# Editing
+
+✅ Render form for `updateDatabase` `data.actionschema.com/[databaseSlug]`
+
+✅ Prefil form with localStorage-values.
+
+✅ Make new function `updateDatabase` that simplifies `createDatabase`
+
+✅ Only render form incase adminToken exists in localStorage.
+
+✅ Hide admintoken field but still submit. (ui:)
+
+✅ Test updating and confirm it works.
 
 ## openapi.json generation
 
-Improve `renderCrudOpenapi` openapi.json to be more specific and include auth if needed.
+✅ Improve `renderCrudOpenapi` openapi.json to respond nicely
 
-Deploy.
+✅ Make openapi returned the pruned version: crud only
 
-Confirm I can create a database on my own upstash and use the openapi spec to do stuff in swagger.
+Deploy everything so it works remotely.
+
+Adapt CRUD operations to refer to `$ref:ModelItem`
+
+Ensure `ModelItem` is replaced with the actual model item.
+
+Try to use the openapi spec to do stuff in swagger.
 
 Confirm it works with a secondary upstash as well.
 
+## Data exploration
+
+On database-page, add a link to `explorer.actionschema.com/{openapi}` and confirm it works.
+
+Add ability to prefil fields in explorer with query parameters and ensure that gets cached into localStorage, and do this with the `authToken`
+
+Ideally, from explorer I can get all rows with 1 click of a button.
+
+# Agenda OpenAPI in an agent
+
+See if I can make a simple calendar one and use it in an agent to test it.
+
+Figure out what would be needed to make this work on a per-user basis, and what would be the best way to make that scale, assuming users don't need each other but the scheme is the same.
+
 # After that works...
+
+Ensure EnhancementProxy, CombinationProxy, and AgentOpenapi datstructures are available in `public`.
+
+Confirm we can use data.actionschema.com with `$ref` to an external url like the above.
 
 Use data.actionschema.com to create CRUD openapis to keep a global state for:
 

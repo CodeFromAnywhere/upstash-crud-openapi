@@ -126,8 +126,9 @@ export const createDatabase: Endpoint<"createDatabase"> = async (context) => {
   await root.set(databaseSlug, databaseDetails);
 
   return {
-    isSuccessful: false,
+    isSuccessful: true,
     message: "Database created",
     authToken: databaseDetails.authToken,
+    adminAuthToken: databaseDetails.adminAuthToken,
   };
 };

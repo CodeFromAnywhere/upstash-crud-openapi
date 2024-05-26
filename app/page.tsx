@@ -1,34 +1,33 @@
 "use client";
+
 import { Suspense } from "react";
 import { makeArray } from "from-anywhere";
 import { OpenapiForm } from "react-openapi-form";
 import { makeComplexUrlStore } from "./makeComplexUrlStore";
-import openapi from "../public/openapi.json";
+import { useStore } from "./store";
 import "react-openapi-form/css.css";
+import { StoreProvider } from "./store";
+import { DatabaseOverview } from "./DatabaseOverview";
+import { CreateDatabaseForm } from "./CreateDatabaseForm";
 
 const HomePage = () => {
-  const useStore = makeComplexUrlStore<{
+  const useUrlStore = makeComplexUrlStore<{
     url: string | string[] | undefined;
   }>();
-  const [url, setUrl] = useStore("url");
+  const [url, setUrl] = useUrlStore("url");
   const urls = makeArray(url);
 
   return (
-    <div className="h-full p-4 lg:px-32 lg:py-20">
-      <h1 className="text-3xl">OpenAPI CRUD Generator</h1>
-      <p>Create a new CRUD OpenAPI</p>
+    <StoreProvider>
+      <div className="h-full p-4 lg:px-32 lg:py-20">
+        <h1 className="text-3xl">OpenAPI CRUD Generator</h1>
+        <p>Create a new CRUD OpenAPI</p>
 
-      <OpenapiForm
-        openapi={openapi as any}
-        path="/root/createDatabase"
-        method="post"
-        uiSchema={{
-          schemaString: {
-            "ui:widget": "textarea",
-          },
-        }}
-      />
-    </div>
+        <DatabaseOverview />
+
+        <CreateDatabaseForm />
+      </div>
+    </StoreProvider>
   );
 };
 

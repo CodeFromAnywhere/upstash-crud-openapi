@@ -1,13 +1,18 @@
-import { Redis } from "@upstash/redis";
-import { O, removeOptionalKeysFromObjectStrings } from "from-anywhere";
+import { Endpoint } from "@/client";
+import { getDatabaseDetails } from "@/getDatabaseDetails";
+import {
+  O,
+  getSubsetFromObject,
+  removeOptionalKeysFromObjectStrings,
+} from "from-anywhere";
 import { OpenapiSchemaObject } from "from-anywhere/types";
 import { JSONSchema7 } from "json-schema";
-import { SchemaObject } from "openapi-typescript";
-import { Endpoint } from "@/client";
-import { DatabaseDetails } from "@/types";
-import { getUpstashRedisDatabase } from "@/upstashRedis";
+import {
+  OperationObject,
+  ParameterObject,
+  SchemaObject,
+} from "openapi-typescript";
 import openapi from "../../../public/openapi.json";
-import { getDatabaseDetails } from "@/getDatabaseDetails";
 
 export const withoutProperties = (
   schema: OpenapiSchemaObject,
@@ -72,10 +77,46 @@ export const renderCrudOpenapi: Endpoint<"renderCrudOpenapi"> = async (
   // NB: no auth needed for this endpoint.
 
   if (!databaseDetails) {
-    return { isSuccessful: false, message: "Couldn't find database details" };
+    return {
+      isSuccessful: false,
+      message: "Couldn't find database details for db " + databaseSlug,
+    };
   }
+
+  const withoutParameter = (operation: any, parameterName: string) => {
+    return {
+      ...operation,
+      parameters: Array.isArray(operation.parameters)
+        ? operation.parameters.filter((x: any) => x.name !== parameterName)
+        : [],
+    };
+  };
+
+  const crudPaths = {
+    "/create": withoutParameter(
+      openapi.paths["/{databaseSlug}/create"],
+      "databaseSlug",
+    ),
+    "/read": withoutParameter(
+      openapi.paths["/{databaseSlug}/read"],
+      "databaseSlug",
+    ),
+    "/update": withoutParameter(
+      openapi.paths["/{databaseSlug}/update"],
+      "databaseSlug",
+    ),
+    "/remove": withoutParameter(
+      openapi.paths["/{databaseSlug}/remove"],
+      "databaseSlug",
+    ),
+  };
 
   // TODO: respond with a subset of belows openapi specific to 'databaseDetails.schema'
   console.log({ schema: databaseDetails.schema });
-  return openapi;
+  return {
+    ...openapi,
+    paths: crudPaths,
+    info: { title: `${databaseSlug} CRUD`, version: "1.0", description: "" },
+    servers: [{ url: `/${databaseSlug}` }],
+  };
 };

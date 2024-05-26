@@ -7,6 +7,7 @@ import { remove } from "./remove";
 import { renderCrudOpenapi } from "./renderCrudOpenapi";
 import openapi from "../../../public/openapi.json";
 import { createDatabase } from "./createDatabase";
+import { updateDatabase } from "./updateDatabase";
 
 /** function creator to DRY */
 const getHandler = (method: string) => (request: Request) =>
@@ -19,6 +20,7 @@ const getHandler = (method: string) => (request: Request) =>
       remove,
       renderCrudOpenapi,
       createDatabase,
+      updateDatabase,
     },
   });
 

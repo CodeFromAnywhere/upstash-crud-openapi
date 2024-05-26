@@ -19,13 +19,31 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/{databaseSlug}/updateDatabase": {
+        parameters: {
+            query?: never;
+            header: {
+                X_ADMIN_AUTH_TOKEN: string;
+            };
+            path: {
+                databaseSlug: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Update Database */
+        post: operations["updateDatabase"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/{databaseSlug}/openapi.json": {
         parameters: {
             query?: never;
-            header?: {
-                /** @description Bearer authorization */
-                Authorization?: string;
-            };
+            header?: never;
             path: {
                 databaseSlug: string;
             };
@@ -198,6 +216,12 @@ export interface components {
             message: string;
             /** @description The number of items deleted */
             deleteCount?: number;
+        };
+        CreateDatabaseResponse: {
+            isSuccessful: boolean;
+            message?: string;
+            authToken?: string;
+            adminAuthToken?: string;
         };
         StandardResponse: {
             isSuccessful: boolean;
@@ -415,8 +439,11 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": {
+                    /** @description JSON of the schema you want the database to refer to. Should be a Object JSON Schema. */
                     schemaString: string;
+                    /** @description Unique slug for the database to be used as prefix to the endpoints. */
                     databaseSlug: string;
+                    /** @description Token required to authrorize using the CRUD endpoints. Will be generated if not given. */
                     authToken?: string;
                     /**
                      * @description Can be set for a new database. Cannot be changed
@@ -427,7 +454,40 @@ export interface operations {
             };
         };
         responses: {
-            /** @description Standard response */
+            /** @description Create database response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CreateDatabaseResponse"];
+                };
+            };
+        };
+    };
+    updateDatabase: {
+        parameters: {
+            query?: never;
+            header: {
+                X_ADMIN_AUTH_TOKEN: string;
+            };
+            path: {
+                databaseSlug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @description JSON of the schema you want the database to refer to. Should be a Object JSON Schema. */
+                    schemaString: string;
+                    /** @description Token required to authrorize using the CRUD endpoints. */
+                    authToken: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Update database response */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -441,10 +501,7 @@ export interface operations {
     renderCrudOpenapi: {
         parameters: {
             query?: never;
-            header?: {
-                /** @description Bearer authorization */
-                Authorization?: string;
-            };
+            header?: never;
             path: {
                 databaseSlug: string;
             };
@@ -595,12 +652,17 @@ export type UpdateContext = components["schemas"]["UpdateContext"]
 export type UpdateResponse = components["schemas"]["UpdateResponse"]
 export type RemoveContext = components["schemas"]["RemoveContext"]
 export type RemoveResponse = components["schemas"]["RemoveResponse"]
+export type CreateDatabaseResponse = components["schemas"]["CreateDatabaseResponse"]
 export type StandardResponse = components["schemas"]["StandardResponse"]
   
 export const operationUrlObject = {
   "createDatabase": {
     "method": "post",
     "path": "/root/createDatabase"
+  },
+  "updateDatabase": {
+    "method": "post",
+    "path": "/{databaseSlug}/updateDatabase"
   },
   "renderCrudOpenapi": {
     "method": "get",

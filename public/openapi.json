@@ -7,7 +7,7 @@
     "version": "1.0",
     "description": ""
   },
-  "servers": [{ "url": "https://data.actionschema.com" }],
+  "servers": [{ "url": "" }],
   "paths": {
     "/root/createDatabase": {
       "parameters": [
@@ -15,19 +15,28 @@
           "in": "header",
           "required": false,
           "name": "X_UPSTASH_EMAIL",
-          "schema": { "type": "string" }
+          "schema": {
+            "type": "string",
+            "description": "If you want to use your own upstash account, fill in the details here."
+          }
         },
         {
           "in": "header",
           "required": false,
           "name": "X_UPSTASH_API_KEY",
-          "schema": { "type": "string" }
+          "schema": {
+            "type": "string",
+            "description": "If you want to use your own upstash account, fill in the details here."
+          }
         },
         {
           "in": "header",
           "required": false,
           "name": "X_ADMIN_AUTH_TOKEN",
-          "schema": { "type": "string" }
+          "schema": {
+            "type": "string",
+            "description": "Provide your admin authtoken if you have it. If you don't it will be generated for you."
+          }
         }
       ],
 
@@ -42,9 +51,18 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "schemaString": { "type": "string" },
-                  "databaseSlug": { "type": "string" },
-                  "authToken": { "type": "string" },
+                  "schemaString": {
+                    "type": "string",
+                    "description": "JSON of the schema you want the database to refer to. Should be a Object JSON Schema."
+                  },
+                  "databaseSlug": {
+                    "type": "string",
+                    "description": "Unique slug for the database to be used as prefix to the endpoints."
+                  },
+                  "authToken": {
+                    "type": "string",
+                    "description": "Token required to authrorize using the CRUD endpoints. Will be generated if not given."
+                  },
                   "region": {
                     "description": "Can be set for a new database. Cannot be changed",
                     "type": "string",
@@ -64,7 +82,47 @@
         },
         "responses": {
           "200": {
-            "description": "Standard response",
+            "description": "Create database response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateDatabaseResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/{databaseSlug}/updateDatabase": {
+      "post": {
+        "summary": "Update Database",
+        "operationId": "updateDatabase",
+
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "schemaString": {
+                    "type": "string",
+                    "description": "JSON of the schema you want the database to refer to. Should be a Object JSON Schema."
+                  },
+                  "authToken": {
+                    "type": "string",
+                    "description": "Token required to authrorize using the CRUD endpoints."
+                  }
+                },
+                "required": ["schemaString", "authToken"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Update database response",
             "content": {
               "application/json": {
                 "schema": {
@@ -74,8 +132,26 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "in": "header",
+          "required": true,
+          "name": "X_ADMIN_AUTH_TOKEN",
+          "schema": {
+            "type": "string",
+            "description": "Provide your admin authtoken for this database."
+          }
+        },
+        {
+          "in": "path",
+          "name": "databaseSlug",
+          "schema": { "type": "string" },
+          "required": true
+        }
+      ]
     },
+
     "/{databaseSlug}/openapi.json": {
       "get": {
         "summary": "Get openapi for this database table alone",
@@ -100,13 +176,6 @@
         }
       },
       "parameters": [
-        {
-          "in": "header",
-          "name": "Authorization",
-          "schema": { "type": "string" },
-          "required": false,
-          "description": "Bearer authorization"
-        },
         {
           "in": "path",
           "name": "databaseSlug",
@@ -497,6 +566,20 @@
         "required": ["isSuccessful", "message"]
       },
 
+      "CreateDatabaseResponse": {
+        "type": "object",
+        "required": ["isSuccessful"],
+        "properties": {
+          "isSuccessful": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "authToken": { "type": "string" },
+          "adminAuthToken": { "type": "string" }
+        }
+      },
       "StandardResponse": {
         "type": "object",
         "required": ["isSuccessful"],
