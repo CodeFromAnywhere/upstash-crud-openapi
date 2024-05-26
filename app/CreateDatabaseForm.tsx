@@ -34,7 +34,14 @@ export const CreateDatabaseForm = () => {
         }
         const newDatabases = databases
           .filter((x) => x.databaseSlug !== bodyData?.databaseSlug)
-          .concat([{ adminToken, authToken, databaseSlug }]);
+          .concat([
+            {
+              adminToken,
+              authToken,
+              databaseSlug,
+              schemaString: bodyData?.schemaString || "",
+            },
+          ]);
 
         setDatabases(newDatabases);
 
