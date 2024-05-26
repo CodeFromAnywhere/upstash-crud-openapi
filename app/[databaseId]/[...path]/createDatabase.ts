@@ -8,6 +8,7 @@ import {
 } from "@/upstashRedis";
 import { generateId, tryParseJson } from "from-anywhere";
 import { JSONSchema7 } from "json-schema";
+import { rootDatabaseName } from "@/state";
 
 export const createDatabase: Endpoint<"createDatabase"> = async (context) => {
   const {
@@ -64,22 +65,23 @@ export const createDatabase: Endpoint<"createDatabase"> = async (context) => {
     databaseSlug,
   );
 
+  const schema = tryParseJson<JSONSchema7>(schemaString);
+
+  if (!schema) {
+    return { isSuccessful: false, message: "Invalid Schema" };
+  }
+
   if (
-    previousDatabaseDetails &&
-    !!previousDatabaseDetails.adminAuthToken &&
-    previousDatabaseDetails.adminAuthToken !== X_ADMIN_AUTH_TOKEN
+    ["root", rootDatabaseName].includes(databaseSlug) ||
+    (previousDatabaseDetails &&
+      !!previousDatabaseDetails.adminAuthToken &&
+      previousDatabaseDetails.adminAuthToken !== X_ADMIN_AUTH_TOKEN)
   ) {
     return {
       isSuccessful: false,
       message:
         "A database with this name already exists, and you're not authorized to edit it.",
     };
-  }
-
-  const schema = tryParseJson<JSONSchema7>(schemaString);
-
-  if (!schema) {
-    return { isSuccessful: false, message: "Invalid Schema" };
   }
 
   let databaseDetails: DatabaseDetails | null = null;
@@ -95,7 +97,7 @@ export const createDatabase: Endpoint<"createDatabase"> = async (context) => {
     });
 
     if (!created.result) {
-      return { isSuccessful: false, message: "Couldn't create database." };
+      return { isSuccessful: false, message: created.message };
     }
 
     const adminAuthToken = X_ADMIN_AUTH_TOKEN || generateId();

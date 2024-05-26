@@ -92,12 +92,19 @@
 
 Test the entire app and also ensure the below requirements get built in.
 
-- If `authToken` is left empty, do not put any authToken.
-- Confirm it works with a secondary upstash as well.
+- ✅ Fix options request so it works from swagger-ui 🎉
+- ❌ If `authToken` is left empty, do not put any authToken.
+- ✅ Fix problem with incorrect naming with a validation both frontend and backend.
+- ✅ Confirm it works with a secondary upstash as well.
+- ✅ Redirect to new db after it gets created. Also better error handing
 - Ensure keys root and root-db and ones that already existed cannot be picked.
 - Ensure at the `/update` endpoint required is removed from the type interface.
 
-See if I can make a simple people db and use it in an agent to test it. Test if dereferencing things before returning the MODEL openapi.json did make it more stable/easier.
+✅ See if I can make a simple people db and use it in an agent to test it. Test if dereferencing things before returning the MODEL openapi.json did make it more stable/easier.
+
+https://chatgpt.com/share/3a11c4f6-0637-4e31-83e9-e74d7e6733bd
+
+Works incredibly well!
 
 # Agenda OpenAPI in an agent
 

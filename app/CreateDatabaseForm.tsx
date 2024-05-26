@@ -4,10 +4,11 @@ import { OpenapiForm } from "react-openapi-form";
 import openapi from "../public/openapi.json";
 import { useStore } from "./store";
 import { CreateDatabaseResponse, StandardResponse } from "./openapi-types";
+import { useRouter } from "next/navigation";
 
 export const CreateDatabaseForm = () => {
   const [databases, setDatabases] = useStore("databases");
-
+  const router = useRouter();
   return (
     <div>
       <b>New Database</b>
@@ -57,7 +58,7 @@ export const CreateDatabaseForm = () => {
 
             setDatabases(newDatabases);
 
-            alert(requestResponse.message);
+            router.push(`/${databaseSlug}`);
           }}
         />
       </div>

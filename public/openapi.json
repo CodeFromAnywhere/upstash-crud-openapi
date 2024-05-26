@@ -54,6 +54,7 @@
                   "databaseSlug": {
                     "title": "Database ID",
                     "type": "string",
+                    "pattern": "^[a-z0-9]+$",
                     "description": "Unique slug for the database to be used as prefix to the endpoints."
                   },
 

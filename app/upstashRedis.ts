@@ -242,7 +242,10 @@ export const createUpstashRedisDatabase = async (context: {
 
   if (!result?.database_id) {
     console.log({ result });
-    return { isSuccessful: false, message: "No database created" };
+    return {
+      isSuccessful: false,
+      message: typeof result === "string" ? result : "No database created",
+    };
   }
 
   const dbInfo = await getUpstashRedisDatabase({
