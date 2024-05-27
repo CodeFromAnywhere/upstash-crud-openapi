@@ -148,6 +148,8 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** @description Slug compatible with URLs */
+        UrlSlug: string;
         CreateResponse: {
             isSuccessful: boolean;
             message: string;
@@ -441,7 +443,7 @@ export interface operations {
                      * Database ID
                      * @description Unique slug for the database to be used as prefix to the endpoints.
                      */
-                    databaseSlug: string;
+                    databaseSlug: components["schemas"]["UrlSlug"];
                     /**
                      * Schema
                      * @description JSON of the schema you want the database to refer to. Should be a Object JSON Schema.
@@ -647,6 +649,7 @@ export interface operations {
 }
 
 
+export type UrlSlug = components["schemas"]["UrlSlug"]
 export type CreateResponse = components["schemas"]["CreateResponse"]
 export type CreateContext = components["schemas"]["CreateContext"]
 export type Sort = components["schemas"]["Sort"]

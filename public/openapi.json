@@ -53,9 +53,8 @@
                 "properties": {
                   "databaseSlug": {
                     "title": "Database ID",
-                    "type": "string",
-                    "pattern": "^[a-z0-9]+$",
-                    "description": "Unique slug for the database to be used as prefix to the endpoints."
+                    "description": "Unique slug for the database to be used as prefix to the endpoints.",
+                    "$ref": "#/components/schemas/UrlSlug"
                   },
 
                   "schemaString": {
@@ -362,6 +361,13 @@
   },
   "components": {
     "schemas": {
+      "UrlSlug": {
+        "type": "string",
+        "pattern": "^[a-zA-Z0-9._~-]+$",
+        "minLength": 1,
+        "maxLength": 64,
+        "description": "Slug compatible with URLs"
+      },
       "CreateResponse": {
         "type": "object",
         "properties": {

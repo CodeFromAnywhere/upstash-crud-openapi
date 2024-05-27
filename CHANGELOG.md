@@ -97,36 +97,39 @@ Test the entire app and also ensure the below requirements get built in.
 - ✅ Fix problem with incorrect naming with a validation both frontend and backend.
 - ✅ Confirm it works with a secondary upstash as well.
 - ✅ Redirect to new db after it gets created. Also better error handing
-- Ensure keys root and root-db and ones that already existed cannot be picked.
-- Ensure at the `/update` endpoint required is removed from the type interface.
-
-✅ See if I can make a simple people db and use it in an agent to test it. Test if dereferencing things before returning the MODEL openapi.json did make it more stable/easier.
+- ✅ Ensure keys root and root-db and ones that already existed cannot be picked.
+- ✅ See if I can make a simple people db and use it in an agent to test it. Test if dereferencing things before returning the MODEL openapi.json did make it more stable/easier.
+- Ensure at the `/update` endpoint "required" is removed from the type interface.
 
 https://chatgpt.com/share/3a11c4f6-0637-4e31-83e9-e74d7e6733bd
 
-Works incredibly well!
+🎉 Works incredibly well!
 
-# Agenda OpenAPI in an agent
+# User Separation
 
-Think about different use-cases for LLM
+Figure out how to do Key Ranges or other way to efficiently index/separate on keys
 
-Figure out what would be needed to make this work on a per-user basis, and what would be the best way to make that scale, assuming users don't need each other but the scheme is the same.
+Figure out how to do oAuth properly so users can login when using the GPT
 
-## Data exploration
+Make a POC in the oAI GPT builder where the user logs in with oAuth, then it keeps track of a calendar-db for each user.
 
-On database-page, add a link to `explorer.actionschema.com/{openapi}` and confirm it works.
+# FS CLI
+
+Let's make a simple cli `opencrud` that pushes my db models to the cloud with the right settings
+
+## Explorer upgrade
 
 In explorer, add button to fill your own URL.
+
+On database-page, add a link to `explorer.actionschema.com/{openapi}` and confirm it works.
 
 Add ability to prefil fields in explorer with query parameters and ensure that gets cached into localStorage, and do this with the `authToken`
 
 Ideally, from explorer I can get all rows with 1 click of a button.
 
-# Source of truth file system
-
-Let's make a simple cli `opencrud` that pushes my db models to the cloud with the right settings
-
 # After that works...
+
+AgentOpenapi: See itself
 
 Ensure EnhancementProxy, CombinationProxy, and AgentOpenapi datstructures are available in `public`.
 
