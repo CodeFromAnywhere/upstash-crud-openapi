@@ -117,7 +117,13 @@ Make a POC in the oAI GPT builder where the user logs in with oAuth, then it kee
 
 Let's make a simple cli `opencrud` that pushes my db models to the cloud with the right settings
 
-## Explorer upgrade
+# Relative references
+
+Schemas and openapis should have ability to cross reference local relative files. This should be able to be resolved in all tools, both locally and in production, buth on backend and frontend.
+
+This will help to remove code duplication in schemas that is becoming an increasingly big problem now.
+
+# Explorer upgrade
 
 In explorer, add button to fill your own URL.
 

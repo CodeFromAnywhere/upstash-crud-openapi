@@ -61,8 +61,10 @@ export const createDatabase: Endpoint<"createDatabase"> = async (context) => {
     token: rootDatabaseDetails.rest_token,
   });
 
+  const realDatabaseSlug = databaseSlug.toLowerCase();
+
   let previousDatabaseDetails: DatabaseDetails | null = await root.get(
-    databaseSlug,
+    realDatabaseSlug,
   );
 
   const schema = tryParseJson<JSONSchema7>(schemaString);
@@ -72,7 +74,7 @@ export const createDatabase: Endpoint<"createDatabase"> = async (context) => {
   }
 
   if (
-    ["root", rootDatabaseName].includes(databaseSlug) ||
+    ["root", rootDatabaseName].includes(realDatabaseSlug) ||
     (previousDatabaseDetails &&
       !!previousDatabaseDetails.adminAuthToken &&
       previousDatabaseDetails.adminAuthToken !== X_ADMIN_AUTH_TOKEN)
@@ -92,7 +94,7 @@ export const createDatabase: Endpoint<"createDatabase"> = async (context) => {
     const created = await createUpstashRedisDatabase({
       upstashApiKey,
       upstashEmail,
-      name: databaseSlug,
+      name: realDatabaseSlug,
       region,
     });
 
@@ -125,7 +127,7 @@ export const createDatabase: Endpoint<"createDatabase"> = async (context) => {
   }
 
   // re-set the database details
-  await root.set(databaseSlug, databaseDetails);
+  await root.set(realDatabaseSlug, databaseDetails);
 
   return {
     isSuccessful: true,

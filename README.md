@@ -1,4 +1,4 @@
-# OpenCRUD
+# CRUD OpenAPI
 
 Serverless Redis CRUD Server that generates OpenAPI.
 
