@@ -1,5 +1,9 @@
 import { JSONSchema7 } from "json-schema";
 
+export type OpenaiEmbeddingModelEnum =
+  | "text-embedding-ada-002"
+  | "text-embedding-3-small"
+  | "text-embedding-3-large";
 /**
  * Details that are found in the KV store after de-serialisation
  *
@@ -14,4 +18,14 @@ export type DatabaseDetails = {
   authToken: string;
   adminAuthToken: string;
   schema: JSONSchema7;
+
+  openaiApiKey?: string;
+  // TODO: put the right stuff in there after creating the indexes, so we can easily perform actions with it.
+  vectorIndexColumnDetails?: {
+    propertyKey: string;
+    vectorRestToken: string;
+    vectorRestUrl: string;
+    dimensions: number;
+    model: OpenaiEmbeddingModelEnum;
+  }[];
 };

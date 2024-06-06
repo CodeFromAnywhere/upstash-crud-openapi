@@ -2,6 +2,7 @@ import { Redis } from "@upstash/redis";
 import { getUpstashRedisDatabase } from "@/upstashRedis";
 import { Endpoint, EndpointContext } from "@/client";
 import { getDatabaseDetails } from "@/getDatabaseDetails";
+import { embeddingsClient } from "./embeddings";
 
 export type ActionSchemaDeleteResponse = {
   isSuccessful: boolean;
@@ -33,6 +34,15 @@ export const remove: Endpoint<"remove"> = async (context) => {
   const redis = new Redis({
     url: `https://${databaseDetails.endpoint}`,
     token: databaseDetails.rest_token,
+  });
+
+  databaseDetails.vectorIndexColumnDetails?.map((item) => {
+    const { vectorRestUrl, vectorRestToken } = item;
+    return embeddingsClient.deleteVector({
+      vectorRestUrl,
+      vectorRestToken,
+      ids: rowIds,
+    });
   });
 
   const deleteCount = await redis.del(...rowIds);

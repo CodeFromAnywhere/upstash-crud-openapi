@@ -105,6 +105,14 @@ https://chatgpt.com/share/3a11c4f6-0637-4e31-83e9-e74d7e6733bd
 
 🎉 Works incredibly well!
 
+# Vector Embedding Search Integration into any CRUD
+
+- ✅ Created a simple integration with upstash vector store and openai embedding models
+- ✅ In `createDatabase`, specify needed columns, and ensure to call `createIndex` for needed columns
+- ✅ In `create` and `update`, ensure to call `submitVectorFromString` for needed columns. NB: If we'd had actionschema, this wouldn't have needed to be changed except for them activating the actionschema maybe
+- ✅ In `remove`, ensure to call `deleteVector` for needed columns. NB: If we had actionschema.x-unmountOperationId, an unmount property could be set.
+- ✅ In `read` add an array of `search(input,topK)` and `minimumSimilarity?` parameters and retreive only the ones from `search`, then still do other filters.
+
 # User Separation
 
 Figure out how to do Key Ranges or other way to efficiently index/separate on keys

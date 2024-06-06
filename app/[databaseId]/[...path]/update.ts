@@ -2,6 +2,7 @@ import { O, getSubsetFromObject, objectMapSync } from "from-anywhere";
 import { upstashRedisSetItems } from "@/upstashRedis";
 import { Endpoint } from "@/client";
 import { getDatabaseDetails } from "@/getDatabaseDetails";
+import { upsertIndexVectors } from "./embeddings";
 
 /**
 Update an item in a specified row in a table.
@@ -59,6 +60,9 @@ export const update: Endpoint<"update"> = async (context) => {
     redisRestUrl: databaseDetails.endpoint,
     items: { [id]: castedPartialItem },
   });
+
+  // also update vectors if they're there
+  await upsertIndexVectors(databaseDetails, id, castedPartialItem);
 
   return { isSuccessful: true, message: "Updated" };
 };

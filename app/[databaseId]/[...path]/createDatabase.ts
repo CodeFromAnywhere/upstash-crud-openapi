@@ -6,9 +6,15 @@ import {
   createUpstashRedisDatabase,
   getUpstashRedisDatabase,
 } from "@/upstashRedis";
-import { generateId, tryParseJson } from "from-anywhere";
+import {
+  destructureOptionalObject,
+  generateId,
+  notEmpty,
+  tryParseJson,
+} from "from-anywhere";
 import { JSONSchema7 } from "json-schema";
 import { rootDatabaseName } from "@/state";
+import { embeddingsClient } from "./embeddings";
 
 export const createDatabase: Endpoint<"createDatabase"> = async (context) => {
   const {
@@ -19,6 +25,8 @@ export const createDatabase: Endpoint<"createDatabase"> = async (context) => {
     X_UPSTASH_API_KEY,
     X_UPSTASH_EMAIL,
     X_ADMIN_AUTH_TOKEN,
+    X_OPENAPI_API_KEY,
+    vectorIndexColumns,
   } = context;
   // comes from headers or .env
   const rootUpstashApiKey = process.env["X_UPSTASH_API_KEY"];
@@ -89,6 +97,37 @@ export const createDatabase: Endpoint<"createDatabase"> = async (context) => {
   let databaseDetails: DatabaseDetails | null = null;
 
   if (!previousDatabaseDetails) {
+    // creates indexes
+    const vectorIndexColumnDetails =
+      vectorIndexColumns && X_UPSTASH_API_KEY && X_UPSTASH_EMAIL
+        ? (
+            await Promise.all(
+              vectorIndexColumns.map(async (item) => {
+                const index = await embeddingsClient.createIndex({
+                  upstashApiKey: X_UPSTASH_API_KEY,
+                  upstashEmail: X_UPSTASH_EMAIL,
+                  dimension_count: item.dimension_count,
+                  region: item.region,
+                  similarity_function: item.similarity_function,
+                  vectorIndexName: `${databaseSlug}-${item.propertyKey}`,
+                });
+                if (!index) {
+                  return;
+                }
+                const { propertyKey } = item;
+                const { endpoint, token, name } = index;
+                return {
+                  propertyKey,
+                  vectorRestToken: token,
+                  vectorRestUrl: endpoint,
+                  dimensions: item.dimension_count,
+                  model: item.model,
+                };
+              }),
+            )
+          ).filter(notEmpty)
+        : undefined;
+
     const realAuthToken = authToken || generateId();
     //create if we couldn't find it before
     const created = await createUpstashRedisDatabase({
@@ -105,6 +144,8 @@ export const createDatabase: Endpoint<"createDatabase"> = async (context) => {
     const adminAuthToken = X_ADMIN_AUTH_TOKEN || generateId();
 
     databaseDetails = {
+      openaiApiKey: X_OPENAPI_API_KEY,
+      vectorIndexColumnDetails,
       adminAuthToken,
       upstashApiKey,
       upstashEmail,

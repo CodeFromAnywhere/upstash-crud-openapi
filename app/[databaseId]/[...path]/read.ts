@@ -5,10 +5,11 @@ import {
   objectMapSync,
   removeOptionalKeysFromObjectStrings,
 } from "from-anywhere";
-import { getUpstashRedisDatabase, upstashRedisGetRange } from "@/upstashRedis";
+import { upstashRedisGetRange } from "@/upstashRedis";
 import { Endpoint } from "@/client";
 import { Filter, Sort } from "@/openapi-types";
 import { getDatabaseDetails } from "@/getDatabaseDetails";
+import { embeddingsClient } from "./embeddings";
 
 const sortData = (sort: Sort[] | undefined, data: { [key: string]: O }) => {
   if (!sort?.length) {
@@ -178,6 +179,7 @@ export const read: Endpoint<"read"> = async (context) => {
     ignoreObjectParameterKeys,
     databaseSlug,
     Authorization,
+    vectorSearch,
   } = context;
 
   const { databaseDetails } = await getDatabaseDetails(databaseSlug);
@@ -204,8 +206,52 @@ export const read: Endpoint<"read"> = async (context) => {
     return { isSuccessful: false, message: "No result" };
   }
 
+  let vectorSearchIds: string[] | undefined = undefined;
+  if (vectorSearch) {
+    const { input, minimumSimilarity, propertyKey, topK } = vectorSearch;
+    const { openaiApiKey, vectorIndexColumnDetails } = databaseDetails;
+    const vectorIndexDetails = vectorIndexColumnDetails?.find(
+      (x) => x.propertyKey === propertyKey,
+    );
+
+    if (vectorIndexDetails && openaiApiKey) {
+      const { vectorRestToken, vectorRestUrl, model } = vectorIndexDetails;
+
+      const results = await embeddingsClient.search({
+        input,
+        topK,
+        vectorRestToken,
+        vectorRestUrl,
+        openaiApiKey,
+        model,
+      });
+
+      const similarResults = results.filter((x) => {
+        if (!minimumSimilarity) {
+          return true;
+        }
+        return x.score >= minimumSimilarity;
+      });
+
+      const normalized = similarResults.map((x) => ({
+        propertyKey,
+        score: x.score,
+        id: x.id as string,
+      }));
+
+      vectorSearchIds = normalized.map((x) => x.id);
+    }
+  }
+
+  // TODO: Make this more efficient
+  const vectorResult = vectorSearchIds
+    ? getSubsetFromObject(result, vectorSearchIds)
+    : result;
+
   // TODO: make this more efficient
-  const specificResult = rowIds ? getSubsetFromObject(result, rowIds) : result;
+  const specificResult = rowIds
+    ? getSubsetFromObject(vectorResult, rowIds)
+    : vectorResult;
 
   const searchedData = searchData(search, specificResult);
 

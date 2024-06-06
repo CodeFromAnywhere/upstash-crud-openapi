@@ -5,6 +5,7 @@ export interface paths {
             header?: {
                 X_UPSTASH_EMAIL?: string;
                 X_UPSTASH_API_KEY?: string;
+                X_OPENAPI_API_KEY?: string;
                 X_ADMIN_AUTH_TOKEN?: string;
             };
             path?: never;
@@ -185,6 +186,12 @@ export interface components {
         };
         ReadContext: {
             search?: string;
+            vectorSearch?: {
+                propertyKey: string;
+                input: string;
+                topK: number;
+                minimumSimilarity: number;
+            };
             rowIds?: string[];
             startFromIndex?: number;
             maxRows?: number;
@@ -223,6 +230,17 @@ export interface components {
             authToken?: string;
             adminAuthToken?: string;
         };
+        /** @description A list of vector indexes to be created for several columns in your schema */
+        VectorIndexColumns: {
+            propertyKey: string;
+            /** @enum {string} */
+            model: "text-embedding-ada-002" | "text-embedding-3-small" | "text-embedding-3-large";
+            /** @enum {string} */
+            region: "us-east-1" | "eu-west-1" | "us-central1";
+            dimension_count: number;
+            /** @enum {string} */
+            similarity_function: "COSINE" | "EUCLIDIAN" | "DOT_PRODUCT";
+        }[];
         StandardResponse: {
             isSuccessful: boolean;
             message?: string;
@@ -431,6 +449,7 @@ export interface operations {
             header?: {
                 X_UPSTASH_EMAIL?: string;
                 X_UPSTASH_API_KEY?: string;
+                X_OPENAPI_API_KEY?: string;
                 X_ADMIN_AUTH_TOKEN?: string;
             };
             path?: never;
@@ -449,6 +468,7 @@ export interface operations {
                      * @description JSON of the schema you want the database to refer to. Should be a Object JSON Schema.
                      */
                     schemaString: string;
+                    vectorIndexColumns?: components["schemas"]["VectorIndexColumns"];
                     /** @description Token required to authrorize using the CRUD endpoints. Will be generated if not given. */
                     authToken?: string;
                     /**
@@ -662,6 +682,7 @@ export type ModelItem = components["schemas"]["ModelItem"]
 export type RemoveContext = components["schemas"]["RemoveContext"]
 export type RemoveResponse = components["schemas"]["RemoveResponse"]
 export type CreateDatabaseResponse = components["schemas"]["CreateDatabaseResponse"]
+export type VectorIndexColumns = components["schemas"]["VectorIndexColumns"]
 export type StandardResponse = components["schemas"]["StandardResponse"]
   
 export const operationUrlObject = {

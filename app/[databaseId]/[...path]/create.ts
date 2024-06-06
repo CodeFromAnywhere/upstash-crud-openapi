@@ -2,6 +2,7 @@ import { Endpoint } from "@/client";
 import { getDatabaseDetails } from "@/getDatabaseDetails";
 import { upstashRedisSetItems } from "@/upstashRedis";
 import { generateId, mergeObjectsArray } from "from-anywhere";
+import { upsertIndexVectors } from "./embeddings";
 
 export const create: Endpoint<"create"> = async (
   context,
@@ -38,6 +39,12 @@ export const create: Endpoint<"create"> = async (
     items.map(({ __id, ...item }) => ({
       [__id || generateId()]: item,
     })),
+  );
+
+  await Promise.all(
+    Object.keys(mappedItems).map(async (id) => {
+      upsertIndexVectors(databaseDetails, id, mappedItems[id]);
+    }),
   );
 
   await upstashRedisSetItems({
