@@ -215,10 +215,7 @@ export const read: Endpoint<"read"> = async (context) => {
       (x) => x.propertyKey === propertyKey,
     );
 
-    console.log("WE DO vs IT", { vectorIndexDetails, propertyKey });
-
     if (vectorIndexDetails && openaiApiKey) {
-      console.log("WE DO TRY IT");
       const { vectorRestToken, vectorRestUrl, model } = vectorIndexDetails;
 
       const results = await embeddingsClient.search({
@@ -230,7 +227,7 @@ export const read: Endpoint<"read"> = async (context) => {
         model,
       });
 
-      console.log({ results });
+      //console.log({ results });
 
       const similarResults = results.filter((x) => {
         if (!minimumSimilarity) {
@@ -249,7 +246,6 @@ export const read: Endpoint<"read"> = async (context) => {
     }
   }
 
-  console.log({ vectorSearchIds, normalized });
   // TODO: Make this more efficient
   const vectorResult = vectorSearchIds
     ? objectMapSync(
@@ -261,10 +257,13 @@ export const read: Endpoint<"read"> = async (context) => {
       )
     : result;
 
+  // console.log({ vectorSearchIds, normalized, vectorResult });
+
   // TODO: make this more efficient
-  const specificResult = rowIds
-    ? getSubsetFromObject(vectorResult, rowIds)
-    : vectorResult;
+  const specificResult =
+    rowIds && rowIds.length > 0
+      ? getSubsetFromObject(vectorResult, rowIds)
+      : vectorResult;
 
   const searchedData = searchData(search, specificResult);
 
@@ -311,7 +310,7 @@ export const read: Endpoint<"read"> = async (context) => {
 
   const finalData = slicedLimitData;
 
-  console.log({ result });
+  // console.log({ result });
   return {
     isSuccessful: true,
     message: "Found json and schema",
