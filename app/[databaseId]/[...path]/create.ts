@@ -43,7 +43,7 @@ export const create: Endpoint<"create"> = async (
 
   await Promise.all(
     Object.keys(mappedItems).map(async (id) => {
-      upsertIndexVectors(databaseDetails, id, mappedItems[id]);
+      return upsertIndexVectors(databaseDetails, id, mappedItems[id]);
     }),
   );
 

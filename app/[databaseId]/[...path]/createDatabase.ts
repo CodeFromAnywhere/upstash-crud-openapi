@@ -99,13 +99,13 @@ export const createDatabase: Endpoint<"createDatabase"> = async (context) => {
   if (!previousDatabaseDetails) {
     // creates indexes
     const vectorIndexColumnDetails =
-      vectorIndexColumns && X_UPSTASH_API_KEY && X_UPSTASH_EMAIL
+      vectorIndexColumns && upstashApiKey && upstashEmail
         ? (
             await Promise.all(
               vectorIndexColumns.map(async (item) => {
                 const index = await embeddingsClient.createIndex({
-                  upstashApiKey: X_UPSTASH_API_KEY,
-                  upstashEmail: X_UPSTASH_EMAIL,
+                  upstashApiKey,
+                  upstashEmail,
                   dimension_count: item.dimension_count,
                   region: item.region,
                   similarity_function: item.similarity_function,
@@ -119,7 +119,7 @@ export const createDatabase: Endpoint<"createDatabase"> = async (context) => {
                 return {
                   propertyKey,
                   vectorRestToken: token,
-                  vectorRestUrl: endpoint,
+                  vectorRestUrl: `https://${endpoint}`,
                   dimensions: item.dimension_count,
                   model: item.model,
                 };
@@ -143,6 +143,12 @@ export const createDatabase: Endpoint<"createDatabase"> = async (context) => {
 
     const adminAuthToken = X_ADMIN_AUTH_TOKEN || generateId();
 
+    console.log("creating", {
+      vectorIndexColumnDetails,
+      vectorIndexColumns,
+      X_UPSTASH_API_KEY,
+      X_UPSTASH_EMAIL,
+    });
     databaseDetails = {
       openaiApiKey: X_OPENAPI_API_KEY,
       vectorIndexColumnDetails,

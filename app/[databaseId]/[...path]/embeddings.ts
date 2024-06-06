@@ -347,6 +347,7 @@ export const upsertIndexVectors = async (
     !databaseDetails.vectorIndexColumnDetails ||
     !databaseDetails.openaiApiKey
   ) {
+    console.log("DONThaveDETAILS");
     return;
   }
   //for each inserted item, for each column, create vectors.
@@ -370,4 +371,6 @@ export const upsertIndexVectors = async (
       return res;
     }),
   );
+
+  console.log(res);
 };

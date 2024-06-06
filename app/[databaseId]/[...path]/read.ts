@@ -206,6 +206,7 @@ export const read: Endpoint<"read"> = async (context) => {
     return { isSuccessful: false, message: "No result" };
   }
 
+  let normalized: O[] | undefined = undefined;
   let vectorSearchIds: string[] | undefined = undefined;
   if (vectorSearch) {
     const { input, minimumSimilarity, propertyKey, topK } = vectorSearch;
@@ -214,7 +215,10 @@ export const read: Endpoint<"read"> = async (context) => {
       (x) => x.propertyKey === propertyKey,
     );
 
+    console.log("WE DO vs IT", { vectorIndexDetails, propertyKey });
+
     if (vectorIndexDetails && openaiApiKey) {
+      console.log("WE DO TRY IT");
       const { vectorRestToken, vectorRestUrl, model } = vectorIndexDetails;
 
       const results = await embeddingsClient.search({
@@ -226,6 +230,8 @@ export const read: Endpoint<"read"> = async (context) => {
         model,
       });
 
+      console.log({ results });
+
       const similarResults = results.filter((x) => {
         if (!minimumSimilarity) {
           return true;
@@ -233,7 +239,7 @@ export const read: Endpoint<"read"> = async (context) => {
         return x.score >= minimumSimilarity;
       });
 
-      const normalized = similarResults.map((x) => ({
+      normalized = similarResults.map((x) => ({
         propertyKey,
         score: x.score,
         id: x.id as string,
@@ -243,9 +249,16 @@ export const read: Endpoint<"read"> = async (context) => {
     }
   }
 
+  console.log({ vectorSearchIds, normalized });
   // TODO: Make this more efficient
   const vectorResult = vectorSearchIds
-    ? getSubsetFromObject(result, vectorSearchIds)
+    ? objectMapSync(
+        getSubsetFromObject(result, vectorSearchIds),
+        (id, value) => ({
+          ...value,
+          _score: normalized?.find((x) => x.id === id)?.score,
+        }),
+      )
     : result;
 
   // TODO: make this more efficient
