@@ -71,6 +71,26 @@ export default function DatabasePage(props: {
           );
         })}
       </div>
+
+      <OpenapiForm
+        openapi={openapi}
+        path="/{databaseSlug}/updateDatabase"
+        method="post"
+        uiSchema={{
+          schemaString: {
+            "ui:widget": "textarea",
+          },
+          X_ADMIN_AUTH_TOKEN: { "ui:widget": "hidden" },
+          databaseSlug: { "ui:widget": "hidden" },
+        }}
+        initialData={{
+          databaseSlug: props.params.databaseId,
+          X_ADMIN_AUTH_TOKEN: database?.adminToken || "",
+          authToken: database?.authToken || "",
+          Authorization: `Bearer ${database?.authToken}`,
+          schemaString: database?.schemaString || "",
+        }}
+      />
       <div>
         {database ? (
           <OpenapiForms
