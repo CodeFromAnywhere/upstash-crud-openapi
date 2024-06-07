@@ -113,14 +113,6 @@ https://chatgpt.com/share/3a11c4f6-0637-4e31-83e9-e74d7e6733bd
 - ✅ In `remove`, ensure to call `deleteVector` for needed columns. NB: If we had actionschema.x-unmountOperationId, an unmount property could be set.
 - ✅ In `read` add an array of `search(input,topK)` and `minimumSimilarity?` parameters and retreive only the ones from `search`, then still do other filters.
 
-# Simplify debugging
-
-I need to be able to easily use all my edpoints from a swagger but with localhost. How?
-
-https://github.com/jellydn/next-swagger-doc
-
-maybe?
-
 # User Separation
 
 Figure out how to do Key Ranges or other way to efficiently index/separate on keys

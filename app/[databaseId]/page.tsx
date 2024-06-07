@@ -3,6 +3,7 @@
 import { StandardResponse } from "@/openapi-types";
 import { OpenapiForm } from "react-openapi-form";
 import openapi from "../../public/openapi.json";
+import { OpenapiForms } from "openapi-for-humans-react";
 import { useStore } from "../store";
 
 export default function DatabasePage(props: {
@@ -70,14 +71,10 @@ export default function DatabasePage(props: {
           );
         })}
       </div>
-      <div>
-        {database ? (
-          <>
-            <OpenapiForm
-              openapi={openapi}
-              path="/{databaseSlug}/updateDatabase"
-              method="post"
-              uiSchema={{
+      <div>{database ? <OpenapiForms url={openapiUrl} /> : null}</div>
+    </div>
+  );
+  /*uiSchema={{
                 schemaString: {
                   "ui:widget": "textarea",
                 },
@@ -88,68 +85,7 @@ export default function DatabasePage(props: {
                 databaseSlug: props.params.databaseId,
                 X_ADMIN_AUTH_TOKEN: database?.adminToken || "",
                 authToken: database?.authToken || "",
+                Authorization:`Bearer ${database?.authToken}`,
                 schemaString: database?.schemaString || "",
-              }}
-              withResponse={(response) => {
-                const {
-                  statusCode,
-                  statusText,
-                  body,
-                  headers,
-                  method,
-                  bodyData,
-                  url,
-                } = response;
-                const requestResponse = response.response as
-                  | StandardResponse
-                  | undefined;
-
-                if (!requestResponse?.isSuccessful) {
-                  alert(requestResponse?.message || "Something went wrong");
-                  return;
-                }
-
-                const newDatabases = databases.map((x) =>
-                  x.databaseSlug === props.params.databaseId
-                    ? {
-                        ...x,
-                        authToken: bodyData?.authToken,
-                        schemaString: bodyData?.schemaString,
-                      }
-                    : x,
-                );
-
-                setDatabases(newDatabases);
-
-                alert(requestResponse.message);
-              }}
-            />
-
-            <OpenapiForm
-              openapi={openapi}
-              path="/{databaseSlug}/read"
-              method="post"
-              uiSchema={{}}
-              initialData={{
-                databaseSlug: props.params.databaseId,
-                X_ADMIN_AUTH_TOKEN: database?.adminToken || "",
-                Authorization: database?.authToken || "",
-              }}
-              withResponse={(response) => {
-                const requestResponse = response.response as
-                  | StandardResponse
-                  | undefined;
-
-                if (!requestResponse?.isSuccessful) {
-                  alert(requestResponse?.message || "Something went wrong");
-                  return;
-                }
-                console.log({ requestResponse });
-              }}
-            />
-          </>
-        ) : null}
-      </div>
-    </div>
-  );
+              }}*/
 }
