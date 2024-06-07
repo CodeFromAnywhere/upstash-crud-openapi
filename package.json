@@ -20,7 +20,7 @@
     "json-schema": "^0.4.0",
     "next": "14.2.1",
     "openai": "^4.48.2",
-    "openapi-for-humans-react": "^0.0.42",
+    "openapi-for-humans-react": "^0.0.43",
     "openapi-types": "^12.1.3",
     "openapi-typescript": "^6.7.5",
     "openapi-util": "^0.0.48",

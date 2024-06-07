@@ -71,21 +71,27 @@ export default function DatabasePage(props: {
           );
         })}
       </div>
-      <div>{database ? <OpenapiForms url={openapiUrl} /> : null}</div>
+      <div>
+        {database ? (
+          <OpenapiForms
+            url={openapiUrl}
+            uiSchema={{
+              schemaString: {
+                "ui:widget": "textarea",
+              },
+              X_ADMIN_AUTH_TOKEN: { "ui:widget": "hidden" },
+              databaseSlug: { "ui:widget": "hidden" },
+            }}
+            initialData={{
+              databaseSlug: props.params.databaseId,
+              X_ADMIN_AUTH_TOKEN: database?.adminToken || "",
+              authToken: database?.authToken || "",
+              Authorization: `Bearer ${database?.authToken}`,
+              schemaString: database?.schemaString || "",
+            }}
+          />
+        ) : null}
+      </div>
     </div>
   );
-  /*uiSchema={{
-                schemaString: {
-                  "ui:widget": "textarea",
-                },
-                X_ADMIN_AUTH_TOKEN: { "ui:widget": "hidden" },
-                databaseSlug: { "ui:widget": "hidden" },
-              }}
-              initialData={{
-                databaseSlug: props.params.databaseId,
-                X_ADMIN_AUTH_TOKEN: database?.adminToken || "",
-                authToken: database?.authToken || "",
-                Authorization:`Bearer ${database?.authToken}`,
-                schemaString: database?.schemaString || "",
-              }}*/
 }
