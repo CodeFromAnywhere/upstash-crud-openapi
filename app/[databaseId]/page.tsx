@@ -99,15 +99,16 @@ export default function DatabasePage(props: {
               schemaString: {
                 "ui:widget": "textarea",
               },
-              X_ADMIN_AUTH_TOKEN: { "ui:widget": "hidden" },
-              databaseSlug: { "ui:widget": "hidden" },
+              // X_ADMIN_AUTH_TOKEN: { "ui:widget": "hidden" },
+              // databaseSlug: { "ui:widget": "hidden" },
+              httpBearerToken: { "ui:widget": "hidden" },
             }}
             initialData={{
-              databaseSlug: props.params.databaseId,
-              X_ADMIN_AUTH_TOKEN: database?.adminToken || "",
-              authToken: database?.authToken || "",
-              Authorization: `Bearer ${database?.authToken}`,
-              schemaString: database?.schemaString || "",
+              // databaseSlug: props.params.databaseId,
+              // X_ADMIN_AUTH_TOKEN: database?.adminToken || "",
+              httpBearerToken: database?.authToken || "",
+              // Authorization: `Bearer ${database?.authToken}`,
+              // schemaString: database?.schemaString || "",
             }}
           />
         ) : null}
