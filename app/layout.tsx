@@ -3,6 +3,8 @@ export const metadata = {
   description: "Create a simple CRUD OpenAPI for any schema with ease...",
 };
 import "./globals.css";
+import "openapi-for-humans-react/css.css";
+import "react-openapi-form/css.css";
 
 export default function RootLayout({
   children,
