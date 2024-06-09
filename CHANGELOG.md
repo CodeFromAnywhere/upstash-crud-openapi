@@ -99,7 +99,6 @@ Test the entire app and also ensure the below requirements get built in.
 - ✅ Redirect to new db after it gets created. Also better error handing
 - ✅ Ensure keys root and root-db and ones that already existed cannot be picked.
 - ✅ See if I can make a simple people db and use it in an agent to test it. Test if dereferencing things before returning the MODEL openapi.json did make it more stable/easier.
-- Ensure at the `/update` endpoint "required" is removed from the type interface.
 
 https://chatgpt.com/share/3a11c4f6-0637-4e31-83e9-e74d7e6733bd
 
@@ -113,37 +112,21 @@ https://chatgpt.com/share/3a11c4f6-0637-4e31-83e9-e74d7e6733bd
 - ✅ In `remove`, ensure to call `deleteVector` for needed columns. NB: If we had actionschema.x-unmountOperationId, an unmount property could be set.
 - ✅ In `read` add an array of `search(input,topK)` and `minimumSimilarity?` parameters and retreive only the ones from `search`, then still do other filters.
 
-# User Separation
+# HTML STS Client
 
-Figure out how to do Key Ranges or other way to efficiently index/separate on keys
+✅ `index.ts:99` --> Fix JSONParseError
 
-Figure out how to do oAuth properly so users can login when using the GPT
+✅ Setup Local Tunnel in `npm run dev`: https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/get-started/create-local-tunnel/ <-- NEEDS A FIXED URL TO PUT IN A PHONE NUMBER
 
-Make a POC in the oAI GPT builder where the user logs in with oAuth, then it keeps track of a calendar-db for each user.
+✅ Get a Whatsapp Phone Number and talk to Wijnand AI that is in dev...
 
-# FS CLI
+✅ https://developers.deepgram.com/reference/js-example-client
 
-Let's make a simple cli `opencrud` that pushes my db models to the cloud with the right settings
+✅ The websocket is now made available through a URL in twilio containing all info - without there being a datastore. However, it can be great for PR if we allow people to find agents and either chat with them (via opengpts) or speak (via html client).
 
-# Relative references
+✅ Render a button on the agent that opens the browser client for talking to it through websocket (requires user to fill a deepgram token)
 
-Schemas and openapis should have ability to cross reference local relative files. This should be able to be resolved in all tools, both locally and in production, buth on backend and frontend.
-
-This will help to remove code duplication in schemas that is becoming an increasingly big problem now.
-
-# Explorer upgrade
-
-In explorer, add button to fill your own URL.
-
-On database-page, add a link to `explorer.actionschema.com/{openapi}` and confirm it works.
-
-Add ability to prefil fields in explorer with query parameters and ensure that gets cached into localStorage, and do this with the `authToken`
-
-Ideally, from explorer I can get all rows with 1 click of a button.
-
-# After that works...
-
-AgentOpenapi: See itself
+# OpenAPI overview
 
 Ensure EnhancementProxy, CombinationProxy, and AgentOpenapi datstructures are available in `public`.
 
@@ -153,10 +136,81 @@ Use data.actionschema.com to create CRUD openapis to keep a global state for:
 
 - EnhancementProxy: https://openapi.actionschema.com/[proxySlug]/openapi.json
 - CombinationProxy: https://proxy.actionschema.com/[proxySlug]/openapi.json
-- AgentOpenapi: https://agent.actionschema.com/[agentSlug]/openapi.json
 
-Now I can make those and add those endpoints into my own openapi there via the new `x-proxy` standard.
+In explorer, make a frontpage in which you can CRD openapi URLs. Start by adding my own...
 
-Now I can also use forms in explorer. It'd be perfect to test things a little.
+For `https://data.actionschema.com/openapi.json`: Error: Value isn't defined [0] at resolveReferenceOrContinue
 
-Now I can also use forms in all of the above.
+Add the `resolveReferenceOrContinue` stuff and ensure there's proper logging.
+
+Ensure to also link to swagger to get proper validations from there.
+
+# 🔴 oAuth / User Separation
+
+Agent-openapi and CRUD-openapi user oAuth
+
+Figure out how to do Key Ranges or other way to efficiently index/separate on keys
+
+Figure out how to do oAuth properly so users can login when using the GPT
+
+Make a POC in the oAI GPT builder where the user logs in with oAuth, then it keeps track of a calendar-db for each user.
+
+# 🔴 Threads
+
+Create CRUD for messages
+
+Use the client for that to store messages for the thread. Ensure we use something like `X-USER-AUTH` or so for determining the user.
+
+- For whatsapp, load in the thread of the phone number
+- For phonecall, load in the thread for the phone number
+- For email, load in the thread for the email
+
+# 🔴 Files
+
+Now we are relying on gpt4 to process just the images which is useful as it is much more integrated and will be in the future, but what about processing of all kinds of stuff? An AI can do this in many ways and that is why we need cool tools.
+
+Let's do it like this:
+
+- provide `attachmentUrls` as text in an additional message, but provide some additional context for each file
+- tools provided can use these URLs & context as parameters.
+
+This way we can make our own multimodal LLM with extra functionalities that depend on the usecase. This keeps the model super general purpose.
+
+A good start would be to create an agent that allows for image generation, speech generation, and speech analsysis. Perfect for whatsapp!
+
+# Improvements
+
+- Ensure at the `/update` endpoint "required" is removed from the type interface.
+- Greatly simplify the CRUD API by removing lots of stuff and use some sort of hybrid search. Remove ambiguity and make search much more simple
+
+# MORE COOL STUFF
+
+🔴 CRUD to keep and reveal user info + Agent
+🔴 Conventional Agent to make CRUD agent more reliable
+🔴 API for twilio to connect to another websocket or phonenumber
+🔴 Phone number that I can call to make a new agent for any datastructure. It can make the agent, then redirect me to it.
+🔴 CRUD cron-sync capability (e.g. with drive, calendar)
+
+The above is basically a Voice Excelsheet. This would be insanely useful.
+
+# Different LLMs
+
+https://sdk.vercel.ai/providers/ai-sdk-providers#provider-support
+
+https://x.com/transitive_bs <-- get feedback, integrate with his stuff maybe?
+
+Read here. These providers should all have an Open API. I should be able to merge them into a single endpoint with some AI that maps it, given very specific instructions. I should be able to have a single gateway in which the openapi url, action, and parameters are provided, in which the map is cached. This would be super epic, as it allows people to provide their own openapi URL without changing the script.
+
+# Sendgrid client
+
+Same trick, same worker.
+
+# FS CLI
+
+Let's make a simple cli `actionschema crud` that pushes my db models to the cloud with the right settings
+
+# Relative references
+
+Schemas and openapis should have ability to cross reference local relative files. This should be able to be resolved in all tools, both locally and in production, buth on backend and frontend.
+
+This will help to remove code duplication in schemas that is becoming an increasingly big problem now.

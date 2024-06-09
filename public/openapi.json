@@ -574,17 +574,7 @@
       },
       "ModelItem": {
         "type": "object",
-        "properties": { "__id": { "type": "string" } },
-        "additionalProperties": {
-          "oneOf": [
-            { "type": "string" },
-            { "type": "object" },
-            { "type": "array" },
-            { "type": "boolean" },
-            { "type": "integer" },
-            { "type": "number" }
-          ]
-        }
+        "properties": { "__id": { "type": "string" } }
       },
 
       "RemoveContext": {
