@@ -618,7 +618,8 @@
             "type": "string"
           },
           "authToken": { "type": "string" },
-          "adminAuthToken": { "type": "string" }
+          "adminAuthToken": { "type": "string" },
+          "databaseSlug": { "type": "string" }
         }
       },
       "VectorIndexColumns": {

@@ -112,21 +112,13 @@ https://chatgpt.com/share/3a11c4f6-0637-4e31-83e9-e74d7e6733bd
 - ✅ In `remove`, ensure to call `deleteVector` for needed columns. NB: If we had actionschema.x-unmountOperationId, an unmount property could be set.
 - ✅ In `read` add an array of `search(input,topK)` and `minimumSimilarity?` parameters and retreive only the ones from `search`, then still do other filters.
 
-# HTML STS Client
-
-✅ `index.ts:99` --> Fix JSONParseError
-
-✅ Setup Local Tunnel in `npm run dev`: https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/get-started/create-local-tunnel/ <-- NEEDS A FIXED URL TO PUT IN A PHONE NUMBER
-
-✅ Get a Whatsapp Phone Number and talk to Wijnand AI that is in dev...
-
-✅ https://developers.deepgram.com/reference/js-example-client
-
-✅ The websocket is now made available through a URL in twilio containing all info - without there being a datastore. However, it can be great for PR if we allow people to find agents and either chat with them (via opengpts) or speak (via html client).
-
-✅ Render a button on the agent that opens the browser client for talking to it through websocket (requires user to fill a deepgram token)
-
 # OpenAPI overview
+
+Look at `getOperations` and `resolveReferenceOrContinue` and finish it or remove it altogether if not needed. Ensure it never throws unexpectedly.
+
+crud-openapi ==> make a list endpoint `list(admintoken) ==> mylist[]`
+
+agent-openapi ==> make a list endpoint `list(admintoken) ==> mylist[]`
 
 Ensure EnhancementProxy, CombinationProxy, and AgentOpenapi datstructures are available in `public`.
 
@@ -141,11 +133,15 @@ In explorer, make a frontpage in which you can CRD openapi URLs. Start by adding
 
 For `https://data.actionschema.com/openapi.json`: Error: Value isn't defined [0] at resolveReferenceOrContinue
 
-Add the `resolveReferenceOrContinue` stuff and ensure there's proper logging.
-
 Ensure to also link to swagger to get proper validations from there.
 
-# 🔴 oAuth / User Separation
+After https://data.actionschema.com/openapi.json validates properly, let's make an agent for it.
+
+# Combination proxy
+
+I really need it? Or would support for using 2 openapis and using a queryparameter on it to prune suffice?
+
+# 🔴 User Separation
 
 Agent-openapi and CRUD-openapi user oAuth
 

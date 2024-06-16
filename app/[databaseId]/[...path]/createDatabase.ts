@@ -181,5 +181,6 @@ export const createDatabase: Endpoint<"createDatabase"> = async (context) => {
     message: "Database created",
     authToken: databaseDetails.authToken,
     adminAuthToken: databaseDetails.adminAuthToken,
+    databaseSlug: realDatabaseSlug,
   };
 };
