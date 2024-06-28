@@ -182,5 +182,7 @@ export const createDatabase: Endpoint<"createDatabase"> = async (context) => {
     authToken: databaseDetails.authToken,
     adminAuthToken: databaseDetails.adminAuthToken,
     databaseSlug: realDatabaseSlug,
+    openapiUrl:
+      "https://data.actionschema.com/" + realDatabaseSlug + "/openapi.json",
   };
 };

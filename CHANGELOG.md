@@ -201,10 +201,6 @@ Read here. These providers should all have an Open API. I should be able to merg
 
 Same trick, same worker.
 
-# FS CLI
-
-Let's make a simple cli `actionschema crud` that pushes my db models to the cloud with the right settings
-
 # Relative references
 
 Schemas and openapis should have ability to cross reference local relative files. This should be able to be resolved in all tools, both locally and in production, buth on backend and frontend.
