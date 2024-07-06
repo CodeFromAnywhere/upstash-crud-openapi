@@ -125,23 +125,21 @@ export const renderCrudOpenapi: Endpoint<"renderCrudOpenapi"> = async (
     security: [{ bearerAuth: [] }],
   };
 
-  const dereferenced = (await resolveSchemaRecursive({
-    document: improved,
-    shouldDereference: true,
-  })) as typeof improved | undefined;
+  // NB: this causes it to
+  // const dereferenced = (await resolveSchemaRecursive({
+  //   document: improved,
+  //   shouldDereference: true,
+  // })) as typeof improved | undefined;
 
-  if (!dereferenced) {
-    return { isSuccessful: false, message: "Dereferencing didn't work out" };
-  }
+  // if (!dereferenced) {
+  //   return { isSuccessful: false, message: "Dereferencing didn't work out" };
+  // }
 
-  const componentsWithoutSchemas = removeOptionalKeysFromObjectStrings(
-    dereferenced.components,
-    ["schemas"],
-  ) as OpenapiDocument["components"];
+  // const componentsWithoutSchemas = removeOptionalKeysFromObjectStrings(
+  //   dereferenced.components,
+  //   ["schemas"],
+  // ) as OpenapiDocument["components"];
 
-  return {
-    ...dereferenced,
-    components: componentsWithoutSchemas,
-    // bit ugly but couldn't find another way
-  } as unknown as ResponseType<"renderCrudOpenapi">;
+  return improved as unknown as ResponseType<"renderCrudOpenapi">;
+  // bit ugly but couldn't find another way
 };
