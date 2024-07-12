@@ -125,9 +125,25 @@ https://chatgpt.com/share/3a11c4f6-0637-4e31-83e9-e74d7e6733bd
 - ✅ Also expose the `index.html` at `GET /[databaseSlug]` by using `fs` to import it. It should allow to test any slug.
 - ✅ Also expose GET `/slug/schema.json`
 - ✅ Create new endpoint `listDatabases`
-- When creating/updating a CRUD DB, ensure to save it in another KV where the key is the admin authToken, the value all db slugs so far.
-- Make a list endpoint `list(admintoken) ==> mylist[]`
-- Regenerate CRUDs for agents as I did before using the migrate CLI, and confirm that I can test the CRUD's easily using the elements.
+- ✅ When creating/updating a CRUD DB, ensure to save it in another KV where the key is the admin authToken, the value all db slugs so far.
+- ✅ Make a `listDatabases` endpoint `listDatabases(admintoken) ==> mylist[]`
+
+# Improve actionschema migrate
+
+- ✅ Function `openapiCombinationToSdkConfig`
+- ✅ Make two agents in JSON files
+- ✅ Get the `/agent/message` endpoints into the openapi as well `api/messageXyzAgent.ts` POST endpoint for now, that simply forwards it
+- 🟠 Bun Segfault. Fix `runMigration` in a way that it works using `npx` instead.
+- See to it that SDK gets generated properly including `AgentOpenapi`
+- See to it that the types of each CRUD are in there.
+- Prompts are also useful, but don't I need it to use apis sometimes too? Not sure if prompts.json is the right way. It's local vs remote
+- Make it search `public/actionschema.json` as well
+- Change `runMigration` so it can also create agents based on the `agentConfig`
+- 🟠 Run migrate CLI for agents so the slugs get added.
+
+# Test CRUD
+
+- Confirm that I can test the CRUD's easily using the elements.
 - Test CRUD and confirm it works well with authentication and all.
 - Ensure this can somehow be verified when migrating to prevent this in the future. After CRUD works, make agent. After agent works, make message work via proxy.
 - After https://data.actionschema.com/openapi.json validates properly, let's make an agent for it.

@@ -40,20 +40,8 @@
         }
       ],
       "get": {
-        "summary": "",
+        "summary": "List your databases",
         "operationId": "listDatabases",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "additionalProperties": false,
-                "properties": {}
-              }
-            }
-          }
-        },
         "responses": {
           "200": {
             "description": "My DB List",

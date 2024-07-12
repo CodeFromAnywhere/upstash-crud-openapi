@@ -26,6 +26,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /** List your databases */
         get: operations["listDatabases"];
         put?: never;
         post?: never;
@@ -537,11 +538,7 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
-        requestBody: {
-            content: {
-                "application/json": Record<string, never>;
-            };
-        };
+        requestBody?: never;
         responses: {
             /** @description My DB List */
             200: {
