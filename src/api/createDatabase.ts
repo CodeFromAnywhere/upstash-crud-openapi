@@ -173,9 +173,8 @@ export const createDatabase: Endpoint<"createDatabase"> = async (context) => {
 
   // re-set the database details
   await root.set(realDatabaseSlug, databaseDetails);
-  const slugs: string[] = (await root.get(`admin_${X_ADMIN_AUTH_TOKEN}`)) || [];
-  const newSlugs = slugs.concat(realDatabaseSlug).filter(onlyUnique2());
-  await root.set(`admin_${X_ADMIN_AUTH_TOKEN}`, newSlugs);
+  const n = await root.sadd(`admin_${X_ADMIN_AUTH_TOKEN}`, realDatabaseSlug);
+  console.log({ n });
 
   return {
     isSuccessful: true,

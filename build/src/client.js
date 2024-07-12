@@ -1,4 +1,4 @@
-import { operationUrlObject } from "./openapi-types";
+import { operationUrlObject } from "./openapi-types.js";
 export const createClient = (config) => {
     const client = async (operation, body, 
     /** NB: always use `getPersonConfig` for this! */

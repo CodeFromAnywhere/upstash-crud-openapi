@@ -1,15 +1,27 @@
 export const operationUrlObject = {
+    "getOpenapi": {
+        "method": "get",
+        "path": "/openapi.json"
+    },
+    "listDatabases": {
+        "method": "get",
+        "path": "/listDatabases"
+    },
     "createDatabase": {
         "method": "post",
-        "path": "/root/createDatabase"
-    },
-    "updateDatabase": {
-        "method": "post",
-        "path": "/{databaseSlug}/updateDatabase"
+        "path": "/createDatabase"
     },
     "renderCrudOpenapi": {
         "method": "get",
         "path": "/{databaseSlug}/openapi.json"
+    },
+    "getSchema": {
+        "method": "get",
+        "path": "/{databaseSlug}/schema.json"
+    },
+    "updateDatabase": {
+        "method": "post",
+        "path": "/{databaseSlug}/updateDatabase"
     },
     "read": {
         "method": "post",

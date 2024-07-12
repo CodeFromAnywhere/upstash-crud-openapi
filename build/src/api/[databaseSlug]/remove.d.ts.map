@@ -1,0 +1,1 @@
+{"version":3,"file":"remove.d.ts","sourceRoot":"","sources":["../../../../src/api/[databaseSlug]/remove.ts"],"names":[],"mappings":"AACA,OAAO,EAAE,QAAQ,EAAE,MAAM,iBAAiB,CAAC;AAI3C,MAAM,MAAM,0BAA0B,GAAG;IACvC,YAAY,EAAE,OAAO,CAAC;IACtB,OAAO,EAAE,MAAM,CAAC;IAChB,WAAW,CAAC,EAAE,MAAM,CAAC;CACtB,CAAC;AAEF,eAAO,MAAM,MAAM,EAAE,QAAQ,CAAC,QAAQ,CAsCrC,CAAC"}

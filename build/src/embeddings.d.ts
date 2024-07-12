@@ -1,6 +1,6 @@
 import OpenAI from "openai";
 import type { EmbeddingCreateParams } from "openai/resources/embeddings";
-import { DatabaseDetails, OpenaiEmbeddingModelEnum } from "./types";
+import { DatabaseDetails, OpenaiEmbeddingModelEnum } from "./types.js";
 import { O } from "from-anywhere";
 /**
 https://upstash.com/docs/vector
@@ -16,7 +16,7 @@ export declare const vectorSearch: (context: {
     topK: number;
     includeMetadata: boolean;
     includeVectors: boolean;
-}) => Promise<import("@upstash/vector/dist/vector-wT6XsV3D").Q<import("@upstash/vector/dist/vector-wT6XsV3D").D>[]>;
+}) => Promise<import("@upstash/vector/dist/vector-wT6XsV3D.js").Q<import("@upstash/vector/dist/vector-wT6XsV3D.js").D>[]>;
 export declare const deleteVector: (context: {
     vectorRestUrl: string;
     vectorRestToken: string;
@@ -114,7 +114,7 @@ export declare const search: (context: {
     vectorRestUrl: string;
     /** TODO: Should maybe be kept somehow when creating the index */
     model?: "text-embedding-ada-002" | "text-embedding-3-small" | "text-embedding-3-large";
-}) => Promise<import("@upstash/vector/dist/vector-wT6XsV3D").Q<import("@upstash/vector/dist/vector-wT6XsV3D").D>[]>;
+}) => Promise<import("@upstash/vector/dist/vector-wT6XsV3D.js").Q<import("@upstash/vector/dist/vector-wT6XsV3D.js").D>[]>;
 /** NB: If we use this, we can later decouple it more easily with added openapi in between */
 export declare const embeddingsClient: {
     createIndex: (context: {
@@ -140,7 +140,7 @@ export declare const embeddingsClient: {
         vectorRestUrl: string;
         /** TODO: Should maybe be kept somehow when creating the index */
         model?: "text-embedding-ada-002" | "text-embedding-3-small" | "text-embedding-3-large";
-    }) => Promise<import("@upstash/vector/dist/vector-wT6XsV3D").Q<import("@upstash/vector/dist/vector-wT6XsV3D").D>[]>;
+    }) => Promise<import("@upstash/vector/dist/vector-wT6XsV3D.js").Q<import("@upstash/vector/dist/vector-wT6XsV3D.js").D>[]>;
     upsertVector: (context: {
         vectorRestUrl: string;
         vectorRestToken: string;

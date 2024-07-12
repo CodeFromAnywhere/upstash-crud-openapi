@@ -1,5 +1,42 @@
 export interface paths {
-    "/root/createDatabase": {
+    "/openapi.json": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get openapi */
+        get: operations["getOpenapi"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/listDatabases": {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Bearer authorization for admin. */
+                Authorization: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        /** List your databases */
+        get: operations["listDatabases"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/createDatabase": {
         parameters: {
             query?: never;
             header?: {
@@ -14,6 +51,44 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["createDatabase"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/{databaseSlug}/openapi.json": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                databaseSlug: string;
+            };
+            cookie?: never;
+        };
+        /** Get openapi for this database table alone */
+        get: operations["renderCrudOpenapi"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/{databaseSlug}/schema.json": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                databaseSlug: string;
+            };
+            cookie?: never;
+        };
+        /** Get schema for a database */
+        get: operations["getSchema"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -35,25 +110,6 @@ export interface paths {
         put?: never;
         /** Update Database */
         post: operations["updateDatabase"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/{databaseSlug}/openapi.json": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                databaseSlug: string;
-            };
-            cookie?: never;
-        };
-        /** Get openapi for this database table alone */
-        get: operations["renderCrudOpenapi"];
-        put?: never;
-        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -211,8 +267,7 @@ export interface components {
             message: string;
         };
         ModelItem: {
-            __id?: string;
-            [key: string]: (string | Record<string, never> | unknown[] | boolean | number) | undefined;
+            [key: string]: unknown;
         };
         RemoveContext: {
             /** @description Which IDs should be removed */
@@ -229,6 +284,8 @@ export interface components {
             message?: string;
             authToken?: string;
             adminAuthToken?: string;
+            databaseSlug?: string;
+            openapiUrl?: string;
         };
         /** @description A list of vector indexes to be created for several columns in your schema */
         VectorIndexColumns: {
@@ -332,7 +389,7 @@ export interface components {
             /** @description General latency info. */
             "x-latency"?: unknown;
             /** @description Link to other openapis that could be good alternatives. */
-            "x-alternatives"?: unknown[];
+            "x-alternatives"?: string[];
             /** @description Logo metadata. Standard taken from https://apis.guru */
             "x-logo"?: {
                 /**
@@ -415,7 +472,15 @@ export interface components {
             /** @description An array of Server Objects, indicating the original servers. Useful when defining a proxy. */
             "x-origin-servers"?: components["schemas"]["Server"][];
             /**
-             * @description A declaration of which security mechanisms can be used across the API. The list of values includes alternative security requirement objects that can be used. Only one of the security requirement objects need to be satisfied to authorize a request. Individual operations can override this definition. To make security optional, an empty security requirement ({}) can be included in the array.
+             * @description Security Requirement Object (https://spec.openapis.org/oas/latest.html#security-requirement-object)
+             *
+             *     Lists the required security schemes to execute this operation. The name used for each property MUST correspond to a security scheme declared in the Security Schemes under the Components Object.
+             *
+             *     Security Requirement Objects that contain multiple schemes require that all schemes MUST be satisfied for a request to be authorized. This enables support for scenarios where multiple query parameters or HTTP headers are required to convey security information.
+             *
+             *     When a list of Security Requirement Objects is defined on the OpenAPI Object or Operation Object, only one of the Security Requirement Objects in the list needs to be satisfied to authorize the request.
+             *
+             *     A declaration of which security mechanisms can be used across the API. The list of values includes alternative security requirement objects that can be used. Only one of the security requirement objects need to be satisfied to authorize a request. Individual operations can override this definition. To make security optional, an empty security requirement ({}) can be included in the array.
              *
              *     Please note: Every item in this array is an object with keys being the scheme names (can be anything). These names should then also be defined in components.securitySchemes.
              * @default [
@@ -443,6 +508,57 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    getOpenapi: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OpenAPI */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["openapi.schema"];
+                };
+            };
+        };
+    };
+    listDatabases: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Bearer authorization for admin. */
+                Authorization: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description My DB List */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        isSuccessful?: boolean;
+                        message?: string;
+                        status?: number;
+                        databases?: {
+                            databaseSlug?: string;
+                            authToken?: string;
+                        }[];
+                    };
+                };
+            };
+        };
+    };
     createDatabase: {
         parameters: {
             query?: never;
@@ -491,6 +607,55 @@ export interface operations {
             };
         };
     };
+    renderCrudOpenapi: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                databaseSlug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OpenAPI */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["openapi.schema"] | {
+                        isSuccessful: boolean;
+                        message?: string;
+                    };
+                };
+            };
+        };
+    };
+    getSchema: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                databaseSlug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Schema */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+        };
+    };
     updateDatabase: {
         parameters: {
             query?: never;
@@ -520,31 +685,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["StandardResponse"];
-                };
-            };
-        };
-    };
-    renderCrudOpenapi: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                databaseSlug: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OpenAPI */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["openapi.schema"] | {
-                        isSuccessful: boolean;
-                        message?: string;
-                    };
                 };
             };
         };
@@ -683,15 +823,27 @@ export type CreateDatabaseResponse = components["schemas"]["CreateDatabaseRespon
 export type VectorIndexColumns = components["schemas"]["VectorIndexColumns"];
 export type StandardResponse = components["schemas"]["StandardResponse"];
 export declare const operationUrlObject: {
+    getOpenapi: {
+        method: string;
+        path: string;
+    };
+    listDatabases: {
+        method: string;
+        path: string;
+    };
     createDatabase: {
         method: string;
         path: string;
     };
-    updateDatabase: {
+    renderCrudOpenapi: {
         method: string;
         path: string;
     };
-    renderCrudOpenapi: {
+    getSchema: {
+        method: string;
+        path: string;
+    };
+    updateDatabase: {
         method: string;
         path: string;
     };

@@ -1,4 +1,4 @@
-import { operations } from "./openapi-types";
+import { operations } from "./openapi-types.js";
 export type PromiseOrNot<T> = Promise<T> | T;
 export type GetParameters<K extends keyof operations> = operations[K]["parameters"]["cookie"] | operations[K]["parameters"]["header"] | operations[K]["parameters"]["path"] | operations[K]["parameters"]["query"];
 type UnionToIntersection<U> = (U extends any ? (k: U) => void : never) extends (k: infer I) => void ? I : never;

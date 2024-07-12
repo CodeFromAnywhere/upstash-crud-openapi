@@ -133,7 +133,7 @@ https://chatgpt.com/share/3a11c4f6-0637-4e31-83e9-e74d7e6733bd
 - ✅ Function `openapiCombinationToSdkConfig`
 - ✅ Make two agents in JSON files
 - ✅ Get the `/agent/message` endpoints into the openapi as well `api/messageXyzAgent.ts` POST endpoint for now, that simply forwards it
-- 🟠 Bun Segfault. Fix `runMigration` in a way that it works using `npx` instead.
+- 🟠 Bun segfault. Fix `runMigration` in a way that it works using `npx` instead.
 - See to it that SDK gets generated properly including `AgentOpenapi`
 - See to it that the types of each CRUD are in there.
 - Prompts are also useful, but don't I need it to use apis sometimes too? Not sure if prompts.json is the right way. It's local vs remote
