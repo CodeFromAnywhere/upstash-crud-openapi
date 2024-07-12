@@ -55,11 +55,13 @@ export const listDatabases: Endpoint<"listDatabases"> = async (context) => {
     return { isSuccessful: false, message: "Unauthorized", status: 403 };
   }
 
-  const details: (DatabaseDetails | null)[] = await root.mget(slugs);
+  const details: (DatabaseDetails | null)[] = await root.mget(...slugs);
 
   const databases = details
     .map((x, index) =>
-      x ? { authToken: x.authToken, slug: slugs[index] } : null,
+      x
+        ? { authToken: x.authToken, slug: slugs[index], schema: x.schema }
+        : null,
     )
     .filter(notEmpty);
 
