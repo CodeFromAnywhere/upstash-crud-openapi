@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Update Item</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #333;
+        }
+
+        textarea {
+            width: 100%;
+            height: 300px;
+            margin-bottom: 20px;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1 id="pageTitle">Update Item</h1>
+        <textarea id="jsonEditor"></textarea>
+        <button onclick="submitData()">Submit</button>
+    </div>
+
+    <script>
+        let databaseSlug = '';
+        let rowId = '';
+
+        async function fetchItem() {
+            const token = localStorage.getItem('adminToken');
+            databaseSlug = new URLSearchParams(window.location.search).get('databaseSlug');
+            rowId = new URLSearchParams(window.location.search).get('rowId');
+
+            if (!rowId) {
+                document.getElementById('pageTitle').textContent = 'Create New Item';
+                document.getElementById('jsonEditor').value = '{}';
+                return;
+            }
+
+            try {
+                const response = await fetch(`https://data.actionschema.com/${databaseSlug}/read`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ rowIds: [rowId] })
+                });
+                const data = await response.json();
+
+                if (data.isSuccessful && data.items[rowId]) {
+                    document.getElementById('jsonEditor').value = JSON.stringify(data.items[rowId], null, 2);
+                } else {
+                    alert('Failed to fetch item: ' + data.message);
+                }
+            } catch (error) {
+                console.error('Error fetching item:', error);
+                alert('An error occurred while fetching the item.');
+            }
+        }
+
+        async function submitData() {
+            const token = localStorage.getItem('adminToken');
+            const jsonData = document.getElementById('jsonEditor').value;
+
+            try {
+                const parsedData = JSON.parse(jsonData);
+
+                if (!rowId) {
+                    rowId = generateRandomId();
+                }
+
+                const response = await fetch(`https://data.actionschema.com/${databaseSlug}/update`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        id: rowId,
+                        partialItem: parsedData
+                    })
+                });
+                const data = await response.json();
+
+                if (data.isSuccessful) {
+                    alert('Item updated successfully');
+                    window.location.href = `model.html?databaseSlug=${databaseSlug}`;
+                } else {
+                    alert('Failed to update item: ' + data.message);
+                }
+            } catch (error) {
+                console.error('Error updating item:', error);
+                alert('An error occurred while updating the item. Make sure the JSON is valid.');
+            }
+        }
+
+        function generateRandomId() {
+            return Math.random().toString(36).substring(2, 18);
+        }
+
+        window.onload = fetchItem;
+    </script>
+</body>
+
+</html>

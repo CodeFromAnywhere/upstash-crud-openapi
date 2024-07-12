@@ -133,21 +133,22 @@ https://chatgpt.com/share/3a11c4f6-0637-4e31-83e9-e74d7e6733bd
 - ✅ Function `openapiCombinationToSdkConfig`
 - ✅ Make two agents in JSON files
 - ✅ Get the `/agent/message` endpoints into the openapi as well `api/messageXyzAgent.ts` POST endpoint for now, that simply forwards it
-- 🟠 Bun segfault. Fix `runMigration` in a way that it works using `npx` instead.
-- See to it that SDK gets generated properly including `AgentOpenapi`
-- See to it that the types of each CRUD are in there.
-- Prompts are also useful, but don't I need it to use apis sometimes too? Not sure if prompts.json is the right way. It's local vs remote
-- Make it search `public/actionschema.json` as well
-- Change `runMigration` so it can also create agents based on the `agentConfig`
-- 🟠 Run migrate CLI for agents so the slugs get added.
+- ✅ Bun segfault. Fix `runMigration` in a way that it works using `npx` instead.
+- ✅ Make it search `public/actionschema.json` as well
 
-# Test CRUD
+# Fix agents openapi and GPT
 
 - Confirm that I can test the CRUD's easily using the elements.
 - Test CRUD and confirm it works well with authentication and all.
+- Test agent client via code, ensuring it works. Redeploy.
 - Ensure this can somehow be verified when migrating to prevent this in the future. After CRUD works, make agent. After agent works, make message work via proxy.
-- After https://data.actionschema.com/openapi.json validates properly, let's make an agent for it.
-- Use claude to make a HTML where you can first set the admintoken, stored at localstorage, then retrieves list and makes you read for each model with ease, rendering it in some sort of table. Don't waste too much time though. A standalone react would also be nice.
+- Add list-agents endpoint
+- After https://data.actionschema.com/openapi.json validates properly, let's make an agent for it in GPT. It should be usable.
+
+# Agent migration
+
+- Change `runMigration` so it can also create agents based on the `agentConfig`
+- 🟠 Run migrate CLI for agents so the slugs get added.
 
 🎉 Fully refactored this from a next.js to a bare vercel project, being aware that this changes the capabilities. We can now not use react easily anymore, but this is ok since the base is the openapi, and it serves stoplight at the index.
 
