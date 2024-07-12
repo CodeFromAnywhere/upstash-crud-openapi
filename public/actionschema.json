@@ -1,0 +1,5 @@
+{
+  "$schema": "https://migrate.actionschema.com/migration-context.schema.json",
+
+  "agentConfig": {}
+}
