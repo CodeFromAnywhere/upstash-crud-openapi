@@ -10,6 +10,7 @@ import { remove } from "../src/api/[databaseSlug]/remove.js";
 import { renderCrudOpenapi } from "../src/api/[databaseSlug]/renderCrudOpenapi.js";
 import { createDatabase } from "../src/api/root/createDatabase.js";
 import { updateDatabase } from "../src/api/root/updateDatabase.js";
+import { getSchema } from "../src/api/[databaseSlug]/getSchema.js";
 import { getOpenapi } from "../src/api/getOpenapi.js";
 import openapi from "../src/openapi.json" assert { type: "json" };
 
@@ -280,6 +281,7 @@ const getHandler = (method: string) => (request: Request) => {
       renderCrudOpenapi,
       createDatabase,
       updateDatabase,
+      getSchema,
     },
   });
 };

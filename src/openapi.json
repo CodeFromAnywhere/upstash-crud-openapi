@@ -214,6 +214,36 @@
       ]
     },
 
+    "/{databaseSlug}/schema.json": {
+      "get": {
+        "summary": "Get schema for a database",
+        "operationId": "getSchema",
+
+        "responses": {
+          "200": {
+            "description": "Schema",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {},
+                  "additionalProperties": true
+                }
+              }
+            }
+          }
+        }
+      },
+      "parameters": [
+        {
+          "in": "path",
+          "name": "databaseSlug",
+          "schema": { "type": "string" },
+          "required": true
+        }
+      ]
+    },
+
     "/openapi.json": {
       "get": {
         "summary": "Get openapi",

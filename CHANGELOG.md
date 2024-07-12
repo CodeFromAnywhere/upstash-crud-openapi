@@ -50,7 +50,7 @@
 
 ✅ After form-submission - keep a `localStorage` with the `databaseSlug, adminToken, authToken, schemaString` so from `data.actionschema.com` all your databases can be listed.
 
-# Overview
+## Overview
 
 ✅ List the databases (from `localStorage`).
 
@@ -58,7 +58,7 @@
 
 ✅ On dbpage, show links
 
-# Editing
+## Editing
 
 ✅ Render form for `updateDatabase` `data.actionschema.com/[databaseSlug]`
 
@@ -88,7 +88,7 @@
 
 ✅ Try to use the openapi spec to do stuff in swagger.
 
-# More Requirements
+## More Requirements
 
 Test the entire app and also ensure the below requirements get built in.
 
@@ -104,7 +104,7 @@ https://chatgpt.com/share/3a11c4f6-0637-4e31-83e9-e74d7e6733bd
 
 🎉 Works incredibly well!
 
-# Vector Embedding Search Integration into any CRUD
+## Vector Embedding Search Integration into any CRUD
 
 - ✅ Created a simple integration with upstash vector store and openai embedding models
 - ✅ In `createDatabase`, specify needed columns, and ensure to call `createIndex` for needed columns
@@ -112,13 +112,36 @@ https://chatgpt.com/share/3a11c4f6-0637-4e31-83e9-e74d7e6733bd
 - ✅ In `remove`, ensure to call `deleteVector` for needed columns. NB: If we had actionschema.x-unmountOperationId, an unmount property could be set.
 - ✅ In `read` add an array of `search(input,topK)` and `minimumSimilarity?` parameters and retreive only the ones from `search`, then still do other filters.
 
-# OpenAPI overview
+# July 2024
+
+## Refactor CRUD-openapi
+
+- ✅ Create `crud-openapi2` which is a bare vercel project.
+- ✅ Add `index.html` elements file which exposes the openapi as an HTML frontend. Super cool!
+- ✅ Improve `tsconfig.json` so `../public/openapi.json` can be imported without error. If not possible, use `fs` and ensure the file is present.
+- ✅ Refactor `vercel.json` so it directs to `index.ts` for all routes.
+- ✅ Fix imports and other problems that arised
+- ✅ Confirm that everything works as expected!
+- ✅ Also expose the `index.html` at `GET /[databaseSlug]` by using `fs` to import it. It should allow to test any slug.
+- Also expose GET `/slug/schema.json`
+- `crud-openapi` ==> make a list endpoint `list(admintoken) ==> mylist[]`
+- Regenerate CRUDs for agents as I did before using the migrate CLI, and confirm that I can test the CRUD's easily using the elements.
+- Test CRUD and confirm it works well with authentication and all.
+- Ensure this can somehow be verified when migrating to prevent this in the future. After CRUD works, make agent. After agent works, make message work via proxy.
+- After https://data.actionschema.com/openapi.json validates properly, let's make an agent for it.
+- Use claude to make a HTML where you can first set the admintoken, stored at localstorage, then retrieves list and makes you read for each model with ease, rendering it in some sort of table. Don't waste too much time though. A standalone react would also be nice.
+
+🎉 Fully refactored this from a next.js to a bare vercel project, being aware that this changes the capabilities. We can now not use react easily anymore, but this is ok since the base is the openapi, and it serves stoplight at the index.
+
+## Refactor agent-openapi
+
+Agent-openapi ==> make a list endpoint `list(admintoken) ==> mylist[]` which should simply proxy to the `read` endpoint for the crud
+
+Follow same practices so i can message all agents from here
+
+## OpenAPI overview
 
 Look at `getOperations` and `resolveReferenceOrContinue` and finish it or remove it altogether if not needed. Ensure it never throws unexpectedly.
-
-crud-openapi ==> make a list endpoint `list(admintoken) ==> mylist[]`
-
-agent-openapi ==> make a list endpoint `list(admintoken) ==> mylist[]`
 
 Ensure EnhancementProxy, CombinationProxy, and AgentOpenapi datstructures are available in `public`.
 
@@ -134,8 +157,6 @@ In explorer, make a frontpage in which you can CRD openapi URLs. Start by adding
 For `https://data.actionschema.com/openapi.json`: Error: Value isn't defined [0] at resolveReferenceOrContinue
 
 Ensure to also link to swagger to get proper validations from there.
-
-After https://data.actionschema.com/openapi.json validates properly, let's make an agent for it.
 
 # Combination proxy
 

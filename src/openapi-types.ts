@@ -60,6 +60,42 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/{databaseSlug}/schema.json": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                databaseSlug: string;
+            };
+            cookie?: never;
+        };
+        /** Get schema for a database */
+        get: operations["getSchema"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/openapi.json": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get openapi */
+        get: operations["getOpenapi"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/{databaseSlug}/read": {
         parameters: {
             query?: never;
@@ -212,7 +248,6 @@ export interface components {
         };
         ModelItem: {
             __id?: string;
-            [key: string]: (string | Record<string, never> | unknown[] | boolean | number) | undefined;
         };
         RemoveContext: {
             /** @description Which IDs should be removed */
@@ -229,6 +264,8 @@ export interface components {
             message?: string;
             authToken?: string;
             adminAuthToken?: string;
+            databaseSlug?: string;
+            openapiUrl?: string;
         };
         /** @description A list of vector indexes to be created for several columns in your schema */
         VectorIndexColumns: {
@@ -332,7 +369,7 @@ export interface components {
             /** @description General latency info. */
             "x-latency"?: unknown;
             /** @description Link to other openapis that could be good alternatives. */
-            "x-alternatives"?: unknown[];
+            "x-alternatives"?: string[];
             /** @description Logo metadata. Standard taken from https://apis.guru */
             "x-logo"?: {
                 /**
@@ -415,7 +452,15 @@ export interface components {
             /** @description An array of Server Objects, indicating the original servers. Useful when defining a proxy. */
             "x-origin-servers"?: components["schemas"]["Server"][];
             /**
-             * @description A declaration of which security mechanisms can be used across the API. The list of values includes alternative security requirement objects that can be used. Only one of the security requirement objects need to be satisfied to authorize a request. Individual operations can override this definition. To make security optional, an empty security requirement ({}) can be included in the array.
+             * @description Security Requirement Object (https://spec.openapis.org/oas/latest.html#security-requirement-object)
+             *
+             *     Lists the required security schemes to execute this operation. The name used for each property MUST correspond to a security scheme declared in the Security Schemes under the Components Object.
+             *
+             *     Security Requirement Objects that contain multiple schemes require that all schemes MUST be satisfied for a request to be authorized. This enables support for scenarios where multiple query parameters or HTTP headers are required to convey security information.
+             *
+             *     When a list of Security Requirement Objects is defined on the OpenAPI Object or Operation Object, only one of the Security Requirement Objects in the list needs to be satisfied to authorize the request.
+             *
+             *     A declaration of which security mechanisms can be used across the API. The list of values includes alternative security requirement objects that can be used. Only one of the security requirement objects need to be satisfied to authorize a request. Individual operations can override this definition. To make security optional, an empty security requirement ({}) can be included in the array.
              *
              *     Please note: Every item in this array is an object with keys being the scheme names (can be anything). These names should then also be defined in components.securitySchemes.
              * @default [
@@ -545,6 +590,50 @@ export interface operations {
                         isSuccessful: boolean;
                         message?: string;
                     };
+                };
+            };
+        };
+    };
+    getSchema: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                databaseSlug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Schema */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+        };
+    };
+    getOpenapi: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OpenAPI */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["openapi.schema"];
                 };
             };
         };
@@ -697,6 +786,14 @@ export const operationUrlObject = {
   "renderCrudOpenapi": {
     "method": "get",
     "path": "/{databaseSlug}/openapi.json"
+  },
+  "getSchema": {
+    "method": "get",
+    "path": "/{databaseSlug}/schema.json"
+  },
+  "getOpenapi": {
+    "method": "get",
+    "path": "/openapi.json"
   },
   "read": {
     "method": "post",

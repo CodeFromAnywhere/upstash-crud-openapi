@@ -7,7 +7,7 @@
     "tsc": "tsc",
     "up": "npm version patch -f",
     "pub": "npm run up && npm publish && git add . && git commit -m 'improvements' && git push",
-    "types": "npx openapi-fetch-typescript ./public/openapi.json ./app/openapi-types.ts OpenApiTypes",
+    "types": "npx openapi-fetch-typescript ./src/openapi.json ./src/openapi-types.ts OpenApiTypes",
     "watch-types": "nodemon --watch public/openapi.json --exec \"npm run types\"",
     "init-db": "bun run src/makeRootDb.cli.ts",
     "start": "concurrently \"vercel dev\" \"npm:watch-types\""

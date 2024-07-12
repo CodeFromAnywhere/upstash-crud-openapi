@@ -7,7 +7,6 @@ import {
   getUpstashRedisDatabase,
 } from "../../upstashRedis.js";
 import {
-  destructureOptionalObject,
   generateId,
   generateRandomString,
   notEmpty,
