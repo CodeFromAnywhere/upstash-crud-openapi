@@ -1,20 +1,21 @@
 import { Redis } from "@upstash/redis";
 
-import { Endpoint } from "../../client.js";
-import { DatabaseDetails } from "../../types.js";
+import { Endpoint } from "../client.js";
+import { DatabaseDetails } from "../types.js";
 import {
   createUpstashRedisDatabase,
   getUpstashRedisDatabase,
-} from "../../upstashRedis.js";
+} from "../upstashRedis.js";
 import {
   generateId,
   generateRandomString,
   notEmpty,
+  onlyUnique2,
   tryParseJson,
 } from "from-anywhere";
 import { JSONSchema7 } from "json-schema";
-import { rootDatabaseName } from "../../state.js";
-import { embeddingsClient } from "../../embeddings.js";
+import { rootDatabaseName } from "../state.js";
+import { embeddingsClient } from "../embeddings.js";
 
 export const createDatabase: Endpoint<"createDatabase"> = async (context) => {
   const {
@@ -89,6 +90,7 @@ export const createDatabase: Endpoint<"createDatabase"> = async (context) => {
   ) {
     return {
       isSuccessful: false,
+      status: 403,
       message:
         "A database with this name already exists, and you're not authorized to edit it.",
     };
@@ -171,6 +173,9 @@ export const createDatabase: Endpoint<"createDatabase"> = async (context) => {
 
   // re-set the database details
   await root.set(realDatabaseSlug, databaseDetails);
+  const slugs: string[] = (await root.get(`admin_${X_ADMIN_AUTH_TOKEN}`)) || [];
+  const newSlugs = slugs.concat(realDatabaseSlug).filter(onlyUnique2());
+  await root.set(`admin_${X_ADMIN_AUTH_TOKEN}`, newSlugs);
 
   return {
     isSuccessful: true,

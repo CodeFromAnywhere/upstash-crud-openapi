@@ -62,6 +62,13 @@
                 "schema": {
                   "type": "object",
                   "properties": {
+                    "isSuccessful": {
+                      "type": "boolean"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "status": { "type": "number" },
                     "databases": {
                       "type": "array",
                       "items": {
@@ -678,7 +685,8 @@
       },
       "ModelItem": {
         "type": "object",
-        "properties": { "__id": { "type": "string" } }
+        "properties": {},
+        "additionalProperties": true
       },
 
       "RemoveContext": {

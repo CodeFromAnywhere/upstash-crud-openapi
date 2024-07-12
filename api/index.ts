@@ -8,9 +8,9 @@ import { read } from "../src/api/[databaseSlug]/read.js";
 import { update } from "../src/api/[databaseSlug]/update.js";
 import { remove } from "../src/api/[databaseSlug]/remove.js";
 import { renderCrudOpenapi } from "../src/api/[databaseSlug]/renderCrudOpenapi.js";
-import { createDatabase } from "../src/api/root/createDatabase.js";
-import { updateDatabase } from "../src/api/root/updateDatabase.js";
+import { createDatabase } from "../src/api/createDatabase.js";
 import { getSchema } from "../src/api/[databaseSlug]/getSchema.js";
+import { listDatabases } from "../src/api/listDatabases.js";
 import { getOpenapi } from "../src/api/getOpenapi.js";
 import openapi from "../src/openapi.json" assert { type: "json" };
 
@@ -280,8 +280,8 @@ const getHandler = (method: string) => (request: Request) => {
       getOpenapi,
       renderCrudOpenapi,
       createDatabase,
-      updateDatabase,
       getSchema,
+      listDatabases,
     },
   });
 };

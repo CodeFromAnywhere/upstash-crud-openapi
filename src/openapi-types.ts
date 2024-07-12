@@ -1,5 +1,41 @@
 export interface paths {
-    "/root/createDatabase": {
+    "/openapi.json": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get openapi */
+        get: operations["getOpenapi"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/listDatabases": {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Bearer authorization for admin. */
+                Authorization: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listDatabases"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/createDatabase": {
         parameters: {
             query?: never;
             header?: {
@@ -14,27 +50,6 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["createDatabase"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/{databaseSlug}/updateDatabase": {
-        parameters: {
-            query?: never;
-            header: {
-                X_ADMIN_AUTH_TOKEN: string;
-            };
-            path: {
-                databaseSlug: string;
-            };
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Update Database */
-        post: operations["updateDatabase"];
         delete?: never;
         options?: never;
         head?: never;
@@ -79,17 +94,21 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/openapi.json": {
+    "/{databaseSlug}/updateDatabase": {
         parameters: {
             query?: never;
-            header?: never;
-            path?: never;
+            header: {
+                X_ADMIN_AUTH_TOKEN: string;
+            };
+            path: {
+                databaseSlug: string;
+            };
             cookie?: never;
         };
-        /** Get openapi */
-        get: operations["getOpenapi"];
+        get?: never;
         put?: never;
-        post?: never;
+        /** Update Database */
+        post: operations["updateDatabase"];
         delete?: never;
         options?: never;
         head?: never;
@@ -247,7 +266,7 @@ export interface components {
             message: string;
         };
         ModelItem: {
-            __id?: string;
+            [key: string]: unknown;
         };
         RemoveContext: {
             /** @description Which IDs should be removed */
@@ -488,6 +507,61 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    getOpenapi: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OpenAPI */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["openapi.schema"];
+                };
+            };
+        };
+    };
+    listDatabases: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Bearer authorization for admin. */
+                Authorization: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": Record<string, never>;
+            };
+        };
+        responses: {
+            /** @description My DB List */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        isSuccessful?: boolean;
+                        message?: string;
+                        status?: number;
+                        databases?: {
+                            databaseSlug?: string;
+                            authToken?: string;
+                        }[];
+                    };
+                };
+            };
+        };
+    };
     createDatabase: {
         parameters: {
             query?: never;
@@ -532,39 +606,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CreateDatabaseResponse"];
-                };
-            };
-        };
-    };
-    updateDatabase: {
-        parameters: {
-            query?: never;
-            header: {
-                X_ADMIN_AUTH_TOKEN: string;
-            };
-            path: {
-                databaseSlug: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    /** @description JSON of the schema you want the database to refer to. Should be a Object JSON Schema. */
-                    schemaString: string;
-                    /** @description Token required to authrorize using the CRUD endpoints. */
-                    authToken: string;
-                };
-            };
-        };
-        responses: {
-            /** @description Update database response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["StandardResponse"];
                 };
             };
         };
@@ -618,22 +659,35 @@ export interface operations {
             };
         };
     };
-    getOpenapi: {
+    updateDatabase: {
         parameters: {
             query?: never;
-            header?: never;
-            path?: never;
+            header: {
+                X_ADMIN_AUTH_TOKEN: string;
+            };
+            path: {
+                databaseSlug: string;
+            };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @description JSON of the schema you want the database to refer to. Should be a Object JSON Schema. */
+                    schemaString: string;
+                    /** @description Token required to authrorize using the CRUD endpoints. */
+                    authToken: string;
+                };
+            };
+        };
         responses: {
-            /** @description OpenAPI */
+            /** @description Update database response */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["openapi.schema"];
+                    "application/json": components["schemas"]["StandardResponse"];
                 };
             };
         };
@@ -775,13 +829,17 @@ export type VectorIndexColumns = components["schemas"]["VectorIndexColumns"]
 export type StandardResponse = components["schemas"]["StandardResponse"]
   
 export const operationUrlObject = {
+  "getOpenapi": {
+    "method": "get",
+    "path": "/openapi.json"
+  },
+  "listDatabases": {
+    "method": "get",
+    "path": "/listDatabases"
+  },
   "createDatabase": {
     "method": "post",
-    "path": "/root/createDatabase"
-  },
-  "updateDatabase": {
-    "method": "post",
-    "path": "/{databaseSlug}/updateDatabase"
+    "path": "/createDatabase"
   },
   "renderCrudOpenapi": {
     "method": "get",
@@ -791,9 +849,9 @@ export const operationUrlObject = {
     "method": "get",
     "path": "/{databaseSlug}/schema.json"
   },
-  "getOpenapi": {
-    "method": "get",
-    "path": "/openapi.json"
+  "updateDatabase": {
+    "method": "post",
+    "path": "/{databaseSlug}/updateDatabase"
   },
   "read": {
     "method": "post",

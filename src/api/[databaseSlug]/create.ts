@@ -37,7 +37,7 @@ export const create: Endpoint<"create"> = async (
 
   const mappedItems = mergeObjectsArray(
     items.map(({ __id, ...item }) => ({
-      [__id || generateId()]: item,
+      [(__id as string | undefined) || generateId()]: item,
     })),
   );
 
