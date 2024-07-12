@@ -123,8 +123,8 @@ https://chatgpt.com/share/3a11c4f6-0637-4e31-83e9-e74d7e6733bd
 - ✅ Fix imports and other problems that arised
 - ✅ Confirm that everything works as expected!
 - ✅ Also expose the `index.html` at `GET /[databaseSlug]` by using `fs` to import it. It should allow to test any slug.
-- Also expose GET `/slug/schema.json`
-- `crud-openapi` ==> make a list endpoint `list(admintoken) ==> mylist[]`
+- ✅ Also expose GET `/slug/schema.json`
+- make a list endpoint `list(admintoken) ==> mylist[]`
 - Regenerate CRUDs for agents as I did before using the migrate CLI, and confirm that I can test the CRUD's easily using the elements.
 - Test CRUD and confirm it works well with authentication and all.
 - Ensure this can somehow be verified when migrating to prevent this in the future. After CRUD works, make agent. After agent works, make message work via proxy.

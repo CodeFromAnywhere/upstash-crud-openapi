@@ -9,7 +9,80 @@
   },
   "servers": [{ "url": "https://data.actionschema.com" }],
   "paths": {
-    "/root/createDatabase": {
+    "/openapi.json": {
+      "get": {
+        "summary": "Get openapi",
+        "operationId": "getOpenapi",
+
+        "responses": {
+          "200": {
+            "description": "OpenAPI",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "https://raw.githubusercontent.com/CodeFromAnywhere/ActionSchema/main/schemas/openapi.schema.json"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+
+    "/listDatabases": {
+      "parameters": [
+        {
+          "in": "header",
+          "name": "Authorization",
+          "schema": { "type": "string" },
+          "required": true,
+          "description": "Bearer authorization for admin."
+        }
+      ],
+      "get": {
+        "summary": "",
+        "operationId": "listDatabases",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {}
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "My DB List",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "databases": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "properties": {
+                          "databaseSlug": { "type": "string" },
+                          "authToken": { "type": "string" }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+
+    "/createDatabase": {
       "parameters": [
         {
           "in": "header",
@@ -112,63 +185,6 @@
         }
       }
     },
-    "/{databaseSlug}/updateDatabase": {
-      "post": {
-        "summary": "Update Database",
-        "operationId": "updateDatabase",
-
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "schemaString": {
-                    "type": "string",
-                    "description": "JSON of the schema you want the database to refer to. Should be a Object JSON Schema."
-                  },
-                  "authToken": {
-                    "type": "string",
-                    "description": "Token required to authrorize using the CRUD endpoints."
-                  }
-                },
-                "required": ["schemaString", "authToken"]
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Update database response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/StandardResponse"
-                }
-              }
-            }
-          }
-        }
-      },
-      "parameters": [
-        {
-          "in": "header",
-          "required": true,
-          "name": "X_ADMIN_AUTH_TOKEN",
-          "schema": {
-            "type": "string",
-            "description": "Provide your admin authtoken for this database."
-          }
-        },
-        {
-          "in": "path",
-          "name": "databaseSlug",
-          "schema": { "type": "string" },
-          "required": true
-        }
-      ]
-    },
 
     "/{databaseSlug}/openapi.json": {
       "get": {
@@ -244,24 +260,62 @@
       ]
     },
 
-    "/openapi.json": {
-      "get": {
-        "summary": "Get openapi",
-        "operationId": "getOpenapi",
+    "/{databaseSlug}/updateDatabase": {
+      "post": {
+        "summary": "Update Database",
+        "operationId": "updateDatabase",
 
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "schemaString": {
+                    "type": "string",
+                    "description": "JSON of the schema you want the database to refer to. Should be a Object JSON Schema."
+                  },
+                  "authToken": {
+                    "type": "string",
+                    "description": "Token required to authrorize using the CRUD endpoints."
+                  }
+                },
+                "required": ["schemaString", "authToken"]
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
-            "description": "OpenAPI",
+            "description": "Update database response",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "https://raw.githubusercontent.com/CodeFromAnywhere/ActionSchema/main/schemas/openapi.schema.json"
+                  "$ref": "#/components/schemas/StandardResponse"
                 }
               }
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "in": "header",
+          "required": true,
+          "name": "X_ADMIN_AUTH_TOKEN",
+          "schema": {
+            "type": "string",
+            "description": "Provide your admin authtoken for this database."
+          }
+        },
+        {
+          "in": "path",
+          "name": "databaseSlug",
+          "schema": { "type": "string" },
+          "required": true
+        }
+      ]
     },
 
     "/{databaseSlug}/read": {
