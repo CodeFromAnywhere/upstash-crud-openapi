@@ -173,7 +173,10 @@ export const createDatabase: Endpoint<"createDatabase"> = async (context) => {
 
   // re-set the database details
   await root.set(realDatabaseSlug, databaseDetails);
-  const n = await root.sadd(`admin_${X_ADMIN_AUTH_TOKEN}`, realDatabaseSlug);
+  const n = await root.sadd(
+    `adminslugs_${X_ADMIN_AUTH_TOKEN}`,
+    realDatabaseSlug,
+  );
   console.log({ n });
 
   return {

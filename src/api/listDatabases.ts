@@ -49,9 +49,7 @@ export const listDatabases: Endpoint<"listDatabases"> = async (context) => {
     token: rootDatabaseDetails.rest_token,
   });
 
-  const slugs: string[] | null | undefined = await root.get(
-    `admin_${Authorization}`,
-  );
+  const slugs: string[] = await root.smembers(`adminslugs_${Authorization}`);
 
   if (!slugs) {
     return { isSuccessful: false, message: "Unauthorized", status: 403 };
