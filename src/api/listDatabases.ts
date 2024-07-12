@@ -49,18 +49,28 @@ export const listDatabases: Endpoint<"listDatabases"> = async (context) => {
     token: rootDatabaseDetails.rest_token,
   });
 
-  const slugs: string[] = await root.smembers(`adminslugs_${Authorization}`);
+  const key = Authorization.slice("Bearer ".length);
+  const slugs: string[] = await root.smembers(`adminslugs_${key}`);
 
   if (!slugs) {
     return { isSuccessful: false, message: "Unauthorized", status: 403 };
   }
 
+  console.log({ slugs });
+
+  if (slugs.length < 1) {
+    return { isSuccessful: false, message: "Not enough slugs" };
+  }
   const details: (DatabaseDetails | null)[] = await root.mget(...slugs);
 
   const databases = details
     .map((x, index) =>
       x
-        ? { authToken: x.authToken, slug: slugs[index], schema: x.schema }
+        ? {
+            authToken: x.authToken,
+            databaseSlug: slugs[index],
+            //  schema: x.schema,
+          }
         : null,
     )
     .filter(notEmpty);
