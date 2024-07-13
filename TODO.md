@@ -12,16 +12,16 @@ https://data.actionschema.com/openapi.json GPT? good to have compatibility
 
 > I just refactored the whole openapi spec removing parameters because it doesn't work very well with GPTs and maybe others too. But now things at `/{slug}/read` and others don't arrive in the right place so we need to add them as duplicate operation to the openapi. This is also better because it adds transparancy as the spec really is so.
 
-- In vercel.json, ensure `/{s}/read` etc are somehow redirected to the real endpoints but with the parameter filled.
-- Properly handle the status-code (being 200 by default)
-- Later: Add oauth authentication strategy. Until that time, we can't make any useful GPT :/
-- Try again.
-- Test CRUD via GPT
+- ✅ Added a property to the resolve so it can handle the prefix, and also match it.
+- ✅ Test CRUDDY via GPT
+- ✅ Test the crud itself via 'admintoken' as well as via the crud token and confirm it works with the prefix thingy as well as via the regular path.
 - Test `agent-openapi/src/sdk/client.ts` via `client.test.ts`, ensuring it works.
+- Deploy
+- Try oauth security mechanism with the minimal way to make new admins login...
 
 ## User or group separation header
 
-Agent-openapi and CRUD-openapi user oAuth
+Agent-OpenAPI and CRUD-OpenAPI user oAuth
 
 Also admin oauth for root openapi
 
@@ -30,6 +30,10 @@ Figure out how to do Key Ranges or other way to efficiently index/separate on ke
 Figure out how to do oAuth properly so users can login when using the GPT
 
 Make a POC in the oAI GPT builder where the user logs in with oAuth, then it keeps track of a calendar-db for each user.
+
+## Ratelimit
+
+After there's oauth, add a ratelimit for every admin and every user of every crud.
 
 ## Improvements
 

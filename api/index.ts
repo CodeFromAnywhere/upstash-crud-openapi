@@ -155,9 +155,9 @@ export const resolveOpenapiAppRequest = async (
 
   //////// NB: Logic to also resolve if theres a prefix /////////
   const chunks = restPathname.split("/");
-  const prefixParameterValue = prefixParameterName ? chunks[0] : undefined;
+  const prefixParameterValue = prefixParameterName ? chunks[1] : undefined;
   const pathnameWithoutPrefix = prefixParameterName
-    ? restPathname.split("/").slice(1).join("/")
+    ? "/" + restPathname.split("/").slice(2).join("/")
     : undefined;
   const prefixMatch = pathnameWithoutPrefix
     ? router(pathnameWithoutPrefix)
@@ -168,6 +168,16 @@ export const resolveOpenapiAppRequest = async (
       ? { [prefixParameterName]: prefixParameterValue }
       : {};
   /////////
+
+  // console.log({
+  //   chunks,
+  //   prefixParameterName,
+  //   prefixParameterValue,
+  //   pathnameWithoutPrefix,
+  //   prefixMatch,
+  //   match,
+  //   prefixParamPart,
+  // });
 
   if (!regularMatch && !prefixMatch) {
     const allowedMethods = [
@@ -270,14 +280,14 @@ export const resolveOpenapiAppRequest = async (
     request,
   );
 
-  console.log({
-    url,
-    data,
-    requestPathname,
-    match,
-    headers,
-    queryParams,
-  });
+  // console.log({
+  //   url,
+  //   data,
+  //   requestPathname,
+  //   match,
+  //   headers,
+  //   queryParams,
+  // });
 
   const errors = schema
     ? tryValidateSchema({ schema: schema as JSONSchemaType<any>, data })
