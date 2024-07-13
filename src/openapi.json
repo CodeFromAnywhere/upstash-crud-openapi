@@ -7,6 +7,8 @@
     "version": "1.0",
     "description": ""
   },
+  "security": [{ "apiKey": [] }],
+
   "servers": [{ "url": "https://data.actionschema.com" }],
   "paths": {
     "/listDatabases": {
@@ -318,9 +320,15 @@
     }
   },
 
-  "security": [{ "apiKey": [] }],
-
   "components": {
+    "securitySchemes": {
+      "apiKey": {
+        "type": "http",
+        "bearerFormat": "Bearer",
+        "scheme": "bearer",
+        "description": "Admin Authtoken"
+      }
+    },
     "schemas": {
       "UrlSlug": {
         "type": "string",
@@ -361,7 +369,7 @@
           }
         },
         "additionalProperties": false,
-        "required": ["databaseSlug", "items"]
+        "required": ["items"]
       },
       "Sort": {
         "type": "object",
@@ -441,7 +449,6 @@
       "ReadContext": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["databaseSlug"],
         "properties": {
           "databaseSlug": { "type": "string" },
           "search": { "type": "string" },
@@ -510,7 +517,7 @@
             "description": "New (partial) value of the item. Will update all keys provided here. Please note that it cannot be set to 'undefined' as this doesn't transfer over JSON, but if you set it to 'null', the value will be removed from the database."
           }
         },
-        "required": ["databaseSlug", "id", "partialItem"]
+        "required": ["id", "partialItem"]
       },
 
       "UpdateResponse": {
@@ -544,7 +551,7 @@
           }
         },
         "additionalProperties": false,
-        "required": ["databaseSlug", "rowIds"]
+        "required": ["rowIds"]
       },
       "RemoveResponse": {
         "type": "object",
@@ -632,14 +639,6 @@
             "type": "number"
           }
         }
-      }
-    },
-    "securitySchemes": {
-      "apiKey": {
-        "type": "http",
-        "bearerFormat": "Bearer",
-        "scheme": "bearer",
-        "description": "Admin Authtoken"
       }
     }
   }

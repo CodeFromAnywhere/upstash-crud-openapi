@@ -14,7 +14,9 @@ Update an item in a specified row in a table.
 export const update: Endpoint<"update"> = async (context) => {
   const { id, databaseSlug, partialItem, Authorization } = context;
   const apiKey = Authorization?.slice("Bearer ".length);
-
+  if (!databaseSlug) {
+    return { isSuccessful: false, message: "please provide a slug" };
+  }
   const { databaseDetails } = await getDatabaseDetails(databaseSlug);
 
   if (!databaseDetails) {

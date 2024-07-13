@@ -12,7 +12,9 @@ export type ActionSchemaDeleteResponse = {
 export const remove: Endpoint<"remove"> = async (context) => {
   const { rowIds, databaseSlug, Authorization } = context;
   const apiKey = Authorization?.slice("Bearer ".length);
-
+  if (!databaseSlug) {
+    return { isSuccessful: false, message: "please provide a slug" };
+  }
   const { databaseDetails } = await getDatabaseDetails(databaseSlug);
 
   if (!databaseDetails) {

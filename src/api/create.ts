@@ -13,6 +13,10 @@ export const create: Endpoint<"create"> = async (
   result?: string[];
 }> => {
   const { items, databaseSlug, Authorization } = context;
+  if (!databaseSlug) {
+    return { isSuccessful: false, message: "please provide a slug" };
+  }
+
   const { databaseDetails } = await getDatabaseDetails(databaseSlug);
   const apiKey = Authorization?.slice("Bearer ".length);
 

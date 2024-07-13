@@ -164,7 +164,7 @@ export interface components {
             result?: string[];
         };
         CreateContext: {
-            databaseSlug: string;
+            databaseSlug?: string;
             items: components["schemas"]["ModelItem"][];
         };
         Sort: {
@@ -192,7 +192,7 @@ export interface components {
             hasMore?: boolean;
         };
         ReadContext: {
-            databaseSlug: string;
+            databaseSlug?: string;
             search?: string;
             vectorSearch?: {
                 propertyKey: string;
@@ -209,7 +209,7 @@ export interface components {
             ignoreObjectParameterKeys?: string[];
         };
         UpdateContext: {
-            databaseSlug: string;
+            databaseSlug?: string;
             /** @description The id (indexed key) of the item to update. Update that functions as upsert. If the id didn't exist, it will be created. */
             id: string;
             /** @description New (partial) value of the item. Will update all keys provided here. Please note that it cannot be set to 'undefined' as this doesn't transfer over JSON, but if you set it to 'null', the value will be removed from the database. */
@@ -223,7 +223,7 @@ export interface components {
             [key: string]: unknown;
         };
         RemoveContext: {
-            databaseSlug: string;
+            databaseSlug?: string;
             /** @description Which IDs should be removed */
             rowIds: string[];
         };

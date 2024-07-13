@@ -182,6 +182,9 @@ export const read: Endpoint<"read"> = async (context) => {
     Authorization,
   } = context;
   const apiKey = Authorization?.slice("Bearer ".length);
+  if (!databaseSlug) {
+    return { isSuccessful: false, message: "please provide a slug" };
+  }
 
   const { databaseDetails } = await getDatabaseDetails(databaseSlug);
 
