@@ -1,3 +1,4 @@
+/** Ensures the server is correct */
 export declare const getOpenapi: () => {
     servers: {
         url: string;
@@ -11,34 +12,7 @@ export declare const getOpenapi: () => {
         description: string;
     };
     paths: {
-        "/openapi.json": {
-            get: {
-                summary: string;
-                operationId: string;
-                responses: {
-                    "200": {
-                        description: string;
-                        content: {
-                            "application/json": {
-                                schema: {
-                                    $ref: string;
-                                };
-                            };
-                        };
-                    };
-                };
-            };
-        };
         "/listDatabases": {
-            parameters: {
-                in: string;
-                name: string;
-                schema: {
-                    type: string;
-                };
-                required: boolean;
-                description: string;
-            }[];
             get: {
                 summary: string;
                 operationId: string;
@@ -64,11 +38,19 @@ export declare const getOpenapi: () => {
                                             items: {
                                                 type: string;
                                                 additionalProperties: boolean;
+                                                required: string[];
                                                 properties: {
                                                     databaseSlug: {
                                                         type: string;
                                                     };
+                                                    openapiUrl: {
+                                                        type: string;
+                                                    };
                                                     authToken: {
+                                                        type: string;
+                                                        description: string;
+                                                    };
+                                                    schema: {
                                                         type: string;
                                                     };
                                                 };
@@ -83,15 +65,6 @@ export declare const getOpenapi: () => {
             };
         };
         "/createDatabase": {
-            parameters: {
-                in: string;
-                required: boolean;
-                name: string;
-                schema: {
-                    type: string;
-                    description: string;
-                };
-            }[];
             post: {
                 summary: string;
                 operationId: string;
@@ -112,17 +85,23 @@ export declare const getOpenapi: () => {
                                         type: string;
                                         description: string;
                                     };
-                                    vectorIndexColumns: {
-                                        $ref: string;
-                                    };
                                     authToken: {
                                         type: string;
                                         description: string;
+                                        minLength: number;
+                                        maxLength: number;
                                     };
                                     region: {
                                         description: string;
                                         type: string;
                                         enum: string[];
+                                    };
+                                    vectorIndexColumns: {
+                                        $ref: string;
+                                    };
+                                    openaiApiKey: {
+                                        type: string;
+                                        description: string;
                                     };
                                 };
                                 required: string[];
@@ -130,6 +109,24 @@ export declare const getOpenapi: () => {
                         };
                     };
                 };
+                responses: {
+                    "200": {
+                        description: string;
+                        content: {
+                            "application/json": {
+                                schema: {
+                                    $ref: string;
+                                };
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        "/openapi.json": {
+            get: {
+                summary: string;
+                operationId: string;
                 responses: {
                     "200": {
                         description: string;
@@ -215,80 +212,7 @@ export declare const getOpenapi: () => {
                 required: boolean;
             }[];
         };
-        "/{databaseSlug}/updateDatabase": {
-            post: {
-                summary: string;
-                operationId: string;
-                requestBody: {
-                    required: boolean;
-                    content: {
-                        "application/json": {
-                            schema: {
-                                type: string;
-                                properties: {
-                                    schemaString: {
-                                        type: string;
-                                        description: string;
-                                    };
-                                    authToken: {
-                                        type: string;
-                                        description: string;
-                                    };
-                                };
-                                required: string[];
-                            };
-                        };
-                    };
-                };
-                responses: {
-                    "200": {
-                        description: string;
-                        content: {
-                            "application/json": {
-                                schema: {
-                                    $ref: string;
-                                };
-                            };
-                        };
-                    };
-                };
-            };
-            parameters: ({
-                in: string;
-                required: boolean;
-                name: string;
-                schema: {
-                    type: string;
-                    description: string;
-                };
-            } | {
-                in: string;
-                name: string;
-                schema: {
-                    type: string;
-                    description?: undefined;
-                };
-                required: boolean;
-            })[];
-        };
-        "/{databaseSlug}/read": {
-            parameters: ({
-                in: string;
-                name: string;
-                schema: {
-                    type: string;
-                };
-                required: boolean;
-                description?: undefined;
-            } | {
-                in: string;
-                name: string;
-                schema: {
-                    type: string;
-                };
-                required: boolean;
-                description: string;
-            })[];
+        "/read": {
             post: {
                 summary: string;
                 operationId: string;
@@ -316,24 +240,7 @@ export declare const getOpenapi: () => {
                 };
             };
         };
-        "/{databaseSlug}/create": {
-            parameters: ({
-                in: string;
-                name: string;
-                schema: {
-                    type: string;
-                };
-                required: boolean;
-                description?: undefined;
-            } | {
-                in: string;
-                name: string;
-                schema: {
-                    type: string;
-                };
-                required: boolean;
-                description: string;
-            })[];
+        "/create": {
             post: {
                 summary: string;
                 operationId: string;
@@ -361,16 +268,7 @@ export declare const getOpenapi: () => {
                 };
             };
         };
-        "/{databaseSlug}/remove": {
-            parameters: {
-                in: string;
-                name: string;
-                schema: {
-                    type: string;
-                };
-                description: string;
-                required: boolean;
-            }[];
+        "/remove": {
             post: {
                 summary: string;
                 operationId: string;
@@ -398,24 +296,7 @@ export declare const getOpenapi: () => {
                 };
             };
         };
-        "/{databaseSlug}/update": {
-            parameters: ({
-                in: string;
-                name: string;
-                schema: {
-                    type: string;
-                };
-                required: boolean;
-                description?: undefined;
-            } | {
-                in: string;
-                name: string;
-                schema: {
-                    type: string;
-                };
-                required: boolean;
-                description: string;
-            })[];
+        "/update": {
             post: {
                 summary: string;
                 operationId: string;
@@ -444,6 +325,9 @@ export declare const getOpenapi: () => {
             };
         };
     };
+    security: {
+        apiKey: never[];
+    }[];
     components: {
         schemas: {
             UrlSlug: {
@@ -475,6 +359,9 @@ export declare const getOpenapi: () => {
             CreateContext: {
                 type: string;
                 properties: {
+                    databaseSlug: {
+                        type: string;
+                    };
                     items: {
                         type: string;
                         items: {
@@ -483,6 +370,7 @@ export declare const getOpenapi: () => {
                         };
                     };
                 };
+                additionalProperties: boolean;
                 required: string[];
             };
             Sort: {
@@ -547,7 +435,12 @@ export declare const getOpenapi: () => {
             };
             ReadContext: {
                 type: string;
+                additionalProperties: boolean;
+                required: string[];
                 properties: {
+                    databaseSlug: {
+                        type: string;
+                    };
                     search: {
                         type: string;
                     };
@@ -609,7 +502,11 @@ export declare const getOpenapi: () => {
             };
             UpdateContext: {
                 type: string;
+                additionalProperties: boolean;
                 properties: {
+                    databaseSlug: {
+                        type: string;
+                    };
                     id: {
                         type: string;
                         description: string;
@@ -641,6 +538,9 @@ export declare const getOpenapi: () => {
             RemoveContext: {
                 type: string;
                 properties: {
+                    databaseSlug: {
+                        type: string;
+                    };
                     rowIds: {
                         description: string;
                         type: string;
@@ -649,6 +549,7 @@ export declare const getOpenapi: () => {
                         };
                     };
                 };
+                additionalProperties: boolean;
                 required: string[];
             };
             RemoveResponse: {
@@ -723,6 +624,9 @@ export declare const getOpenapi: () => {
                 type: string;
                 required: string[];
                 properties: {
+                    status: {
+                        type: string;
+                    };
                     isSuccessful: {
                         type: string;
                     };
@@ -733,6 +637,14 @@ export declare const getOpenapi: () => {
                         type: string;
                     };
                 };
+            };
+        };
+        securitySchemes: {
+            apiKey: {
+                type: string;
+                bearerFormat: string;
+                scheme: string;
+                description: string;
             };
         };
     };

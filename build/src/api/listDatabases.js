@@ -3,19 +3,12 @@ import { getUpstashRedisDatabase } from "../upstashRedis.js";
 import { notEmpty } from "from-anywhere";
 export const listDatabases = async (context) => {
     const { Authorization } = context;
+    const apiKey = Authorization?.slice("Bearer ".length);
     // auth admin
     const rootUpstashApiKey = process.env["X_UPSTASH_API_KEY"];
     const rootUpstashEmail = process.env["X_UPSTASH_EMAIL"];
     const rootUpstashDatabaseId = process.env["X_UPSTASH_ROOT_DATABASE_ID"];
-    // TODO: also make it work for external upstash? not really needed i guess. maybe just cancel this feature in favor of self hosting.
-    // const upstashApiKey = X_UPSTASH_API_KEY || rootUpstashApiKey;
-    // const upstashEmail = X_UPSTASH_EMAIL || rootUpstashEmail;
-    if (
-    // !upstashApiKey ||
-    // !upstashEmail ||
-    !rootUpstashApiKey ||
-        !rootUpstashEmail ||
-        !rootUpstashDatabaseId) {
+    if (!rootUpstashApiKey || !rootUpstashEmail || !rootUpstashDatabaseId) {
         return {
             isSuccessful: false,
             status: 400,
@@ -38,13 +31,23 @@ export const listDatabases = async (context) => {
         url: `https://${rootDatabaseDetails.endpoint}`,
         token: rootDatabaseDetails.rest_token,
     });
-    const slugs = await root.get(`admin_${Authorization}`);
+    const slugs = await root.smembers(`adminslugs_${apiKey}`);
     if (!slugs) {
         return { isSuccessful: false, message: "Unauthorized", status: 403 };
     }
-    const details = await root.mget(slugs);
+    if (slugs.length < 1) {
+        return { isSuccessful: true, message: "No dbs yet" };
+    }
+    const details = await root.mget(...slugs);
     const databases = details
-        .map((x, index) => x ? { authToken: x.authToken, slug: slugs[index] } : null)
+        .map((x, index) => x
+        ? {
+            databaseSlug: slugs[index],
+            openapiUrl: `https://data.actionschema.com/${slugs[index]}/openapi.json`,
+            authToken: x.authToken,
+            schema: JSON.stringify(x.schema),
+        }
+        : null)
         .filter(notEmpty);
     return { isSuccessful: true, message: "Found your dbs", databases };
 };

@@ -7,7 +7,10 @@ type MergeIntersection<U> = UnionToIntersection<U> extends infer O ? {
 } : never;
 type MergeParameters<P> = MergeIntersection<Extract<P, {}>>;
 export type EndpointBody<T extends keyof operations> = (operations[T]["requestBody"] extends {} ? operations[T]["requestBody"]["content"]["application/json"] : {}) & MergeParameters<GetParameters<T>>;
-export type EndpointContext<K extends keyof operations> = (operations[K]["requestBody"] extends {} ? operations[K]["requestBody"]["content"]["application/json"] : {}) & MergeParameters<GetParameters<K>>;
+export type EndpointContext<K extends keyof operations> = (operations[K]["requestBody"] extends {} ? operations[K]["requestBody"]["content"]["application/json"] : {}) & MergeParameters<GetParameters<K>> & {
+    /** Will always be passed if present */
+    Authorization?: string;
+};
 export type ResponseType<T extends keyof operations> = operations[T]["responses"][200]["content"]["application/json"];
 export type Endpoint<T extends keyof operations> = (context: EndpointContext<T>) => PromiseOrNot<ResponseType<T>>;
 export declare const createClient: (config: {

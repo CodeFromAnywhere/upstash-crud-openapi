@@ -57,8 +57,9 @@ export const listDatabases: Endpoint<"listDatabases"> = async (context) => {
     .map((x, index) =>
       x
         ? {
-            authToken: x.authToken,
             databaseSlug: slugs[index],
+            openapiUrl: `https://data.actionschema.com/${slugs[index]}/openapi.json`,
+            authToken: x.authToken,
             schema: JSON.stringify(x.schema),
           }
         : null,

@@ -1,5 +1,6 @@
-import openapi from "../../src/openapi.json" assert { type: "json" };
+import openapi from "../openapi.json" assert { type: "json" };
 const isDev = process.env.__VERCEL_DEV_RUNNING === "1";
+/** Ensures the server is correct */
 export const getOpenapi = () => {
     const newOpenapi = {
         ...openapi,

@@ -1,8 +1,4 @@
 export const operationUrlObject = {
-    "getOpenapi": {
-        "method": "get",
-        "path": "/openapi.json"
-    },
     "listDatabases": {
         "method": "get",
         "path": "/listDatabases"
@@ -11,7 +7,11 @@ export const operationUrlObject = {
         "method": "post",
         "path": "/createDatabase"
     },
-    "renderCrudOpenapi": {
+    "getOpenapi": {
+        "method": "get",
+        "path": "/openapi.json"
+    },
+    "getCrudOpenapi": {
         "method": "get",
         "path": "/{databaseSlug}/openapi.json"
     },
@@ -19,25 +19,21 @@ export const operationUrlObject = {
         "method": "get",
         "path": "/{databaseSlug}/schema.json"
     },
-    "updateDatabase": {
-        "method": "post",
-        "path": "/{databaseSlug}/updateDatabase"
-    },
     "read": {
         "method": "post",
-        "path": "/{databaseSlug}/read"
+        "path": "/read"
     },
     "create": {
         "method": "post",
-        "path": "/{databaseSlug}/create"
+        "path": "/create"
     },
     "remove": {
         "method": "post",
-        "path": "/{databaseSlug}/remove"
+        "path": "/remove"
     },
     "update": {
         "method": "post",
-        "path": "/{databaseSlug}/update"
+        "path": "/update"
     }
 };
 export const operationKeys = Object.keys(operationUrlObject);

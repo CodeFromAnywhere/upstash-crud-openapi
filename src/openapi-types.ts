@@ -32,6 +32,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/openapi.json": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get openapi */
+        get: operations["getOpenapi"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/{databaseSlug}/openapi.json": {
         parameters: {
             query?: never;
@@ -42,7 +59,7 @@ export interface paths {
             cookie?: never;
         };
         /** Get openapi for this database table alone */
-        get: operations["renderCrudOpenapi"];
+        get: operations["getCrudOpenapi"];
         put?: never;
         post?: never;
         delete?: never;
@@ -467,6 +484,8 @@ export interface operations {
                         status?: number;
                         databases?: {
                             databaseSlug: string;
+                            openapiUrl: string;
+                            /** @description Bearer Authorization token to be used for the openapi of this specific database. Can be used interchangeably to the admin authtoken. */
                             authToken: string;
                             schema: string;
                         }[];
@@ -520,7 +539,27 @@ export interface operations {
             };
         };
     };
-    renderCrudOpenapi: {
+    getOpenapi: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OpenAPI */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["openapi.schema"];
+                };
+            };
+        };
+    };
+    getCrudOpenapi: {
         parameters: {
             query?: never;
             header?: never;
@@ -693,7 +732,11 @@ export const operationUrlObject = {
     "method": "post",
     "path": "/createDatabase"
   },
-  "renderCrudOpenapi": {
+  "getOpenapi": {
+    "method": "get",
+    "path": "/openapi.json"
+  },
+  "getCrudOpenapi": {
     "method": "get",
     "path": "/{databaseSlug}/openapi.json"
   },

@@ -59,9 +59,7 @@ const removePropertiesFromObjectSchema = (
 Should make a CRUD openapi from the schema fetched from database id
 */
 
-export const getCrudOpenapi: Endpoint<"renderCrudOpenapi"> = async (
-  context,
-) => {
+export const getCrudOpenapi: Endpoint<"getCrudOpenapi"> = async (context) => {
   const { databaseSlug } = context;
   // comes from path parameter
   const { databaseDetails } = await getDatabaseDetails(databaseSlug);
@@ -117,6 +115,6 @@ export const getCrudOpenapi: Endpoint<"renderCrudOpenapi"> = async (
     security: [{ bearerAuth: [] }],
   };
 
-  return improved as unknown as ResponseType<"renderCrudOpenapi">;
   // bit ugly but couldn't find another way
+  return improved as unknown as ResponseType<"getCrudOpenapi">;
 };

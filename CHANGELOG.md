@@ -142,3 +142,21 @@ https://chatgpt.com/share/3a11c4f6-0637-4e31-83e9-e74d7e6733bd
 
 - ✅ Made a fantastic POC that allows one to browse their own DBs via a html website
 - ✅ Came up with `website.yaml` data format for making frontends
+
+## CRUDDY GPT (July 13th)
+
+❗️❗️❗️ Finish until it fully works again. things are broken now ❗️❗️❗️
+
+https://data.actionschema.com/openapi.json GPT? good to have compatibility
+
+- ✅ Removed unsupported 'parameters' from CRUD openapi and added global auth header
+- ✅ Add props from `securityScheme` to `Endpoint` type and pass it correctly
+- ✅ Remove the `databaseSlug` body-parameter from the `renderCrudOpenapi` response
+
+> I just refactored the whole openapi spec removing parameters because it doesn't work very well with GPTs and maybe others too. But now things at `/{slug}/read` and others don't arrive in the right place so we need to add them as duplicate operation to the openapi. This is also better because it adds transparancy as the spec really is so.
+
+- ✅ Added a property to the resolve so it can handle the prefix, and also match it.
+- ✅ Test CRUDDY via GPT
+- ✅ Test the crud itself via 'admintoken' as well as via the crud token and confirm it works with the prefix thingy as well as via the regular path.
+- ✅ Deploy
+- ✅ Test `agent-openapi/src/sdk/client.ts` via `client.test.ts`, ensuring it works. **Fixed some bugs. Now works!**

@@ -29,10 +29,19 @@
                       "items": {
                         "type": "object",
                         "additionalProperties": false,
-                        "required": ["databaseSlug", "authToken", "schema"],
+                        "required": [
+                          "databaseSlug",
+                          "authToken",
+                          "schema",
+                          "openapiUrl"
+                        ],
                         "properties": {
                           "databaseSlug": { "type": "string" },
-                          "authToken": { "type": "string" },
+                          "openapiUrl": { "type": "string" },
+                          "authToken": {
+                            "type": "string",
+                            "description": "Bearer Authorization token to be used for the openapi of this specific database. Can be used interchangeably to the admin authtoken."
+                          },
                           "schema": { "type": "string" }
                         }
                       }
