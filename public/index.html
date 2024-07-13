@@ -1,17 +1,136 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <title>CRUD OpenAPI</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CRUD Admin Panel</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
 
-    <script src="https://unpkg.com/@stoplight/elements/web-components.min.js"></script>
-    <link rel="stylesheet" href="https://unpkg.com/@stoplight/elements/styles.min.css">
+        .container {
+            max-width: 800px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #333;
+        }
+
+        input[type="text"],
+        button {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+        }
+
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        li {
+            background: #f4f4f4;
+            margin: 5px 0;
+            padding: 10px;
+            border-radius: 3px;
+        }
+
+        a {
+            color: #333;
+            text-decoration: none;
+        }
+
+        a:hover {
+            color: #666;
+        }
+    </style>
 </head>
 
 <body>
-    <elements-api apiDescriptionUrl="openapi.json" router="hash" />
+    <div class="container">
+        <h1>CRUD Admin Panel</h1>
+        <input type="text" id="adminToken" placeholder="Enter admin token">
+        <button onclick="setAdminToken()">Set Admin Token</button>
+        <ul id="databaseList"></ul>
+    </div>
+
+    <script>
+        function setAdminToken() {
+            const token = document.getElementById('adminToken').value;
+            localStorage.setItem('adminToken', token);
+            fetchDatabases();
+        }
+
+        async function fetchDatabases() {
+            const token = localStorage.getItem('adminToken');
+            if (!token) {
+                alert('Please set the admin token first.');
+                return;
+            }
+
+            try {
+                const response = await fetch('https://data.actionschema.com/listDatabases', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                const data = await response.json();
+
+                if (data.isSuccessful) {
+                    localStorage.setItem('databases', JSON.stringify(data.databases));
+                    displayDatabases(data.databases);
+                } else {
+                    alert('Failed to fetch databases: ' + data.message);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('An error occurred while fetching databases.');
+            }
+        }
+
+        function displayDatabases(databases) {
+            const list = document.getElementById('databaseList');
+            list.innerHTML = '';
+            databases.forEach(db => {
+                const li = document.createElement('li');
+                const a = document.createElement('a');
+                a.href = `model.html?databaseSlug=${db.databaseSlug}`;
+                a.textContent = db.databaseSlug;
+                li.appendChild(a);
+                list.appendChild(li);
+            });
+        }
+
+        // Check if admin token exists and fetch databases on page load
+        window.onload = () => {
+            const token = localStorage.getItem('adminToken');
+            if (token) {
+                fetchDatabases();
+            }
+        };
+    </script>
 </body>
 
 </html>

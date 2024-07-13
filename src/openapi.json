@@ -9,36 +9,7 @@
   },
   "servers": [{ "url": "https://data.actionschema.com" }],
   "paths": {
-    "/openapi.json": {
-      "get": {
-        "summary": "Get openapi",
-        "operationId": "getOpenapi",
-
-        "responses": {
-          "200": {
-            "description": "OpenAPI",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "https://raw.githubusercontent.com/CodeFromAnywhere/ActionSchema/main/schemas/openapi.schema.json"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-
     "/listDatabases": {
-      "parameters": [
-        {
-          "in": "header",
-          "name": "Authorization",
-          "schema": { "type": "string" },
-          "required": true,
-          "description": "Bearer authorization for admin."
-        }
-      ],
       "get": {
         "summary": "List your databases",
         "operationId": "listDatabases",
@@ -50,21 +21,19 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "isSuccessful": {
-                      "type": "boolean"
-                    },
-                    "message": {
-                      "type": "string"
-                    },
+                    "isSuccessful": { "type": "boolean" },
+                    "message": { "type": "string" },
                     "status": { "type": "number" },
                     "databases": {
                       "type": "array",
                       "items": {
                         "type": "object",
                         "additionalProperties": false,
+                        "required": ["databaseSlug", "authToken", "schema"],
                         "properties": {
                           "databaseSlug": { "type": "string" },
-                          "authToken": { "type": "string" }
+                          "authToken": { "type": "string" },
+                          "schema": { "type": "string" }
                         }
                       }
                     }
@@ -78,45 +47,6 @@
     },
 
     "/createDatabase": {
-      "parameters": [
-        {
-          "in": "header",
-          "required": false,
-          "name": "X_UPSTASH_EMAIL",
-          "schema": {
-            "type": "string",
-            "description": "If you want to use your own upstash account, fill in the details here."
-          }
-        },
-        {
-          "in": "header",
-          "required": false,
-          "name": "X_UPSTASH_API_KEY",
-          "schema": {
-            "type": "string",
-            "description": "If you want to use your own upstash account, fill in the details here."
-          }
-        },
-        {
-          "in": "header",
-          "required": false,
-          "name": "X_OPENAPI_API_KEY",
-          "schema": {
-            "type": "string",
-            "description": "Needed incase you use embeddings."
-          }
-        },
-        {
-          "in": "header",
-          "required": false,
-          "name": "X_ADMIN_AUTH_TOKEN",
-          "schema": {
-            "type": "string",
-            "description": "Provide your admin authtoken if you have it. If you don't it will be generated for you."
-          }
-        }
-      ],
-
       "post": {
         "summary": "",
         "operationId": "createDatabase",
@@ -140,13 +70,11 @@
                     "description": "JSON of the schema you want the database to refer to. Should be a Object JSON Schema."
                   },
 
-                  "vectorIndexColumns": {
-                    "$ref": "#/components/schemas/VectorIndexColumns"
-                  },
-
                   "authToken": {
                     "type": "string",
-                    "description": "Token required to authrorize using the CRUD endpoints. Will be generated if not given."
+                    "description": "Token required to authrorize using the CRUD endpoints. Will be generated if not given.",
+                    "minLength": 32,
+                    "maxLength": 128
                   },
 
                   "region": {
@@ -159,6 +87,14 @@
                       "ap-northeast-1",
                       "us-central1"
                     ]
+                  },
+
+                  "vectorIndexColumns": {
+                    "$ref": "#/components/schemas/VectorIndexColumns"
+                  },
+                  "openaiApiKey": {
+                    "type": "string",
+                    "description": "Needed if you use vectorIndexColumns"
                   }
                 },
                 "required": ["schemaString", "databaseSlug"]
@@ -180,11 +116,28 @@
         }
       }
     },
-
+    "/openapi.json": {
+      "get": {
+        "summary": "Get openapi",
+        "operationId": "getOpenapi",
+        "responses": {
+          "200": {
+            "description": "OpenAPI",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "https://raw.githubusercontent.com/CodeFromAnywhere/ActionSchema/main/schemas/openapi.schema.json"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/{databaseSlug}/openapi.json": {
       "get": {
         "summary": "Get openapi for this database table alone",
-        "operationId": "renderCrudOpenapi",
+        "operationId": "getCrudOpenapi",
 
         "responses": {
           "200": {
@@ -255,80 +208,7 @@
       ]
     },
 
-    "/{databaseSlug}/updateDatabase": {
-      "post": {
-        "summary": "Update Database",
-        "operationId": "updateDatabase",
-
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "schemaString": {
-                    "type": "string",
-                    "description": "JSON of the schema you want the database to refer to. Should be a Object JSON Schema."
-                  },
-                  "authToken": {
-                    "type": "string",
-                    "description": "Token required to authrorize using the CRUD endpoints."
-                  }
-                },
-                "required": ["schemaString", "authToken"]
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Update database response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/StandardResponse"
-                }
-              }
-            }
-          }
-        }
-      },
-      "parameters": [
-        {
-          "in": "header",
-          "required": true,
-          "name": "X_ADMIN_AUTH_TOKEN",
-          "schema": {
-            "type": "string",
-            "description": "Provide your admin authtoken for this database."
-          }
-        },
-        {
-          "in": "path",
-          "name": "databaseSlug",
-          "schema": { "type": "string" },
-          "required": true
-        }
-      ]
-    },
-
-    "/{databaseSlug}/read": {
-      "parameters": [
-        {
-          "in": "path",
-          "name": "databaseSlug",
-          "schema": { "type": "string" },
-          "required": true
-        },
-        {
-          "in": "header",
-          "name": "Authorization",
-          "schema": { "type": "string" },
-          "required": false,
-          "description": "Bearer authorization"
-        }
-      ],
+    "/read": {
       "post": {
         "summary": "",
         "operationId": "read",
@@ -353,22 +233,7 @@
       }
     },
 
-    "/{databaseSlug}/create": {
-      "parameters": [
-        {
-          "in": "path",
-          "name": "databaseSlug",
-          "schema": { "type": "string" },
-          "required": true
-        },
-        {
-          "in": "header",
-          "name": "Authorization",
-          "schema": { "type": "string" },
-          "required": false,
-          "description": "Bearer authorization"
-        }
-      ],
+    "/create": {
       "post": {
         "summary": "",
         "operationId": "create",
@@ -392,23 +257,8 @@
         }
       }
     },
-    "/{databaseSlug}/remove": {
-      "parameters": [
-        {
-          "in": "path",
-          "name": "databaseSlug",
-          "schema": { "type": "string" },
-          "description": "Upstash ID of the database",
-          "required": true
-        },
-        {
-          "in": "header",
-          "name": "Authorization",
-          "schema": { "type": "string" },
-          "required": false,
-          "description": "Bearer authorization"
-        }
-      ],
+
+    "/remove": {
       "post": {
         "summary": "",
         "operationId": "remove",
@@ -432,22 +282,8 @@
         }
       }
     },
-    "/{databaseSlug}/update": {
-      "parameters": [
-        {
-          "in": "path",
-          "name": "databaseSlug",
-          "schema": { "type": "string" },
-          "required": true
-        },
-        {
-          "in": "header",
-          "name": "Authorization",
-          "schema": { "type": "string" },
-          "required": false,
-          "description": "Bearer authorization"
-        }
-      ],
+
+    "/update": {
       "post": {
         "summary": "",
         "operationId": "update",
@@ -472,6 +308,9 @@
       }
     }
   },
+
+  "security": [{ "apiKey": [] }],
+
   "components": {
     "schemas": {
       "UrlSlug": {
@@ -503,6 +342,7 @@
       "CreateContext": {
         "type": "object",
         "properties": {
+          "databaseSlug": { "type": "string" },
           "items": {
             "type": "array",
             "items": {
@@ -511,7 +351,8 @@
             }
           }
         },
-        "required": ["items"]
+        "additionalProperties": false,
+        "required": ["databaseSlug", "items"]
       },
       "Sort": {
         "type": "object",
@@ -590,10 +431,11 @@
       },
       "ReadContext": {
         "type": "object",
+        "additionalProperties": false,
+        "required": ["databaseSlug"],
         "properties": {
-          "search": {
-            "type": "string"
-          },
+          "databaseSlug": { "type": "string" },
+          "search": { "type": "string" },
           "vectorSearch": {
             "type": "object",
             "properties": {
@@ -646,7 +488,10 @@
 
       "UpdateContext": {
         "type": "object",
+        "additionalProperties": false,
+
         "properties": {
+          "databaseSlug": { "type": "string" },
           "id": {
             "type": "string",
             "description": "The id (indexed key) of the item to update. Update that functions as upsert. If the id didn't exist, it will be created."
@@ -656,7 +501,7 @@
             "description": "New (partial) value of the item. Will update all keys provided here. Please note that it cannot be set to 'undefined' as this doesn't transfer over JSON, but if you set it to 'null', the value will be removed from the database."
           }
         },
-        "required": ["id", "partialItem"]
+        "required": ["databaseSlug", "id", "partialItem"]
       },
 
       "UpdateResponse": {
@@ -680,6 +525,7 @@
       "RemoveContext": {
         "type": "object",
         "properties": {
+          "databaseSlug": { "type": "string" },
           "rowIds": {
             "description": "Which IDs should be removed",
             "type": "array",
@@ -688,7 +534,8 @@
             }
           }
         },
-        "required": ["rowIds"]
+        "additionalProperties": false,
+        "required": ["databaseSlug", "rowIds"]
       },
       "RemoveResponse": {
         "type": "object",
@@ -723,6 +570,7 @@
           "openapiUrl": { "type": "string" }
         }
       },
+
       "VectorIndexColumns": {
         "description": "A list of vector indexes to be created for several columns in your schema",
         "type": "array",
@@ -764,6 +612,7 @@
         "type": "object",
         "required": ["isSuccessful"],
         "properties": {
+          "status": { "type": "number" },
           "isSuccessful": {
             "type": "boolean"
           },
@@ -774,6 +623,14 @@
             "type": "number"
           }
         }
+      }
+    },
+    "securitySchemes": {
+      "apiKey": {
+        "type": "http",
+        "bearerFormat": "Bearer",
+        "scheme": "bearer",
+        "description": "Admin Authtoken"
       }
     }
   }

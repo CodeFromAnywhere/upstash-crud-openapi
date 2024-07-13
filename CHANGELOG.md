@@ -60,7 +60,7 @@
 
 ## Editing
 
-✅ Render form for `updateDatabase` `data.actionschema.com/[databaseSlug]`
+✅ Render form for `updateDatabase` `data.actionschema.com`
 
 ✅ Prefil form with localStorage-values.
 
@@ -122,13 +122,15 @@ https://chatgpt.com/share/3a11c4f6-0637-4e31-83e9-e74d7e6733bd
 - ✅ Refactor `vercel.json` so it directs to `index.ts` for all routes.
 - ✅ Fix imports and other problems that arised
 - ✅ Confirm that everything works as expected!
-- ✅ Also expose the `index.html` at `GET /[databaseSlug]` by using `fs` to import it. It should allow to test any slug.
+- ✅ Also expose the `index.html` at `GET ` by using `fs` to import it. It should allow to test any slug.
 - ✅ Also expose GET `/slug/schema.json`
 - ✅ Create new endpoint `listDatabases`
 - ✅ When creating/updating a CRUD DB, ensure to save it in another KV where the key is the admin authToken, the value all db slugs so far.
 - ✅ Make a `listDatabases` endpoint `listDatabases(admintoken) ==> mylist[]`
 
-# Improve actionschema migrate
+🎉 Fully refactored this from a next.js to a bare vercel project, being aware that this changes the capabilities. We can now not use react easily anymore, but this is ok since the base is the openapi, and it serves stoplight at the index.
+
+## Improve actionschema migrate
 
 - ✅ Function `openapiCombinationToSdkConfig`
 - ✅ Make two agents in JSON files
@@ -136,113 +138,7 @@ https://chatgpt.com/share/3a11c4f6-0637-4e31-83e9-e74d7e6733bd
 - ✅ Bun segfault. Fix `runMigration` in a way that it works using `npx` instead.
 - ✅ Make it search `public/actionschema.json` as well
 
-# Fix agents openapi and GPT
+## FE Generation
 
-- Confirm that I can test the CRUD's easily using the elements.
-- Test CRUD and confirm it works well with authentication and all.
-- Test agent client via code, ensuring it works. Redeploy.
-- Ensure this can somehow be verified when migrating to prevent this in the future. After CRUD works, make agent. After agent works, make message work via proxy.
-- Add list-agents endpoint
-- After https://data.actionschema.com/openapi.json validates properly, let's make an agent for it in GPT. It should be usable.
-
-# Agent migration
-
-- Change `runMigration` so it can also create agents based on the `agentConfig`
-- 🟠 Run migrate CLI for agents so the slugs get added.
-
-🎉 Fully refactored this from a next.js to a bare vercel project, being aware that this changes the capabilities. We can now not use react easily anymore, but this is ok since the base is the openapi, and it serves stoplight at the index.
-
-## Refactor agent-openapi
-
-Agent-openapi ==> make a list endpoint `list(admintoken) ==> mylist[]` which should simply proxy to the `read` endpoint for the crud
-
-Follow same practices so i can message all agents from here
-
-## OpenAPI overview
-
-Look at `getOperations` and `resolveReferenceOrContinue` and finish it or remove it altogether if not needed. Ensure it never throws unexpectedly.
-
-Ensure EnhancementProxy, CombinationProxy, and AgentOpenapi datstructures are available in `public`.
-
-Confirm we can use data.actionschema.com with `$ref` to an external url like the above.
-
-Use data.actionschema.com to create CRUD openapis to keep a global state for:
-
-- EnhancementProxy: https://openapi.actionschema.com/[proxySlug]/openapi.json
-- CombinationProxy: https://proxy.actionschema.com/[proxySlug]/openapi.json
-
-In explorer, make a frontpage in which you can CRD openapi URLs. Start by adding my own...
-
-For `https://data.actionschema.com/openapi.json`: Error: Value isn't defined [0] at resolveReferenceOrContinue
-
-Ensure to also link to swagger to get proper validations from there.
-
-# Combination proxy
-
-I really need it? Or would support for using 2 openapis and using a queryparameter on it to prune suffice?
-
-# 🔴 User Separation
-
-Agent-openapi and CRUD-openapi user oAuth
-
-Figure out how to do Key Ranges or other way to efficiently index/separate on keys
-
-Figure out how to do oAuth properly so users can login when using the GPT
-
-Make a POC in the oAI GPT builder where the user logs in with oAuth, then it keeps track of a calendar-db for each user.
-
-# 🔴 Threads
-
-Create CRUD for messages
-
-Use the client for that to store messages for the thread. Ensure we use something like `X-USER-AUTH` or so for determining the user.
-
-- For whatsapp, load in the thread of the phone number
-- For phonecall, load in the thread for the phone number
-- For email, load in the thread for the email
-
-# 🔴 Files
-
-Now we are relying on gpt4 to process just the images which is useful as it is much more integrated and will be in the future, but what about processing of all kinds of stuff? An AI can do this in many ways and that is why we need cool tools.
-
-Let's do it like this:
-
-- provide `attachmentUrls` as text in an additional message, but provide some additional context for each file
-- tools provided can use these URLs & context as parameters.
-
-This way we can make our own multimodal LLM with extra functionalities that depend on the usecase. This keeps the model super general purpose.
-
-A good start would be to create an agent that allows for image generation, speech generation, and speech analsysis. Perfect for whatsapp!
-
-# Improvements
-
-- Ensure at the `/update` endpoint "required" is removed from the type interface.
-- Greatly simplify the CRUD API by removing lots of stuff and use some sort of hybrid search. Remove ambiguity and make search much more simple
-
-# MORE COOL STUFF
-
-🔴 CRUD to keep and reveal user info + Agent
-🔴 Conventional Agent to make CRUD agent more reliable
-🔴 API for twilio to connect to another websocket or phonenumber
-🔴 Phone number that I can call to make a new agent for any datastructure. It can make the agent, then redirect me to it.
-🔴 CRUD cron-sync capability (e.g. with drive, calendar)
-
-The above is basically a Voice Excelsheet. This would be insanely useful.
-
-# Different LLMs
-
-https://sdk.vercel.ai/providers/ai-sdk-providers#provider-support
-
-https://x.com/transitive_bs <-- get feedback, integrate with his stuff maybe?
-
-Read here. These providers should all have an Open API. I should be able to merge them into a single endpoint with some AI that maps it, given very specific instructions. I should be able to have a single gateway in which the openapi url, action, and parameters are provided, in which the map is cached. This would be super epic, as it allows people to provide their own openapi URL without changing the script.
-
-# Sendgrid client
-
-Same trick, same worker.
-
-# Relative references
-
-Schemas and openapis should have ability to cross reference local relative files. This should be able to be resolved in all tools, both locally and in production, buth on backend and frontend.
-
-This will help to remove code duplication in schemas that is becoming an increasingly big problem now.
+- ✅ Made a fantastic POC that allows one to browse their own DBs via a html website
+- ✅ Came up with `website.yaml` data format for making frontends

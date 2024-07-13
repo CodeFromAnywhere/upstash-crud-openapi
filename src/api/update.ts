@@ -1,8 +1,8 @@
 import { O, getSubsetFromObject, objectMapSync } from "from-anywhere";
-import { upstashRedisSetItems } from "../../upstashRedis.js";
-import { Endpoint } from "../../client.js";
-import { getDatabaseDetails } from "../../getDatabaseDetails.js";
-import { upsertIndexVectors } from "../../embeddings.js";
+import { upstashRedisSetItems } from "../upstashRedis.js";
+import { Endpoint } from "../client.js";
+import { getDatabaseDetails } from "../getDatabaseDetails.js";
+import { upsertIndexVectors } from "../embeddings.js";
 
 /**
 Update an item in a specified row in a table.
@@ -13,6 +13,7 @@ Update an item in a specified row in a table.
  */
 export const update: Endpoint<"update"> = async (context) => {
   const { id, databaseSlug, partialItem, Authorization } = context;
+  const apiKey = Authorization?.slice("Bearer ".length);
 
   const { databaseDetails } = await getDatabaseDetails(databaseSlug);
 
@@ -23,13 +24,14 @@ export const update: Endpoint<"update"> = async (context) => {
   if (
     databaseDetails.authToken !== undefined &&
     databaseDetails.authToken !== "" &&
-    Authorization !== `Bearer ${databaseDetails.authToken}`
+    apiKey !== databaseDetails.authToken &&
+    apiKey !== databaseDetails.adminAuthToken
   ) {
-    return { isSuccessful: false, message: "Unauthorized" };
+    return { isSuccessful: false, message: "Unauthorized", status: 403 };
   }
 
   if (id === undefined || !partialItem) {
-    return { isSuccessful: false, message: "Invalid inputs" };
+    return { isSuccessful: false, message: "Invalid inputs", status: 422 };
   }
 
   const partialItemPropertyKeys = Object.keys(partialItem);

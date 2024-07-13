@@ -1,7 +1,7 @@
 import { Redis } from "@upstash/redis";
-import { Endpoint } from "../../client.js";
-import { getDatabaseDetails } from "../../getDatabaseDetails.js";
-import { embeddingsClient } from "../../embeddings.js";
+import { Endpoint } from "../client.js";
+import { getDatabaseDetails } from "../getDatabaseDetails.js";
+import { embeddingsClient } from "../embeddings.js";
 
 export type ActionSchemaDeleteResponse = {
   isSuccessful: boolean;
@@ -11,6 +11,7 @@ export type ActionSchemaDeleteResponse = {
 
 export const remove: Endpoint<"remove"> = async (context) => {
   const { rowIds, databaseSlug, Authorization } = context;
+  const apiKey = Authorization?.slice("Bearer ".length);
 
   const { databaseDetails } = await getDatabaseDetails(databaseSlug);
 
@@ -21,7 +22,8 @@ export const remove: Endpoint<"remove"> = async (context) => {
   if (
     databaseDetails.authToken !== undefined &&
     databaseDetails.authToken !== "" &&
-    Authorization !== `Bearer ${databaseDetails.authToken}`
+    apiKey !== databaseDetails.authToken &&
+    apiKey !== databaseDetails.adminAuthToken
   ) {
     return { isSuccessful: false, message: "Unauthorized" };
   }

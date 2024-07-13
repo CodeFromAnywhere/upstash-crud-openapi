@@ -23,27 +23,18 @@ export const createDatabase: Endpoint<"createDatabase"> = async (context) => {
     schemaString,
     authToken,
     region,
-    X_UPSTASH_API_KEY,
-    X_UPSTASH_EMAIL,
-    X_ADMIN_AUTH_TOKEN,
-    X_OPENAPI_API_KEY,
+    openaiApiKey,
     vectorIndexColumns,
+    Authorization,
   } = context;
-  // comes from headers or .env
+  const apiKey = Authorization?.slice("Bearer ".length);
+
+  // comes from .env
   const rootUpstashApiKey = process.env["X_UPSTASH_API_KEY"];
   const rootUpstashEmail = process.env["X_UPSTASH_EMAIL"];
   const rootUpstashDatabaseId = process.env["X_UPSTASH_ROOT_DATABASE_ID"];
 
-  const upstashApiKey = X_UPSTASH_API_KEY || rootUpstashApiKey;
-  const upstashEmail = X_UPSTASH_EMAIL || rootUpstashEmail;
-
-  if (
-    !upstashApiKey ||
-    !upstashEmail ||
-    !rootUpstashApiKey ||
-    !rootUpstashEmail ||
-    !rootUpstashDatabaseId
-  ) {
+  if (!rootUpstashApiKey || !rootUpstashEmail || !rootUpstashDatabaseId) {
     return {
       isSuccessful: false,
       message: "Please provide your upstash details environment variables",
@@ -86,7 +77,7 @@ export const createDatabase: Endpoint<"createDatabase"> = async (context) => {
     ["root", rootDatabaseName].includes(realDatabaseSlug) ||
     (previousDatabaseDetails &&
       !!previousDatabaseDetails.adminAuthToken &&
-      previousDatabaseDetails.adminAuthToken !== X_ADMIN_AUTH_TOKEN)
+      previousDatabaseDetails.adminAuthToken !== apiKey)
   ) {
     return {
       isSuccessful: false,
@@ -101,13 +92,13 @@ export const createDatabase: Endpoint<"createDatabase"> = async (context) => {
   if (!previousDatabaseDetails) {
     // creates indexes
     const vectorIndexColumnDetails =
-      vectorIndexColumns && upstashApiKey && upstashEmail
+      vectorIndexColumns && rootUpstashApiKey && rootUpstashEmail
         ? (
             await Promise.all(
               vectorIndexColumns.map(async (item) => {
                 const index = await embeddingsClient.createIndex({
-                  upstashApiKey,
-                  upstashEmail,
+                  upstashApiKey: rootUpstashApiKey,
+                  upstashEmail: rootUpstashEmail,
                   dimension_count: item.dimension_count,
                   region: item.region,
                   similarity_function: item.similarity_function,
@@ -133,8 +124,8 @@ export const createDatabase: Endpoint<"createDatabase"> = async (context) => {
     const realAuthToken = authToken || generateId();
     //create if we couldn't find it before
     const created = await createUpstashRedisDatabase({
-      upstashApiKey,
-      upstashEmail,
+      upstashApiKey: rootUpstashApiKey,
+      upstashEmail: rootUpstashEmail,
       name: realDatabaseSlug,
       region,
     });
@@ -143,14 +134,14 @@ export const createDatabase: Endpoint<"createDatabase"> = async (context) => {
       return { isSuccessful: false, message: created.message };
     }
 
-    const adminAuthToken = X_ADMIN_AUTH_TOKEN || generateRandomString(64);
+    const adminAuthToken = apiKey || generateRandomString(64);
 
     databaseDetails = {
-      openaiApiKey: X_OPENAPI_API_KEY,
+      openaiApiKey,
       vectorIndexColumnDetails,
       adminAuthToken,
-      upstashApiKey,
-      upstashEmail,
+      upstashApiKey: rootUpstashApiKey,
+      upstashEmail: rootUpstashEmail,
       authToken: realAuthToken,
       database_id: created.result.database_id,
       endpoint: created.result.endpoint,
@@ -165,21 +156,16 @@ export const createDatabase: Endpoint<"createDatabase"> = async (context) => {
 
       authToken: authToken || previousDatabaseDetails.authToken,
 
-      upstashApiKey: upstashApiKey,
-      upstashEmail: upstashEmail,
+      upstashApiKey: rootUpstashApiKey,
+      upstashEmail: rootUpstashEmail,
       schema,
     };
   }
 
-  console.log("OK Setting");
   // re-set the database details
   await root.set(realDatabaseSlug, databaseDetails);
 
-  const n = await root.sadd(
-    `adminslugs_${X_ADMIN_AUTH_TOKEN}`,
-    realDatabaseSlug,
-  );
-  console.log({ n });
+  const n = await root.sadd(`adminslugs_${apiKey}`, realDatabaseSlug);
 
   return {
     isSuccessful: true,

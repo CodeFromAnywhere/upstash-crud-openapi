@@ -1,8 +1,8 @@
-import { Endpoint } from "../../client.js";
-import { getDatabaseDetails } from "../../getDatabaseDetails.js";
-import { upstashRedisSetItems } from "../../upstashRedis.js";
+import { Endpoint } from "../client.js";
+import { getDatabaseDetails } from "../getDatabaseDetails.js";
+import { upstashRedisSetItems } from "../upstashRedis.js";
 import { generateId, mergeObjectsArray } from "from-anywhere";
-import { upsertIndexVectors } from "../../embeddings.js";
+import { upsertIndexVectors } from "../embeddings.js";
 
 export const create: Endpoint<"create"> = async (
   context,
@@ -13,8 +13,8 @@ export const create: Endpoint<"create"> = async (
   result?: string[];
 }> => {
   const { items, databaseSlug, Authorization } = context;
-
   const { databaseDetails } = await getDatabaseDetails(databaseSlug);
+  const apiKey = Authorization?.slice("Bearer ".length);
 
   if (!databaseDetails) {
     return { isSuccessful: false, message: "Couldn't find database details" };
@@ -23,7 +23,8 @@ export const create: Endpoint<"create"> = async (
   if (
     databaseDetails.authToken !== undefined &&
     databaseDetails.authToken !== "" &&
-    Authorization !== `Bearer ${databaseDetails.authToken}`
+    apiKey !== databaseDetails.authToken &&
+    apiKey !== databaseDetails.adminAuthToken
   ) {
     return { isSuccessful: false, message: "Unauthorized" };
   }

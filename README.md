@@ -28,13 +28,8 @@ If you really want it to be private from us, you can self-host this by cloning t
 
 # Self-hosting
 
-1. `git clone https://github.com/CodeFromAnywhere/opencrud.git`
-2. `cd opencrud && npm i`
+1. `git clone https://github.com/CodeFromAnywhere/crud-openapi.git`
+2. `cd crud-openapi && npm i`
 3. `cp .env.local.example .env.local` and provide the credentials needed
 4. Run `npm run init-db` to create the root-db (and regenerate `.env.local`)
 5. When deploying, copy the settings into your production environment variables as well.
-
-# Ideas
-
-- Use the default Vercel upstash if that has a good free plan and can be easily set up.
-- Encrypt the `DatabaseDetails` when storing them into Upstash globalstore with a private-key hosted on Vercel. This way, someone getting into Upstash doesn't get into the data. However, it's still possible if people hack into Vercel.

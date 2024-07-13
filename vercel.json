@@ -2,15 +2,14 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "rewrites": [
     {
-      "source": "/:p/",
-      "destination": "/index.html"
+      "source": "/:p/reference.html",
+      "destination": "/reference.html"
     },
     {
       "source": "/:path*",
       "destination": "/api/index.ts"
     }
   ],
-  "redirects": [],
   "functions": {
     "api/**/*.ts": {
       "maxDuration": 60,

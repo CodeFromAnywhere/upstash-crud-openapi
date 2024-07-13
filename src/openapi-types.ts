@@ -1,28 +1,8 @@
 export interface paths {
-    "/openapi.json": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get openapi */
-        get: operations["getOpenapi"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/listDatabases": {
         parameters: {
             query?: never;
-            header: {
-                /** @description Bearer authorization for admin. */
-                Authorization: string;
-            };
+            header?: never;
             path?: never;
             cookie?: never;
         };
@@ -39,12 +19,7 @@ export interface paths {
     "/createDatabase": {
         parameters: {
             query?: never;
-            header?: {
-                X_UPSTASH_EMAIL?: string;
-                X_UPSTASH_API_KEY?: string;
-                X_OPENAPI_API_KEY?: string;
-                X_ADMIN_AUTH_TOKEN?: string;
-            };
+            header?: never;
             path?: never;
             cookie?: never;
         };
@@ -95,37 +70,11 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/{databaseSlug}/updateDatabase": {
+    "/read": {
         parameters: {
             query?: never;
-            header: {
-                X_ADMIN_AUTH_TOKEN: string;
-            };
-            path: {
-                databaseSlug: string;
-            };
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Update Database */
-        post: operations["updateDatabase"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/{databaseSlug}/read": {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description Bearer authorization */
-                Authorization?: string;
-            };
-            path: {
-                databaseSlug: string;
-            };
+            header?: never;
+            path?: never;
             cookie?: never;
         };
         get?: never;
@@ -137,16 +86,11 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/{databaseSlug}/create": {
+    "/create": {
         parameters: {
             query?: never;
-            header?: {
-                /** @description Bearer authorization */
-                Authorization?: string;
-            };
-            path: {
-                databaseSlug: string;
-            };
+            header?: never;
+            path?: never;
             cookie?: never;
         };
         get?: never;
@@ -158,17 +102,11 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/{databaseSlug}/remove": {
+    "/remove": {
         parameters: {
             query?: never;
-            header?: {
-                /** @description Bearer authorization */
-                Authorization?: string;
-            };
-            path: {
-                /** @description Upstash ID of the database */
-                databaseSlug: string;
-            };
+            header?: never;
+            path?: never;
             cookie?: never;
         };
         get?: never;
@@ -180,16 +118,11 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/{databaseSlug}/update": {
+    "/update": {
         parameters: {
             query?: never;
-            header?: {
-                /** @description Bearer authorization */
-                Authorization?: string;
-            };
-            path: {
-                databaseSlug: string;
-            };
+            header?: never;
+            path?: never;
             cookie?: never;
         };
         get?: never;
@@ -214,6 +147,7 @@ export interface components {
             result?: string[];
         };
         CreateContext: {
+            databaseSlug: string;
             items: components["schemas"]["ModelItem"][];
         };
         Sort: {
@@ -241,6 +175,7 @@ export interface components {
             hasMore?: boolean;
         };
         ReadContext: {
+            databaseSlug: string;
             search?: string;
             vectorSearch?: {
                 propertyKey: string;
@@ -257,6 +192,7 @@ export interface components {
             ignoreObjectParameterKeys?: string[];
         };
         UpdateContext: {
+            databaseSlug: string;
             /** @description The id (indexed key) of the item to update. Update that functions as upsert. If the id didn't exist, it will be created. */
             id: string;
             /** @description New (partial) value of the item. Will update all keys provided here. Please note that it cannot be set to 'undefined' as this doesn't transfer over JSON, but if you set it to 'null', the value will be removed from the database. */
@@ -270,6 +206,7 @@ export interface components {
             [key: string]: unknown;
         };
         RemoveContext: {
+            databaseSlug: string;
             /** @description Which IDs should be removed */
             rowIds: string[];
         };
@@ -299,6 +236,7 @@ export interface components {
             similarity_function: "COSINE" | "EUCLIDIAN" | "DOT_PRODUCT";
         }[];
         StandardResponse: {
+            status?: number;
             isSuccessful: boolean;
             message?: string;
             priceCredit?: number;
@@ -508,33 +446,10 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
-    getOpenapi: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OpenAPI */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["openapi.schema"];
-                };
-            };
-        };
-    };
     listDatabases: {
         parameters: {
             query?: never;
-            header: {
-                /** @description Bearer authorization for admin. */
-                Authorization: string;
-            };
+            header?: never;
             path?: never;
             cookie?: never;
         };
@@ -551,8 +466,9 @@ export interface operations {
                         message?: string;
                         status?: number;
                         databases?: {
-                            databaseSlug?: string;
-                            authToken?: string;
+                            databaseSlug: string;
+                            authToken: string;
+                            schema: string;
                         }[];
                     };
                 };
@@ -562,12 +478,7 @@ export interface operations {
     createDatabase: {
         parameters: {
             query?: never;
-            header?: {
-                X_UPSTASH_EMAIL?: string;
-                X_UPSTASH_API_KEY?: string;
-                X_OPENAPI_API_KEY?: string;
-                X_ADMIN_AUTH_TOKEN?: string;
-            };
+            header?: never;
             path?: never;
             cookie?: never;
         };
@@ -584,7 +495,6 @@ export interface operations {
                      * @description JSON of the schema you want the database to refer to. Should be a Object JSON Schema.
                      */
                     schemaString: string;
-                    vectorIndexColumns?: components["schemas"]["VectorIndexColumns"];
                     /** @description Token required to authrorize using the CRUD endpoints. Will be generated if not given. */
                     authToken?: string;
                     /**
@@ -592,6 +502,9 @@ export interface operations {
                      * @enum {string}
                      */
                     region?: "eu-west-1" | "us-east-1" | "us-west-1" | "ap-northeast-1" | "us-central1";
+                    vectorIndexColumns?: components["schemas"]["VectorIndexColumns"];
+                    /** @description Needed if you use vectorIndexColumns */
+                    openaiApiKey?: string;
                 };
             };
         };
@@ -656,49 +569,11 @@ export interface operations {
             };
         };
     };
-    updateDatabase: {
-        parameters: {
-            query?: never;
-            header: {
-                X_ADMIN_AUTH_TOKEN: string;
-            };
-            path: {
-                databaseSlug: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": {
-                    /** @description JSON of the schema you want the database to refer to. Should be a Object JSON Schema. */
-                    schemaString: string;
-                    /** @description Token required to authrorize using the CRUD endpoints. */
-                    authToken: string;
-                };
-            };
-        };
-        responses: {
-            /** @description Update database response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["StandardResponse"];
-                };
-            };
-        };
-    };
     read: {
         parameters: {
             query?: never;
-            header?: {
-                /** @description Bearer authorization */
-                Authorization?: string;
-            };
-            path: {
-                databaseSlug: string;
-            };
+            header?: never;
+            path?: never;
             cookie?: never;
         };
         requestBody: {
@@ -721,13 +596,8 @@ export interface operations {
     create: {
         parameters: {
             query?: never;
-            header?: {
-                /** @description Bearer authorization */
-                Authorization?: string;
-            };
-            path: {
-                databaseSlug: string;
-            };
+            header?: never;
+            path?: never;
             cookie?: never;
         };
         requestBody: {
@@ -750,14 +620,8 @@ export interface operations {
     remove: {
         parameters: {
             query?: never;
-            header?: {
-                /** @description Bearer authorization */
-                Authorization?: string;
-            };
-            path: {
-                /** @description Upstash ID of the database */
-                databaseSlug: string;
-            };
+            header?: never;
+            path?: never;
             cookie?: never;
         };
         requestBody: {
@@ -780,13 +644,8 @@ export interface operations {
     update: {
         parameters: {
             query?: never;
-            header?: {
-                /** @description Bearer authorization */
-                Authorization?: string;
-            };
-            path: {
-                databaseSlug: string;
-            };
+            header?: never;
+            path?: never;
             cookie?: never;
         };
         requestBody: {
@@ -826,10 +685,6 @@ export type VectorIndexColumns = components["schemas"]["VectorIndexColumns"]
 export type StandardResponse = components["schemas"]["StandardResponse"]
   
 export const operationUrlObject = {
-  "getOpenapi": {
-    "method": "get",
-    "path": "/openapi.json"
-  },
   "listDatabases": {
     "method": "get",
     "path": "/listDatabases"
@@ -846,25 +701,21 @@ export const operationUrlObject = {
     "method": "get",
     "path": "/{databaseSlug}/schema.json"
   },
-  "updateDatabase": {
-    "method": "post",
-    "path": "/{databaseSlug}/updateDatabase"
-  },
   "read": {
     "method": "post",
-    "path": "/{databaseSlug}/read"
+    "path": "/read"
   },
   "create": {
     "method": "post",
-    "path": "/{databaseSlug}/create"
+    "path": "/create"
   },
   "remove": {
     "method": "post",
-    "path": "/{databaseSlug}/remove"
+    "path": "/remove"
   },
   "update": {
     "method": "post",
-    "path": "/{databaseSlug}/update"
+    "path": "/update"
   }
 }
 export const operationKeys = Object.keys(operationUrlObject);

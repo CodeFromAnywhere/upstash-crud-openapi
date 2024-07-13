@@ -5,11 +5,11 @@ import {
   objectMapSync,
   removeOptionalKeysFromObjectStrings,
 } from "from-anywhere";
-import { upstashRedisGetRange } from "../../upstashRedis.js";
-import { Endpoint } from "../../client.js";
-import { Filter, Sort } from "../../openapi-types.js";
-import { getDatabaseDetails } from "../../getDatabaseDetails.js";
-import { embeddingsClient } from "../../embeddings.js";
+import { upstashRedisGetRange } from "../upstashRedis.js";
+import { Endpoint } from "../client.js";
+import { Filter, Sort } from "../openapi-types.js";
+import { getDatabaseDetails } from "../getDatabaseDetails.js";
+import { embeddingsClient } from "../embeddings.js";
 
 const sortData = (sort: Sort[] | undefined, data: { [key: string]: O }) => {
   if (!sort?.length) {
@@ -178,9 +178,10 @@ export const read: Endpoint<"read"> = async (context) => {
     objectParameterKeys,
     ignoreObjectParameterKeys,
     databaseSlug,
-    Authorization,
     vectorSearch,
+    Authorization,
   } = context;
+  const apiKey = Authorization?.slice("Bearer ".length);
 
   const { databaseDetails } = await getDatabaseDetails(databaseSlug);
 
@@ -191,7 +192,8 @@ export const read: Endpoint<"read"> = async (context) => {
   if (
     databaseDetails.authToken !== undefined &&
     databaseDetails.authToken !== "" &&
-    Authorization !== `Bearer ${databaseDetails.authToken}`
+    apiKey !== databaseDetails.authToken &&
+    apiKey !== databaseDetails.adminAuthToken
   ) {
     return { isSuccessful: false, message: "Unauthorized" };
   }

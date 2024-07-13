@@ -96,14 +96,10 @@
 
         async function fetchData() {
 
-
-
             try {
                 const databases = JSON.parse(localStorage.getItem('databases'));
-
                 const authToken = databases.find(x => x.databaseSlug === databaseSlug).authToken;
 
-                console.log({ authToken })
                 const response = await fetch(`https://data.actionschema.com/${databaseSlug}/read`, {
                     method: 'POST',
                     headers: {

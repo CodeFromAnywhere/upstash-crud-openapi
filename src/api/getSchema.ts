@@ -1,5 +1,5 @@
-import { Endpoint } from "../../client.js";
-import { getDatabaseDetails } from "../../getDatabaseDetails.js";
+import { Endpoint } from "../client.js";
+import { getDatabaseDetails } from "../getDatabaseDetails.js";
 
 export const getSchema: Endpoint<"getSchema"> = async (context) => {
   const { databaseSlug } = context;

@@ -1,27 +1,19 @@
 import { Redis } from "@upstash/redis";
-import { Endpoint } from "../client.js";
+import { Endpoint, ResponseType } from "../client.js";
 import { getUpstashRedisDatabase } from "../upstashRedis.js";
 import { DatabaseDetails } from "../types.js";
 import { notEmpty } from "from-anywhere";
 
 export const listDatabases: Endpoint<"listDatabases"> = async (context) => {
   const { Authorization } = context;
+  const apiKey = Authorization?.slice("Bearer ".length);
+
   // auth admin
   const rootUpstashApiKey = process.env["X_UPSTASH_API_KEY"];
   const rootUpstashEmail = process.env["X_UPSTASH_EMAIL"];
   const rootUpstashDatabaseId = process.env["X_UPSTASH_ROOT_DATABASE_ID"];
 
-  // TODO: also make it work for external upstash? not really needed i guess. maybe just cancel this feature in favor of self hosting.
-  // const upstashApiKey = X_UPSTASH_API_KEY || rootUpstashApiKey;
-  // const upstashEmail = X_UPSTASH_EMAIL || rootUpstashEmail;
-
-  if (
-    // !upstashApiKey ||
-    // !upstashEmail ||
-    !rootUpstashApiKey ||
-    !rootUpstashEmail ||
-    !rootUpstashDatabaseId
-  ) {
+  if (!rootUpstashApiKey || !rootUpstashEmail || !rootUpstashDatabaseId) {
     return {
       isSuccessful: false,
       status: 400,
@@ -49,18 +41,16 @@ export const listDatabases: Endpoint<"listDatabases"> = async (context) => {
     token: rootDatabaseDetails.rest_token,
   });
 
-  const key = Authorization.slice("Bearer ".length);
-  const slugs: string[] = await root.smembers(`adminslugs_${key}`);
+  const slugs: string[] = await root.smembers(`adminslugs_${apiKey}`);
 
   if (!slugs) {
     return { isSuccessful: false, message: "Unauthorized", status: 403 };
   }
 
-  console.log({ slugs });
-
   if (slugs.length < 1) {
-    return { isSuccessful: false, message: "Not enough slugs" };
+    return { isSuccessful: true, message: "No dbs yet" };
   }
+
   const details: (DatabaseDetails | null)[] = await root.mget(...slugs);
 
   const databases = details
@@ -69,11 +59,11 @@ export const listDatabases: Endpoint<"listDatabases"> = async (context) => {
         ? {
             authToken: x.authToken,
             databaseSlug: slugs[index],
-            //  schema: x.schema,
+            schema: JSON.stringify(x.schema),
           }
         : null,
     )
-    .filter(notEmpty);
+    .filter(notEmpty) satisfies ResponseType<"listDatabases">["databases"];
 
   return { isSuccessful: true, message: "Found your dbs", databases };
 };

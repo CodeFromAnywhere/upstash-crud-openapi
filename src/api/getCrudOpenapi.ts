@@ -1,30 +1,15 @@
-import { Endpoint, ResponseType } from "../../client.js";
-import { getDatabaseDetails } from "../../getDatabaseDetails.js";
-import { O, removeOptionalKeysFromObjectStrings } from "from-anywhere";
+import { Endpoint, ResponseType } from "../client.js";
+import { getDatabaseDetails } from "../getDatabaseDetails.js";
+import {
+  mapValuesSync,
+  O,
+  removeOptionalKeysFromObjectStrings,
+} from "from-anywhere";
 import { OpenapiSchemaObject } from "from-anywhere";
 import { JSONSchema7 } from "json-schema";
 import { SchemaObject } from "openapi-typescript";
-import openapi from "../../../src/openapi.json" assert { type: "json" };
+import openapi from "../../src/openapi.json" assert { type: "json" };
 const isDev = process.env.__VERCEL_DEV_RUNNING === "1";
-
-export const withoutProperties = (
-  schema: OpenapiSchemaObject,
-  properties: string[],
-) => {
-  if (!schema.properties) {
-    return schema as SchemaObject;
-  }
-
-  const newProperties = removeOptionalKeysFromObjectStrings(
-    schema.properties,
-    properties,
-  );
-
-  return {
-    ...schema,
-    properties: newProperties as JSONSchema7["properties"],
-  } as SchemaObject;
-};
 
 export const replaceRefs = (schema: OpenapiSchemaObject, refs: O) => {
   const string = JSON.stringify(schema);
@@ -56,11 +41,25 @@ export const renameRefs = (schema: SchemaObject | undefined) => {
   return JSON.parse(newString) as any;
 };
 
+/** Removes one or more properties from an object json schema */
+const removePropertiesFromObjectSchema = (
+  schema: JSONSchema7,
+  propertyKeys: string[],
+) => {
+  return {
+    ...schema,
+    properties: schema.properties
+      ? removeOptionalKeysFromObjectStrings(schema.properties, propertyKeys)
+      : undefined,
+    required: schema.required?.filter((key) => !propertyKeys.includes(key)),
+  };
+};
+
 /**
 Should make a CRUD openapi from the schema fetched from database id
 */
 
-export const renderCrudOpenapi: Endpoint<"renderCrudOpenapi"> = async (
+export const getCrudOpenapi: Endpoint<"renderCrudOpenapi"> = async (
   context,
 ) => {
   const { databaseSlug } = context;
@@ -76,36 +75,26 @@ export const renderCrudOpenapi: Endpoint<"renderCrudOpenapi"> = async (
     };
   }
 
-  const crudPaths = {
-    "/create": removeOptionalKeysFromObjectStrings(
-      openapi.paths["/{databaseSlug}/create"],
-      ["parameters"],
-    ),
-
-    "/read": removeOptionalKeysFromObjectStrings(
-      openapi.paths["/{databaseSlug}/read"],
-      ["parameters"],
-    ),
-    "/update": removeOptionalKeysFromObjectStrings(
-      openapi.paths["/{databaseSlug}/update"],
-      ["parameters"],
-    ),
-    "/remove": removeOptionalKeysFromObjectStrings(
-      openapi.paths["/{databaseSlug}/remove"],
-      ["parameters"],
-    ),
-  };
-
   const origin = isDev
     ? "http://localhost:3000"
     : "https://data.actionschema.com";
+
+  const schemasWithoutDatabaseSlug = mapValuesSync(
+    openapi.components.schemas,
+    (schema) =>
+      schema.type === "object"
+        ? removePropertiesFromObjectSchema(schema as JSONSchema7, [
+            "databaseSlug",
+          ])
+        : schema,
+  );
 
   const improved = {
     ...openapi,
     components: {
       ...openapi.components,
       schemas: {
-        ...openapi.components.schemas,
+        ...schemasWithoutDatabaseSlug,
         ModelItem: databaseDetails.schema,
       },
       securitySchemes: {
@@ -117,26 +106,16 @@ export const renderCrudOpenapi: Endpoint<"renderCrudOpenapi"> = async (
         },
       },
     },
-    paths: crudPaths,
+    paths: {
+      "/create": openapi.paths["/create"],
+      "/read": openapi.paths["/read"],
+      "/update": openapi.paths["/update"],
+      "/remove": openapi.paths["/remove"],
+    },
     info: { title: `${databaseSlug} CRUD`, version: "1.0", description: "" },
     servers: [{ url: `${origin}/${databaseSlug}` }],
     security: [{ bearerAuth: [] }],
   };
-
-  // NB: this causes it to
-  // const dereferenced = (await resolveSchemaRecursive({
-  //   document: improved,
-  //   shouldDereference: true,
-  // })) as typeof improved | undefined;
-
-  // if (!dereferenced) {
-  //   return { isSuccessful: false, message: "Dereferencing didn't work out" };
-  // }
-
-  // const componentsWithoutSchemas = removeOptionalKeysFromObjectStrings(
-  //   dereferenced.components,
-  //   ["schemas"],
-  // ) as OpenapiDocument["components"];
 
   return improved as unknown as ResponseType<"renderCrudOpenapi">;
   // bit ugly but couldn't find another way
