@@ -21,3 +21,12 @@ update.html:
   Uses `?databaseSlug={slug}&rowId={id}` and the `authToken` and retreives the item using `/read`, showing the JSON value in a <textarea>.
 
   Submitting the JSON will call `/update` for that `rowId`. If there's no rowId given, generate a random `rowId` of 16 characters when submitting.
+
+jsonschema.html:
+  make a form in which you can build up a JSON Schema of type object.
+
+  if you select object for a property, it should embed the form again, recursively to select properties for that object.
+
+  show the Generated JSON in realtime.
+
+  use basic html, css, and js with tailwind. use tailwind to show the form and the generated JSON side by side
