@@ -355,18 +355,25 @@ export const getUpstashRedisRangeKeys = async (context: {
     token: redisRestToken,
   });
 
-  let cursor = "0";
+  let cursor: string = "0";
   let allKeys: string[] = [];
+  let limit = 0;
 
-  while (true) {
+  // Temporarily allow max 100 pages, which is 100 api calls.
+  while (limit < 100) {
+    limit++;
     const [newCursor, newKeys] = await redis.scan(cursor, {
       match: baseKey ? `${baseKey}.*` : "*",
     });
+
     allKeys = allKeys.concat(newKeys);
-    console.log({ newCursor });
-    if (cursor === newCursor || !newCursor) {
+
+    if (!newCursor || String(cursor) === String(newCursor)) {
       break;
     }
+
+    console.log(`${cursor}!==${newCursor}`);
+
     cursor = newCursor;
   }
 

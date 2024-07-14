@@ -118,6 +118,8 @@ export const createClient = (config: {
         })
         .catch((error) => {
           console.log({
+            fullUrl,
+
             explanation: `Your request could not be executed, you may be disconnected or the server may not be available. `,
             error,
             errorStatus: error.status,
