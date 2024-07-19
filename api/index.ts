@@ -5,28 +5,28 @@ import {
   ReferenceObject,
   resolveReferenceBrowser,
 } from "openapi-util";
+import { Json, mergeObjectsArray, notEmpty, onlyUnique2 } from "from-anywhere";
+import { tryValidateSchema, makeOpenapiPathRouter } from "openapi-util";
+import { JSONSchemaType } from "ajv";
+import { JSONSchema7 } from "json-schema";
+
 import { create } from "../src/api/create.js";
 import { read } from "../src/api/read.js";
 import { update } from "../src/api/update.js";
 import { remove } from "../src/api/remove.js";
 import { getCrudOpenapi } from "../src/api/getCrudOpenapi.js";
-import { createDatabase } from "../src/api/createDatabase.js";
 import { getSchema } from "../src/api/getSchema.js";
 import { listDatabases } from "../src/api/listDatabases.js";
 import { getOpenapi } from "../src/api/getOpenapi.js";
-import { getAppOpenapi } from "../src/api/getAppOpenapi.js";
-import { setProject } from "../src/api/setProject.js";
+import { setCurrentProject } from "../src/api/setCurrentProject.js";
 import { listProjects } from "../src/api/listProjects.js";
 import { removeProject } from "../src/api/removeProject.js";
 import { removeDatabase } from "../src/api/removeDatabase.js";
 
 import openapi from "../src/openapi.json" assert { type: "json" };
 
-import { Json, mergeObjectsArray, notEmpty, onlyUnique2 } from "from-anywhere";
-import { tryValidateSchema, makeOpenapiPathRouter } from "openapi-util";
-import { JSONSchemaType } from "ajv";
 import { resolveReferenceOrContinue } from "../src/resolveReferenceOrContinue.js";
-import { JSONSchema7 } from "json-schema";
+import { upsertDatabase } from "../src/api/upsertDatabase.js";
 
 /** Retreives the right body from the request based on the openapi and operation */
 export const getRequestOperationBody = async (
@@ -378,11 +378,10 @@ const getHandler = (method: string) => (request: Request) => {
       remove,
       getOpenapi,
       getCrudOpenapi,
-      createDatabase,
+      upsertDatabase,
       getSchema,
       listDatabases,
-      getAppOpenapi,
-      setProject,
+      setCurrentProject,
       listProjects,
       removeProject,
       removeDatabase,

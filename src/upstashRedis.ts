@@ -430,14 +430,13 @@ export const upstashRedisGetRange = async (context: {
 
   const allKeys = await getUpstashRedisRangeKeys(context);
 
-  console.log({ allKeys });
   if (allKeys.length === 0) {
     return;
   }
 
   const mgetResult = (await redis.mget(...allKeys)) as O[];
 
-  console.log({ mgetResult });
+  // console.log({ mgetResult });
   const allValues = mergeObjectsArray(
     mgetResult
       .map((value, index) => {
