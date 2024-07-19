@@ -1,7 +1,7 @@
 import { Redis } from "@upstash/redis";
 
 import { Endpoint } from "../client.js";
-import { DatabaseDetails } from "../types.js";
+import { AdminDetails, DatabaseDetails, DbKey } from "../types.js";
 import {
   createUpstashRedisDatabase,
   getUpstashRedisDatabase,
@@ -17,7 +17,7 @@ import { JSONSchema7 } from "json-schema";
 import { rootDatabaseName } from "../state.js";
 import { embeddingsClient } from "../embeddings.js";
 
-export const createDatabase: Endpoint<"createDatabase"> = async (context) => {
+export const upsertDatabase: Endpoint<"upsertDatabase"> = async (context) => {
   const {
     databaseSlug,
     schemaString,
@@ -27,7 +27,12 @@ export const createDatabase: Endpoint<"createDatabase"> = async (context) => {
     vectorIndexColumns,
     Authorization,
   } = context;
+
   const apiKey = Authorization?.slice("Bearer ".length);
+
+  if (!apiKey || apiKey.length < 64) {
+    return { isSuccessful: false, message: "Please provide your auth token" };
+  }
 
   // comes from .env
   const rootUpstashApiKey = process.env["X_UPSTASH_API_KEY"];
@@ -61,10 +66,15 @@ export const createDatabase: Endpoint<"createDatabase"> = async (context) => {
     token: rootDatabaseDetails.rest_token,
   });
 
-  const realDatabaseSlug = databaseSlug.toLowerCase();
+  const admin: AdminDetails | null = await root.get(
+    `admin_${apiKey}` satisfies DbKey,
+  );
+  if (!admin) {
+    return { isSuccessful: false, message: "Couldn't find user" };
+  }
 
   let previousDatabaseDetails: DatabaseDetails | null = await root.get(
-    realDatabaseSlug,
+    `db_${databaseSlug}` satisfies DbKey,
   );
 
   const schema = tryParseJson<JSONSchema7>(schemaString);
@@ -74,7 +84,7 @@ export const createDatabase: Endpoint<"createDatabase"> = async (context) => {
   }
 
   if (
-    ["root", rootDatabaseName].includes(realDatabaseSlug) ||
+    ["root", rootDatabaseName].includes(databaseSlug) ||
     (previousDatabaseDetails &&
       !!previousDatabaseDetails.adminAuthToken &&
       previousDatabaseDetails.adminAuthToken !== apiKey)
@@ -126,7 +136,7 @@ export const createDatabase: Endpoint<"createDatabase"> = async (context) => {
     const created = await createUpstashRedisDatabase({
       upstashApiKey: rootUpstashApiKey,
       upstashEmail: rootUpstashEmail,
-      name: realDatabaseSlug,
+      name: databaseSlug,
       region,
     });
 
@@ -137,6 +147,7 @@ export const createDatabase: Endpoint<"createDatabase"> = async (context) => {
     const adminAuthToken = apiKey || generateRandomString(64);
 
     databaseDetails = {
+      projectSlug: admin.currentProjectSlug,
       openaiApiKey,
       vectorIndexColumnDetails,
       adminAuthToken,
@@ -153,9 +164,7 @@ export const createDatabase: Endpoint<"createDatabase"> = async (context) => {
   } else {
     databaseDetails = {
       ...previousDatabaseDetails,
-
       authToken: authToken || previousDatabaseDetails.authToken,
-
       upstashApiKey: rootUpstashApiKey,
       upstashEmail: rootUpstashEmail,
       schema,
@@ -163,17 +172,26 @@ export const createDatabase: Endpoint<"createDatabase"> = async (context) => {
   }
 
   // re-set the database details
-  await root.set(realDatabaseSlug, databaseDetails);
-
-  const n = await root.sadd(`adminslugs_${apiKey}`, realDatabaseSlug);
+  await root.set(`db_${databaseSlug}` satisfies DbKey, databaseDetails);
+  // add database slug
+  await root.sadd(`dbs_${apiKey}` satisfies DbKey, databaseSlug);
 
   return {
     isSuccessful: true,
     message: "Database created",
+
     authToken: databaseDetails.authToken,
+
     adminAuthToken: databaseDetails.adminAuthToken,
-    databaseSlug: realDatabaseSlug,
+
+    databaseSlug,
+
     openapiUrl:
-      "https://data.actionschema.com/" + realDatabaseSlug + "/openapi.json",
+      "https://data.actionschema.com/" + databaseSlug + "/openapi.json",
+
+    projectOpenapiUrl:
+      "https://data.actionschema.com/project/" +
+      admin.currentProjectSlug +
+      "/openapi.json",
   };
 };

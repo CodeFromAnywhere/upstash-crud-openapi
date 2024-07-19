@@ -16,7 +16,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/createDatabase": {
+    "/upsertDatabase": {
         parameters: {
             query?: never;
             header?: never;
@@ -25,7 +25,76 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["createDatabase"];
+        /** Create or update a database model */
+        post: operations["upsertDatabase"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/removeDatabase": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Remove a database */
+        post: operations["removeDatabase"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/setCurrentProject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Set a project */
+        post: operations["setCurrentProject"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/listProjects": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List projects */
+        get: operations["listProjects"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/removeProject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Remove a project */
+        post: operations["removeProject"];
         delete?: never;
         options?: never;
         head?: never;
@@ -60,6 +129,25 @@ export interface paths {
         };
         /** Get openapi for this database table alone */
         get: operations["getCrudOpenapi"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/app/{projectSlug}/openapi.json": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                projectSlug: string;
+            };
+            cookie?: never;
+        };
+        /** Get Projectf OpenAPI */
+        get: operations["getProjectOpenapi"];
         put?: never;
         post?: never;
         delete?: never;
@@ -494,7 +582,7 @@ export interface operations {
             };
         };
     };
-    createDatabase: {
+    upsertDatabase: {
         parameters: {
             query?: never;
             header?: never;
@@ -535,6 +623,110 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CreateDatabaseResponse"];
+                };
+            };
+        };
+    };
+    removeDatabase: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    databaseSlug: components["schemas"]["UrlSlug"];
+                };
+            };
+        };
+        responses: {
+            /** @description Successful response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StandardResponse"];
+                };
+            };
+        };
+    };
+    setCurrentProject: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    projectSlug: components["schemas"]["UrlSlug"];
+                    description?: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Successful response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StandardResponse"];
+                };
+            };
+        };
+    };
+    listProjects: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        projects?: {
+                            projectSlug?: components["schemas"]["UrlSlug"];
+                            description?: string;
+                        }[];
+                    };
+                };
+            };
+        };
+    };
+    removeProject: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    projectSlug: components["schemas"]["UrlSlug"];
+                };
+            };
+        };
+        responses: {
+            /** @description Successful response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StandardResponse"];
                 };
             };
         };
@@ -580,6 +772,28 @@ export interface operations {
                         isSuccessful: boolean;
                         message?: string;
                     };
+                };
+            };
+        };
+    };
+    getProjectOpenapi: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                projectSlug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["openapi.schema"];
                 };
             };
         };
@@ -728,9 +942,25 @@ export const operationUrlObject = {
     "method": "get",
     "path": "/listDatabases"
   },
-  "createDatabase": {
+  "upsertDatabase": {
     "method": "post",
-    "path": "/createDatabase"
+    "path": "/upsertDatabase"
+  },
+  "removeDatabase": {
+    "method": "post",
+    "path": "/removeDatabase"
+  },
+  "setCurrentProject": {
+    "method": "post",
+    "path": "/setCurrentProject"
+  },
+  "listProjects": {
+    "method": "get",
+    "path": "/listProjects"
+  },
+  "removeProject": {
+    "method": "post",
+    "path": "/removeProject"
   },
   "getOpenapi": {
     "method": "get",
@@ -739,6 +969,10 @@ export const operationUrlObject = {
   "getCrudOpenapi": {
     "method": "get",
     "path": "/{databaseSlug}/openapi.json"
+  },
+  "getProjectOpenapi": {
+    "method": "get",
+    "path": "/app/{projectSlug}/openapi.json"
   },
   "getSchema": {
     "method": "get",

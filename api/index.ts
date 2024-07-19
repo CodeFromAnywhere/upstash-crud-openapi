@@ -14,6 +14,12 @@ import { createDatabase } from "../src/api/createDatabase.js";
 import { getSchema } from "../src/api/getSchema.js";
 import { listDatabases } from "../src/api/listDatabases.js";
 import { getOpenapi } from "../src/api/getOpenapi.js";
+import { getAppOpenapi } from "../src/api/getAppOpenapi.js";
+import { setProject } from "../src/api/setProject.js";
+import { listProjects } from "../src/api/listProjects.js";
+import { removeProject } from "../src/api/removeProject.js";
+import { removeDatabase } from "../src/api/removeDatabase.js";
+
 import openapi from "../src/openapi.json" assert { type: "json" };
 
 import { Json, mergeObjectsArray, notEmpty, onlyUnique2 } from "from-anywhere";
@@ -375,6 +381,11 @@ const getHandler = (method: string) => (request: Request) => {
       createDatabase,
       getSchema,
       listDatabases,
+      getAppOpenapi,
+      setProject,
+      listProjects,
+      removeProject,
+      removeDatabase,
     },
   });
 };

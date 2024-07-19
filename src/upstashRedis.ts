@@ -452,3 +452,21 @@ export const upstashRedisGetRange = async (context: {
 
   return allValues;
 };
+
+/** Gets a range of items from redis by first iterating over the keys (in range or all) and then efficiently getting all values */
+export const upstashRedisGetMultiple = async (context: {
+  redisRestUrl: string;
+  redisRestToken: string;
+  keys: string[];
+}) => {
+  const { redisRestToken, redisRestUrl, keys } = context;
+
+  const redis = new Redis({
+    url: `https://${redisRestUrl}`,
+    token: redisRestToken,
+  });
+
+  const mgetResult = (await redis.mget(...keys)) as (O | null)[];
+
+  return mgetResult;
+};

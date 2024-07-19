@@ -1,0 +1,54 @@
+crud-openapi:
+  .env.example: 89
+  .genignore: 10
+  .gitignore: 69
+  CHANGELOG.md: 7136
+  README.md: 1671
+  TODO.md: 4856
+  api:
+    index.ts: 10761
+  package.json: 1406
+  public:
+    actionschema.json: 153
+    index.html: 3669
+    jsonschema.html: 5626
+    model.html: 5347
+    reference.html: 468
+    update.html: 4359
+    website.yaml: 1607
+  src:
+    api:
+      create.ts: 1816
+      createDatabase.ts: 5166
+      getAppOpenapi.ts: 3483
+      getCrudOpenapi.ts: 3483
+      getOpenapi.ts: 333
+      getSchema.ts: 523
+      listApps.ts: 0
+      listDatabases.ts: 2120
+      oauthCallback.ts: 0
+      read.ts: 8841
+      remove.ts: 1630
+      removeDatabase.ts: 0
+      setApp.ts: 0
+      update.ts: 2305
+    client.ts: 4711
+    dot-wild.ts: 12188
+    embeddings.ts: 9851
+    getDatabaseDetails.ts: 1170
+    getDotLocation.ts: 146
+    globals.css: 606
+    isSchemaValid.ts: 1861
+    makeRootDb.cli.ts: 1720
+    openapi-types.ts: 27379
+    openapi.json: 22096
+    resolveReferenceOrContinue.ts: 1708
+    resolveResource.ts: 2201
+    setSchema.ts: 677
+    spreadValue.ts: 678
+    state.ts: 147
+    types.ts: 849
+    upstashRedis.test.ts: 226
+    upstashRedis.ts: 10032
+  tsconfig.json: 558
+  vercel.json: 821

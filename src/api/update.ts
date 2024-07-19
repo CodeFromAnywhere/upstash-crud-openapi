@@ -1,5 +1,8 @@
 import { O, getSubsetFromObject, objectMapSync } from "from-anywhere";
-import { upstashRedisSetItems } from "../upstashRedis.js";
+import {
+  upstashRedisGetMultiple,
+  upstashRedisSetItems,
+} from "../upstashRedis.js";
 import { Endpoint } from "../client.js";
 import { getDatabaseDetails } from "../getDatabaseDetails.js";
 import { upsertIndexVectors } from "../embeddings.js";
@@ -42,6 +45,14 @@ export const update: Endpoint<"update"> = async (context) => {
     return { isSuccessful: false, message: "Schema not found" };
   }
 
+  const redisRestToken = databaseDetails.rest_token;
+  const redisRestUrl = databaseDetails.endpoint;
+  const [item] = await upstashRedisGetMultiple({
+    redisRestToken,
+    redisRestUrl,
+    keys: [id],
+  });
+
   const schemaPropertyKeys = Object.keys(databaseDetails.schema.properties);
 
   const validPartialItemPropertyKeys = partialItemPropertyKeys.filter((k) =>
@@ -59,10 +70,12 @@ export const update: Endpoint<"update"> = async (context) => {
     (key, value) => (value === null ? undefined : value),
   );
 
+  const mergedItem = { ...(item || {}), ...castedPartialItem } as O;
+
   await upstashRedisSetItems({
-    redisRestToken: databaseDetails.rest_token,
-    redisRestUrl: databaseDetails.endpoint,
-    items: { [id]: castedPartialItem },
+    redisRestToken,
+    redisRestUrl,
+    items: { [id]: mergedItem },
   });
 
   // also update vectors if they're there

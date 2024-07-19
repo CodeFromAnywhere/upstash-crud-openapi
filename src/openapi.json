@@ -57,10 +57,10 @@
       }
     },
 
-    "/createDatabase": {
+    "/upsertDatabase": {
       "post": {
-        "summary": "",
-        "operationId": "createDatabase",
+        "summary": "Create or update a database model",
+        "operationId": "upsertDatabase",
 
         "requestBody": {
           "required": true,
@@ -127,6 +127,146 @@
         }
       }
     },
+
+    "/removeDatabase": {
+      "post": {
+        "summary": "Remove a database",
+        "operationId": "removeDatabase",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "databaseSlug": {
+                    "$ref": "#/components/schemas/UrlSlug"
+                  }
+                },
+                "required": ["databaseSlug"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StandardResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+
+    "/setCurrentProject": {
+      "post": {
+        "summary": "Set a project",
+        "operationId": "setCurrentProject",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "projectSlug": {
+                    "$ref": "#/components/schemas/UrlSlug"
+                  },
+                  "description": { "type": "string" }
+                },
+                "required": ["projectSlug"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StandardResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/listProjects": {
+      "get": {
+        "summary": "List projects",
+        "operationId": "listProjects",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "projects": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "projectSlug": {
+                            "$ref": "#/components/schemas/UrlSlug"
+                          },
+                          "description": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/removeProject": {
+      "post": {
+        "summary": "Remove a project",
+        "operationId": "removeProject",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "projectSlug": {
+                    "$ref": "#/components/schemas/UrlSlug"
+                  }
+                },
+                "required": ["projectSlug"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StandardResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+
     "/openapi.json": {
       "get": {
         "summary": "Get openapi",
@@ -145,6 +285,7 @@
         }
       }
     },
+
     "/{databaseSlug}/openapi.json": {
       "get": {
         "summary": "Get openapi for this database table alone",
@@ -183,6 +324,33 @@
         {
           "in": "path",
           "name": "databaseSlug",
+          "schema": { "type": "string" },
+          "required": true
+        }
+      ]
+    },
+
+    "/app/{projectSlug}/openapi.json": {
+      "get": {
+        "summary": "Get Projectf OpenAPI",
+        "operationId": "getProjectOpenapi",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "https://raw.githubusercontent.com/CodeFromAnywhere/ActionSchema/main/schemas/openapi.schema.json"
+                }
+              }
+            }
+          }
+        }
+      },
+      "parameters": [
+        {
+          "in": "path",
+          "name": "projectSlug",
           "schema": { "type": "string" },
           "required": true
         }

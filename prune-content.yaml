@@ -1,0 +1,2395 @@
+api:
+  index.ts: >
+    import {
+      OpenapiDocument,
+      OpenapiOperationObject,
+      OpenapiPathItemObject,
+      ReferenceObject,
+      resolveReferenceBrowser,
+    } from "openapi-util";
+
+    import { create } from "../src/api/create.js";
+
+    import { read } from "../src/api/read.js";
+
+    import { update } from "../src/api/update.js";
+
+    import { remove } from "../src/api/remove.js";
+
+    import { getCrudOpenapi } from "../src/api/getCrudOpenapi.js";
+
+    import { createDatabase } from "../src/api/createDatabase.js";
+
+    import { getSchema } from "../src/api/getSchema.js";
+
+    import { listDatabases } from "../src/api/listDatabases.js";
+
+    import { getOpenapi } from "../src/api/getOpenapi.js";
+
+    import openapi from "../src/openapi.json" assert { type: "json" };
+
+
+    import { Json, mergeObjectsArray, notEmpty, onlyUnique2 } from
+    "from-anywhere";
+
+    import { tryValidateSchema, makeOpenapiPathRouter } from "openapi-util";
+
+    import { JSONSchemaType } from "ajv";
+
+    import { resolveReferenceOrContinue } from
+    "../src/resolveReferenceOrContinue.js";
+
+    import { JSONSchema7 } from "json-schema";
+
+
+    /** Retreives the right body from the request based on the openapi and
+    operation */
+
+    export const getRequestOperationBody = async (
+      openapi: OpenapiDocument,
+      operation: OpenapiOperationObject,
+      documentLocation: string,
+      request: Request,
+    ) => {
+      if (!operation.requestBody) {
+        return { schema: undefined, data: undefined };
+      }
+
+      const requestBody = await resolveReferenceBrowser(
+        operation.requestBody,
+        openapi,
+        documentLocation,
+      );
+
+      const mediaTypes = requestBody?.content
+        ? Object.keys(requestBody.content)
+        : [];
+      const headerMediaType = request.headers.get("content-type");
+      const mediaType =
+        headerMediaType && mediaTypes.includes(headerMediaType)
+          ? headerMediaType
+          : (mediaTypes[0] as string | undefined);
+
+      if (!mediaType) {
+        return { schema: undefined, data: undefined };
+      }
+
+      const schemaOrReference = requestBody?.content?.[mediaType]?.schema as
+        | JSONSchema7
+        | ReferenceObject
+        | undefined;
+
+      const schema = await resolveReferenceBrowser(
+        schemaOrReference,
+        openapi,
+        documentLocation,
+      );
+
+      try {
+        // TODO: maybe there are more mediatypes that can be parsed like yaml and xml
+        const data =
+          mediaType === "application/json"
+            ? await request.json()
+            : mediaType === "plain/text"
+            ? await request.text()
+            : undefined;
+
+        return { schema: schema as JSONSchema7, data };
+      } catch (e) {
+        return { schema, data: undefined };
+      }
+    };
+
+
+    /** Retrieves an object of the query params belonging to an endpoint */
+
+    export const getUrlQueryParams = (
+      url: string,
+      permittedQueryKeys: string[],
+    ) => {
+      try {
+        const urlQueryParams = Array.from(
+          new URL(url).searchParams.entries(),
+        ).reduce(
+          (previous, [key, value]) => ({ ...previous, [key]: value }),
+          {} as { [key: string]: string },
+        );
+
+        const queryParams = permittedQueryKeys.reduce(
+          (previous, key) =>
+            urlQueryParams[key]
+              ? { ...previous, [key]: urlQueryParams[key] }
+              : previous,
+          {} as { [key: string]: string },
+        );
+
+        return queryParams;
+      } catch (e) {
+        return {};
+      }
+    };
+
+
+    /**
+     * Function that turns a regular function into an endpoint. If the function is available in the OpenAPI (with function name equalling the operationId), the input will be validated.
+     *
+     * NB: You can use this anywhere you want your openapi to be available. Usually it's in a catch-all route, but you can also use other next routing in case you need to have pages in some cases.
+     */
+    export const resolveOpenapiAppRequest = async (
+      request: Request,
+      method: string,
+      config: {
+        /** If given, must be a parameterName. If so, will also try to match against all paths with the prefix removed, giving the parameter to the body. Useful when you want to serve openapis that are subsets of the main server implementation
+         */
+        prefixParameterName?: string;
+
+        openapi: OpenapiDocument;
+        functions: {
+          [functionName: string]: (jsonBody: any) => any | Promise<any>;
+        };
+      },
+    ) => {
+      const { functions, openapi, prefixParameterName } = config;
+      const defaultHeaders = {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type, Authorization",
+      };
+      if (method === "options") {
+        // preflight stuff
+        return new Response("OK", {
+          status: 200,
+          headers: {
+            ...defaultHeaders,
+            "Access-Control-Allow-Headers": "Content-Type, Authorization",
+          },
+        });
+      }
+
+      const url = request.url;
+      const urlObject = new URL(url);
+      const requestPathname = urlObject.pathname;
+      // basePath may depend on openapi server
+      const serverUrl = openapi.servers?.[0]?.url || urlObject.origin;
+      const serverBasePathname = new URL(serverUrl).pathname;
+      const restPathname = "/" + requestPathname.slice(serverBasePathname.length);
+
+      const router = makeOpenapiPathRouter(openapi);
+
+      const regularMatch = router(restPathname);
+
+      //////// NB: Logic to also resolve if theres a prefix /////////
+      const chunks = restPathname.split("/");
+      const prefixParameterValue = prefixParameterName ? chunks[1] : undefined;
+      const pathnameWithoutPrefix = prefixParameterName
+        ? "/" + restPathname.split("/").slice(2).join("/")
+        : undefined;
+      const prefixMatch = pathnameWithoutPrefix
+        ? router(pathnameWithoutPrefix)
+        : undefined;
+      const match = (regularMatch || prefixMatch)!;
+      const prefixParamPart =
+        prefixParameterName && prefixParameterValue && prefixMatch
+          ? { [prefixParameterName]: prefixParameterValue }
+          : {};
+      /////////
+
+      // console.log({
+      //   chunks,
+      //   prefixParameterName,
+      //   prefixParameterValue,
+      //   pathnameWithoutPrefix,
+      //   prefixMatch,
+      //   match,
+      //   prefixParamPart,
+      // });
+
+      if (!regularMatch && !prefixMatch) {
+        const allowedMethods = [
+          "get",
+          "post",
+          "put",
+          "patch",
+          "delete",
+          "head",
+          "options",
+        ];
+        const methods = mergeObjectsArray(
+          Object.keys(openapi.paths).map((path) => {
+            return {
+              [path]: Object.keys((openapi as any).paths[path]).filter((method) =>
+                allowedMethods.includes(method),
+              ),
+            };
+          }),
+        );
+
+        return new Response(
+          JSON.stringify({
+            message: `Invalid method.`,
+            methods,
+            restPathname,
+          }),
+          {
+            status: 404,
+            headers: { ...defaultHeaders, "Content-Type": "application/json" },
+          },
+        );
+      }
+
+      const pathItem = (openapi.paths as any)?.[
+        match.path
+      ] as OpenapiPathItemObject;
+
+      const operation = pathItem?.[method as keyof typeof pathItem] as
+        | OpenapiOperationObject
+        | undefined;
+
+      if (!operation) {
+        return new Response("Endpoint not found", {
+          status: 404,
+          headers: defaultHeaders,
+        });
+      }
+
+      const parameters = pathItem.parameters || operation?.parameters;
+
+      const documentLocation = undefined;
+
+      const resolvedParameters = parameters
+        ? await Promise.all(
+            parameters.map((parameter) => {
+              return resolveReferenceOrContinue(
+                parameter,
+                openapi,
+                documentLocation,
+              );
+            }),
+          )
+        : undefined;
+
+      const parameterHeaderKeys =
+        resolvedParameters
+          ?.filter((item) => item?.in === "header")
+          .map((x) => x!.name) || [];
+
+      const parameterQueryKeys =
+        resolvedParameters
+          ?.filter((item) => item?.in === "query")
+          .map((x) => x!.name) || [];
+
+      const headerKeys = parameterHeaderKeys
+        //always add Authorization as a possible header
+        .concat("Authorization")
+        .filter(onlyUnique2());
+
+      const headers = mergeObjectsArray(
+        headerKeys
+          .map((key) => {
+            const value = request.headers.get(key);
+            if (value === null) {
+              // this could be a problem if it were required
+              return;
+            }
+            return { [key]: value };
+          })
+          .filter(notEmpty),
+      );
+
+      const queryParams = getUrlQueryParams(request.url, parameterQueryKeys);
+
+      const { schema, data } = await getRequestOperationBody(
+        openapi,
+        operation,
+        "",
+        request,
+      );
+
+      // console.log({
+      //   url,
+      //   data,
+      //   requestPathname,
+      //   match,
+      //   headers,
+      //   queryParams,
+      // });
+
+      const errors = schema
+        ? tryValidateSchema({ schema: schema as JSONSchemaType<any>, data })
+        : undefined;
+
+      // validate this schema and return early if it fails
+
+      if (errors && errors.length > 0) {
+        console.log({ errors });
+        return new Response(
+          JSON.stringify({
+            isSuccessful: false,
+            message:
+              "Invalid Input\n\n" +
+              errors
+                .map((x) => x.instancePath + x.schemaPath + ": " + x.message)
+                .join(" \n\n"),
+            // errors,
+          }),
+          {
+            status: 422,
+            headers: { ...defaultHeaders, "Content-Type": "application/json" },
+          },
+        );
+      }
+
+      const operationId =
+        operation.operationId || match.path.slice(1) + "=" + method;
+
+      const fn = functions[operationId];
+
+      if (!fn) {
+        return new Response("Function not found", {
+          status: 404,
+          headers: defaultHeaders,
+        });
+      }
+
+      const pathParams =
+        Object.keys(match.context).length > 0 ? match.context : undefined;
+
+      // TODO: Add proper typing for this if we ever accept non-object bodies in our openapi spec
+      const body =
+        typeof data === "object" && !Array.isArray(data) && data !== null
+          ? data
+          : data === undefined
+          ? undefined
+          : { body: data };
+
+      const context = {
+        ...body,
+        ...pathParams,
+        ...queryParams,
+        ...headers,
+        ...prefixParamPart,
+      };
+
+      // console.log({ parameters, resolvedParameters, headers, context });
+
+      // valid! Let's execute.
+      const resultJson = await fn(context);
+
+      if (typeof resultJson === undefined) {
+        return new Response("No response", { status: 404 });
+      }
+
+      return new Response(JSON.stringify(resultJson), {
+        status: 200,
+        headers: { ...defaultHeaders, "Content-Type": "application/json" },
+      });
+    };
+
+
+    /** function creator to DRY */
+
+    const getHandler = (method: string) => (request: Request) => {
+      return resolveOpenapiAppRequest(request, method, {
+        openapi: openapi as OpenapiDocument,
+        prefixParameterName: "databaseSlug",
+        functions: {
+          create,
+          read,
+          update,
+          remove,
+          getOpenapi,
+          getCrudOpenapi,
+          createDatabase,
+          getSchema,
+          listDatabases,
+        },
+      });
+    };
+
+
+    export const GET = getHandler("get");
+
+    export const POST = getHandler("post");
+
+    export const PUT = getHandler("put");
+
+    export const PATCH = getHandler("patch");
+
+    export const DELETE = getHandler("delete");
+
+    export const HEAD = getHandler("head");
+
+    export const OPTIONS = getHandler("options");
+src:
+  api:
+    create.ts: >
+      import { Endpoint } from "../client.js";
+
+      import { getDatabaseDetails } from "../getDatabaseDetails.js";
+
+      import { upstashRedisSetItems } from "../upstashRedis.js";
+
+      import { generateId, mergeObjectsArray } from "from-anywhere";
+
+      import { upsertIndexVectors } from "../embeddings.js";
+
+
+      export const create: Endpoint<"create"> = async (
+        context,
+      ): Promise<{
+        isSuccessful: boolean;
+        message: string;
+        /** The rowIds created */
+        result?: string[];
+      }> => {
+        const { items, databaseSlug, Authorization } = context;
+        if (!databaseSlug) {
+          return { isSuccessful: false, message: "please provide a slug" };
+        }
+
+        const { databaseDetails } = await getDatabaseDetails(databaseSlug);
+        const apiKey = Authorization?.slice("Bearer ".length);
+
+        if (!databaseDetails) {
+          return { isSuccessful: false, message: "Couldn't find database details" };
+        }
+
+        if (
+          databaseDetails.authToken !== undefined &&
+          databaseDetails.authToken !== "" &&
+          apiKey !== databaseDetails.authToken &&
+          apiKey !== databaseDetails.adminAuthToken
+        ) {
+          return { isSuccessful: false, message: "Unauthorized" };
+        }
+
+        if (!items || !Array.isArray(items) || items.length === 0) {
+          return {
+            isSuccessful: false,
+            message: "No items",
+          };
+        }
+
+        const mappedItems = mergeObjectsArray(
+          items.map(({ __id, ...item }) => ({
+            [(__id as string | undefined) || generateId()]: item,
+          })),
+        );
+
+        await Promise.all(
+          Object.keys(mappedItems).map(async (id) => {
+            return upsertIndexVectors(databaseDetails, id, mappedItems[id]);
+          }),
+        );
+
+        await upstashRedisSetItems({
+          redisRestToken: databaseDetails.rest_token,
+          redisRestUrl: databaseDetails.endpoint,
+          items: mappedItems,
+        });
+
+        return {
+          isSuccessful: true,
+          message: "Done",
+          result: Object.keys(mappedItems),
+        };
+      };
+    createDatabase.ts: >
+      import { Redis } from "@upstash/redis";
+
+
+      import { Endpoint } from "../client.js";
+
+      import { DatabaseDetails } from "../types.js";
+
+      import {
+        createUpstashRedisDatabase,
+        getUpstashRedisDatabase,
+      } from "../upstashRedis.js";
+
+      import {
+        generateId,
+        generateRandomString,
+        notEmpty,
+        onlyUnique2,
+        tryParseJson,
+      } from "from-anywhere";
+
+      import { JSONSchema7 } from "json-schema";
+
+      import { rootDatabaseName } from "../state.js";
+
+      import { embeddingsClient } from "../embeddings.js";
+
+
+      export const createDatabase: Endpoint<"createDatabase"> = async (context)
+      => {
+        const {
+          databaseSlug,
+          schemaString,
+          authToken,
+          region,
+          openaiApiKey,
+          vectorIndexColumns,
+          Authorization,
+        } = context;
+        const apiKey = Authorization?.slice("Bearer ".length);
+
+        // comes from .env
+        const rootUpstashApiKey = process.env["X_UPSTASH_API_KEY"];
+        const rootUpstashEmail = process.env["X_UPSTASH_EMAIL"];
+        const rootUpstashDatabaseId = process.env["X_UPSTASH_ROOT_DATABASE_ID"];
+
+        if (!rootUpstashApiKey || !rootUpstashEmail || !rootUpstashDatabaseId) {
+          return {
+            isSuccessful: false,
+            message: "Please provide your upstash details environment variables",
+          };
+        }
+
+        const rootDatabaseDetails = await getUpstashRedisDatabase({
+          upstashEmail: rootUpstashEmail,
+          databaseId: rootUpstashDatabaseId,
+          upstashApiKey: rootUpstashApiKey,
+        });
+
+        if (!rootDatabaseDetails) {
+          return {
+            isSuccessful: false,
+            message: "Couldn't get root database details",
+          };
+        }
+
+        // now we have root-db
+
+        const root = new Redis({
+          url: `https://${rootDatabaseDetails.endpoint}`,
+          token: rootDatabaseDetails.rest_token,
+        });
+
+        const realDatabaseSlug = databaseSlug.toLowerCase();
+
+        let previousDatabaseDetails: DatabaseDetails | null = await root.get(
+          realDatabaseSlug,
+        );
+
+        const schema = tryParseJson<JSONSchema7>(schemaString);
+
+        if (!schema) {
+          return { isSuccessful: false, message: "Invalid Schema" };
+        }
+
+        if (
+          ["root", rootDatabaseName].includes(realDatabaseSlug) ||
+          (previousDatabaseDetails &&
+            !!previousDatabaseDetails.adminAuthToken &&
+            previousDatabaseDetails.adminAuthToken !== apiKey)
+        ) {
+          return {
+            isSuccessful: false,
+            status: 403,
+            message:
+              "A database with this name already exists, and you're not authorized to edit it.",
+          };
+        }
+
+        let databaseDetails: DatabaseDetails | null = null;
+
+        if (!previousDatabaseDetails) {
+          // creates indexes
+          const vectorIndexColumnDetails =
+            vectorIndexColumns && rootUpstashApiKey && rootUpstashEmail
+              ? (
+                  await Promise.all(
+                    vectorIndexColumns.map(async (item) => {
+                      const index = await embeddingsClient.createIndex({
+                        upstashApiKey: rootUpstashApiKey,
+                        upstashEmail: rootUpstashEmail,
+                        dimension_count: item.dimension_count,
+                        region: item.region,
+                        similarity_function: item.similarity_function,
+                        vectorIndexName: `${databaseSlug}-${item.propertyKey}`,
+                      });
+                      if (!index) {
+                        return;
+                      }
+                      const { propertyKey } = item;
+                      const { endpoint, token, name } = index;
+                      return {
+                        propertyKey,
+                        vectorRestToken: token,
+                        vectorRestUrl: `https://${endpoint}`,
+                        dimensions: item.dimension_count,
+                        model: item.model,
+                      };
+                    }),
+                  )
+                ).filter(notEmpty)
+              : undefined;
+
+          const realAuthToken = authToken || generateId();
+          //create if we couldn't find it before
+          const created = await createUpstashRedisDatabase({
+            upstashApiKey: rootUpstashApiKey,
+            upstashEmail: rootUpstashEmail,
+            name: realDatabaseSlug,
+            region,
+          });
+
+          if (!created.result) {
+            return { isSuccessful: false, message: created.message };
+          }
+
+          const adminAuthToken = apiKey || generateRandomString(64);
+
+          databaseDetails = {
+            openaiApiKey,
+            vectorIndexColumnDetails,
+            adminAuthToken,
+            upstashApiKey: rootUpstashApiKey,
+            upstashEmail: rootUpstashEmail,
+            authToken: realAuthToken,
+            database_id: created.result.database_id,
+            endpoint: created.result.endpoint,
+            rest_token: created.result.rest_token,
+            schema,
+          };
+
+          console.log(`creating`, { databaseDetails });
+        } else {
+          databaseDetails = {
+            ...previousDatabaseDetails,
+
+            authToken: authToken || previousDatabaseDetails.authToken,
+
+            upstashApiKey: rootUpstashApiKey,
+            upstashEmail: rootUpstashEmail,
+            schema,
+          };
+        }
+
+        // re-set the database details
+        await root.set(realDatabaseSlug, databaseDetails);
+
+        const n = await root.sadd(`adminslugs_${apiKey}`, realDatabaseSlug);
+
+        return {
+          isSuccessful: true,
+          message: "Database created",
+          authToken: databaseDetails.authToken,
+          adminAuthToken: databaseDetails.adminAuthToken,
+          databaseSlug: realDatabaseSlug,
+          openapiUrl:
+            "https://data.actionschema.com/" + realDatabaseSlug + "/openapi.json",
+        };
+      };
+    getAppOpenapi.ts: >
+      import { Endpoint, ResponseType } from "../client.js";
+
+      import { getDatabaseDetails } from "../getDatabaseDetails.js";
+
+      import {
+        mapValuesSync,
+        O,
+        removeOptionalKeysFromObjectStrings,
+      } from "from-anywhere";
+
+      import { OpenapiSchemaObject } from "from-anywhere";
+
+      import { JSONSchema7 } from "json-schema";
+
+      import { SchemaObject } from "openapi-typescript";
+
+      import openapi from "../../src/openapi.json" assert { type: "json" };
+
+      const isDev = process.env.__VERCEL_DEV_RUNNING === "1";
+
+
+      export const replaceRefs = (schema: OpenapiSchemaObject, refs: O) => {
+        const string = JSON.stringify(schema);
+
+        const finalString = Object.keys(refs).reduce((newString, refKey) => {
+          const json = JSON.stringify(refs[refKey]);
+          const jsonWithoutBrackets = json.slice(1, json.length - 1);
+
+          // NB: no spaces!
+          return newString.replaceAll(`"$ref":"${refKey}"`, jsonWithoutBrackets);
+        }, string);
+
+        // console.log(finalString);
+        return JSON.parse(finalString) as any;
+      };
+
+
+      /** Renames all refs to #/components/schemas/ instead of #/definitions */
+
+      export const renameRefs = (schema: SchemaObject | undefined) => {
+        if (!schema) {
+          return schema;
+        }
+        const string = JSON.stringify(schema);
+
+        const newString = string.replaceAll(
+          `"$ref":"#/definitions/`,
+          `"$ref":"#/components/schemas/`,
+        );
+
+        return JSON.parse(newString) as any;
+      };
+
+
+      /** Removes one or more properties from an object json schema */
+
+      const removePropertiesFromObjectSchema = (
+        schema: JSONSchema7,
+        propertyKeys: string[],
+      ) => {
+        return {
+          ...schema,
+          properties: schema.properties
+            ? removeOptionalKeysFromObjectStrings(schema.properties, propertyKeys)
+            : undefined,
+          required: schema.required?.filter((key) => !propertyKeys.includes(key)),
+        };
+      };
+
+
+      /**
+
+      Should make a CRUD openapi from the schema fetched from database id
+
+      */
+
+
+      export const getCrudOpenapi: Endpoint<"getCrudOpenapi"> = async (context)
+      => {
+        const { databaseSlug } = context;
+        // comes from path parameter
+        const { databaseDetails } = await getDatabaseDetails(databaseSlug);
+
+        // NB: no auth needed for this endpoint.
+
+        if (!databaseDetails) {
+          return {
+            isSuccessful: false,
+            message: "Couldn't find database details for db " + databaseSlug,
+          };
+        }
+
+        const origin = isDev
+          ? "http://localhost:3000"
+          : "https://data.actionschema.com";
+
+        const schemasWithoutDatabaseSlug = mapValuesSync(
+          openapi.components.schemas,
+          (schema) =>
+            schema.type === "object"
+              ? removePropertiesFromObjectSchema(schema as JSONSchema7, [
+                  "databaseSlug",
+                ])
+              : schema,
+        );
+
+        const improved = {
+          ...openapi,
+          components: {
+            ...openapi.components,
+            schemas: {
+              ...schemasWithoutDatabaseSlug,
+              ModelItem: databaseDetails.schema,
+            },
+            securitySchemes: {
+              bearerAuth: {
+                type: "http",
+                scheme: "bearer",
+                bearerFormat: "Bearer",
+                description: "Your authToken should be provided",
+              },
+            },
+          },
+          paths: {
+            "/create": openapi.paths["/create"],
+            "/read": openapi.paths["/read"],
+            "/update": openapi.paths["/update"],
+            "/remove": openapi.paths["/remove"],
+          },
+          info: { title: `${databaseSlug} CRUD`, version: "1.0", description: "" },
+          servers: [{ url: `${origin}/${databaseSlug}` }],
+          security: [{ bearerAuth: [] }],
+        };
+
+        // bit ugly but couldn't find another way
+        return improved as unknown as ResponseType<"getCrudOpenapi">;
+      };
+    getCrudOpenapi.ts: >
+      import { Endpoint, ResponseType } from "../client.js";
+
+      import { getDatabaseDetails } from "../getDatabaseDetails.js";
+
+      import {
+        mapValuesSync,
+        O,
+        removeOptionalKeysFromObjectStrings,
+      } from "from-anywhere";
+
+      import { OpenapiSchemaObject } from "from-anywhere";
+
+      import { JSONSchema7 } from "json-schema";
+
+      import { SchemaObject } from "openapi-typescript";
+
+      import openapi from "../../src/openapi.json" assert { type: "json" };
+
+      const isDev = process.env.__VERCEL_DEV_RUNNING === "1";
+
+
+      export const replaceRefs = (schema: OpenapiSchemaObject, refs: O) => {
+        const string = JSON.stringify(schema);
+
+        const finalString = Object.keys(refs).reduce((newString, refKey) => {
+          const json = JSON.stringify(refs[refKey]);
+          const jsonWithoutBrackets = json.slice(1, json.length - 1);
+
+          // NB: no spaces!
+          return newString.replaceAll(`"$ref":"${refKey}"`, jsonWithoutBrackets);
+        }, string);
+
+        // console.log(finalString);
+        return JSON.parse(finalString) as any;
+      };
+
+
+      /** Renames all refs to #/components/schemas/ instead of #/definitions */
+
+      export const renameRefs = (schema: SchemaObject | undefined) => {
+        if (!schema) {
+          return schema;
+        }
+        const string = JSON.stringify(schema);
+
+        const newString = string.replaceAll(
+          `"$ref":"#/definitions/`,
+          `"$ref":"#/components/schemas/`,
+        );
+
+        return JSON.parse(newString) as any;
+      };
+
+
+      /** Removes one or more properties from an object json schema */
+
+      const removePropertiesFromObjectSchema = (
+        schema: JSONSchema7,
+        propertyKeys: string[],
+      ) => {
+        return {
+          ...schema,
+          properties: schema.properties
+            ? removeOptionalKeysFromObjectStrings(schema.properties, propertyKeys)
+            : undefined,
+          required: schema.required?.filter((key) => !propertyKeys.includes(key)),
+        };
+      };
+
+
+      /**
+
+      Should make a CRUD openapi from the schema fetched from database id
+
+      */
+
+
+      export const getCrudOpenapi: Endpoint<"getCrudOpenapi"> = async (context)
+      => {
+        const { databaseSlug } = context;
+        // comes from path parameter
+        const { databaseDetails } = await getDatabaseDetails(databaseSlug);
+
+        // NB: no auth needed for this endpoint.
+
+        if (!databaseDetails) {
+          return {
+            isSuccessful: false,
+            message: "Couldn't find database details for db " + databaseSlug,
+          };
+        }
+
+        const origin = isDev
+          ? "http://localhost:3000"
+          : "https://data.actionschema.com";
+
+        const schemasWithoutDatabaseSlug = mapValuesSync(
+          openapi.components.schemas,
+          (schema) =>
+            schema.type === "object"
+              ? removePropertiesFromObjectSchema(schema as JSONSchema7, [
+                  "databaseSlug",
+                ])
+              : schema,
+        );
+
+        const improved = {
+          ...openapi,
+          components: {
+            ...openapi.components,
+            schemas: {
+              ...schemasWithoutDatabaseSlug,
+              ModelItem: databaseDetails.schema,
+            },
+            securitySchemes: {
+              bearerAuth: {
+                type: "http",
+                scheme: "bearer",
+                bearerFormat: "Bearer",
+                description: "Your authToken should be provided",
+              },
+            },
+          },
+          paths: {
+            "/create": openapi.paths["/create"],
+            "/read": openapi.paths["/read"],
+            "/update": openapi.paths["/update"],
+            "/remove": openapi.paths["/remove"],
+          },
+          info: { title: `${databaseSlug} CRUD`, version: "1.0", description: "" },
+          servers: [{ url: `${origin}/${databaseSlug}` }],
+          security: [{ bearerAuth: [] }],
+        };
+
+        // bit ugly but couldn't find another way
+        return improved as unknown as ResponseType<"getCrudOpenapi">;
+      };
+    getOpenapi.ts: |
+      import openapi from "../openapi.json" assert { type: "json" };
+      const isDev = process.env.__VERCEL_DEV_RUNNING === "1";
+      /** Ensures the server is correct */
+      export const getOpenapi = () => {
+        const newOpenapi = {
+          ...openapi,
+          servers: isDev ? [{ url: "http://localhost:3000" }] : openapi.servers,
+        };
+        return newOpenapi;
+      };
+    getSchema.ts: |
+      import { Endpoint } from "../client.js";
+      import { getDatabaseDetails } from "../getDatabaseDetails.js";
+
+      export const getSchema: Endpoint<"getSchema"> = async (context) => {
+        const { databaseSlug } = context;
+        const { databaseDetails } = await getDatabaseDetails(databaseSlug);
+
+        if (!databaseDetails) {
+          return {
+            isSuccessful: false,
+            status: 404,
+            message: "Couldn't find database details",
+          } as { [key: string]: unknown };
+        }
+
+        return databaseDetails.schema as { [key: string]: unknown };
+      };
+    listApps.ts: ""
+    listDatabases.ts: >
+      import { Redis } from "@upstash/redis";
+
+      import { Endpoint, ResponseType } from "../client.js";
+
+      import { getUpstashRedisDatabase } from "../upstashRedis.js";
+
+      import { DatabaseDetails } from "../types.js";
+
+      import { notEmpty } from "from-anywhere";
+
+
+      export const listDatabases: Endpoint<"listDatabases"> = async (context) =>
+      {
+        const { Authorization } = context;
+        const apiKey = Authorization?.slice("Bearer ".length);
+
+        // auth admin
+        const rootUpstashApiKey = process.env["X_UPSTASH_API_KEY"];
+        const rootUpstashEmail = process.env["X_UPSTASH_EMAIL"];
+        const rootUpstashDatabaseId = process.env["X_UPSTASH_ROOT_DATABASE_ID"];
+
+        if (!rootUpstashApiKey || !rootUpstashEmail || !rootUpstashDatabaseId) {
+          return {
+            isSuccessful: false,
+            status: 400,
+            message: "Please provide your upstash details environment variables",
+          };
+        }
+
+        const rootDatabaseDetails = await getUpstashRedisDatabase({
+          upstashEmail: rootUpstashEmail,
+          databaseId: rootUpstashDatabaseId,
+          upstashApiKey: rootUpstashApiKey,
+        });
+
+        if (!rootDatabaseDetails) {
+          return {
+            isSuccessful: false,
+            message: "Couldn't get root database details",
+          };
+        }
+
+        // now we have root-db
+
+        const root = new Redis({
+          url: `https://${rootDatabaseDetails.endpoint}`,
+          token: rootDatabaseDetails.rest_token,
+        });
+
+        const slugs: string[] = await root.smembers(`adminslugs_${apiKey}`);
+
+        if (!slugs) {
+          return { isSuccessful: false, message: "Unauthorized", status: 403 };
+        }
+
+        if (slugs.length < 1) {
+          return { isSuccessful: true, message: "No dbs yet" };
+        }
+
+        const details: (DatabaseDetails | null)[] = await root.mget(...slugs);
+
+        const databases = details
+          .map((x, index) =>
+            x
+              ? {
+                  databaseSlug: slugs[index],
+                  openapiUrl: `https://data.actionschema.com/${slugs[index]}/openapi.json`,
+                  authToken: x.authToken,
+                  schema: JSON.stringify(x.schema),
+                }
+              : null,
+          )
+          .filter(notEmpty) satisfies ResponseType<"listDatabases">["databases"];
+
+        return { isSuccessful: true, message: "Found your dbs", databases };
+      };
+    oauthCallback.ts: ""
+    read.ts: >
+      import {
+        O,
+        getSubsetFromObject,
+        hasAllLetters,
+        objectMapSync,
+        removeOptionalKeysFromObjectStrings,
+      } from "from-anywhere";
+
+      import { upstashRedisGetRange } from "../upstashRedis.js";
+
+      import { Endpoint } from "../client.js";
+
+      import { Filter, Sort } from "../openapi-types.js";
+
+      import { getDatabaseDetails } from "../getDatabaseDetails.js";
+
+      import { embeddingsClient } from "../embeddings.js";
+
+
+      const sortData = (sort: Sort[] | undefined, data: { [key: string]: O }) =>
+      {
+        if (!sort?.length) {
+          return data;
+        }
+
+        const result = sort.reduce((sortedData, datasetSort) => {
+          const sortedKeys: string[] = Object.keys(sortedData).sort((a, b) => {
+            const itemA = sortedData[a];
+            const itemB = sortedData[b];
+            const valueA = itemA[datasetSort.objectParameterKey];
+            const valueB = itemB[datasetSort.objectParameterKey];
+            const directionMultiplier =
+              datasetSort.sortDirection === "ascending" ? 1 : -1;
+
+            if (typeof valueA === "number" && typeof valueB === "number") {
+              // Number sorg
+              return (valueA - valueB) * directionMultiplier;
+            }
+
+            // String sort
+            return String(valueA) < String(valueB)
+              ? directionMultiplier * 1
+              : directionMultiplier * -1;
+          });
+
+          const newSortedData = sortedKeys.reduce((data, key) => {
+            return { ...data, [key]: sortedData };
+          }, {} as { [key: string]: O });
+
+          return newSortedData;
+        }, data);
+
+        return result;
+      };
+
+      const filterData = (
+        filter: Filter[] | undefined,
+        data: { [key: string]: O },
+      ) => {
+        if (!filter?.length) {
+          return data;
+        }
+
+        const result = filter.reduce((filteredData, datasetFilter) => {
+          const keys = Object.keys(filteredData).filter((key) => {
+            const item = filteredData[key];
+
+            const objectParameterKey =
+              datasetFilter.objectParameterKey as keyof typeof item;
+
+            const value = item[objectParameterKey];
+
+            if (datasetFilter.operator === "equal") {
+              return String(value) === datasetFilter.value;
+            }
+
+            if (datasetFilter.operator === "notEqual") {
+              return String(value) === datasetFilter.value;
+            }
+
+            if (datasetFilter.operator === "isFalsy") {
+              return !value;
+            }
+
+            if (datasetFilter.operator === "isTruthy") {
+              return !!value;
+            }
+
+            const lowercaseValue = String(value).toLowerCase();
+            const lowercaseDatasetValue = String(datasetFilter.value).toLowerCase();
+
+            if (datasetFilter.operator === "endsWith") {
+              return lowercaseValue.endsWith(lowercaseDatasetValue);
+            }
+
+            if (datasetFilter.operator === "startsWith") {
+              return lowercaseValue.startsWith(lowercaseDatasetValue);
+            }
+
+            if (datasetFilter.operator === "includes") {
+              return lowercaseValue.includes(lowercaseDatasetValue);
+            }
+
+            if (datasetFilter.operator === "includesLetters") {
+              return hasAllLetters(lowercaseValue, lowercaseDatasetValue);
+            }
+
+            if (
+              datasetFilter.operator === "greaterThan" &&
+              datasetFilter.value !== null &&
+              datasetFilter.value !== undefined
+            ) {
+              return Number(value) > Number(datasetFilter.value);
+            }
+
+            if (
+              datasetFilter.operator === "lessThan" &&
+              datasetFilter.value !== null &&
+              datasetFilter.value !== undefined
+            ) {
+              return Number(value) < Number(datasetFilter.value);
+            }
+
+            if (
+              datasetFilter.operator === "greaterThanOrEqual" &&
+              datasetFilter.value !== null &&
+              datasetFilter.value !== undefined
+            ) {
+              return Number(value) >= Number(datasetFilter.value);
+            }
+
+            if (
+              datasetFilter.operator === "lessThanOrEqual" &&
+              datasetFilter.value !== null &&
+              datasetFilter.value !== undefined
+            ) {
+              return Number(value) <= Number(datasetFilter.value);
+            }
+
+            if (datasetFilter.operator === "isIncludedIn") {
+              return lowercaseDatasetValue.split(",").includes(lowercaseValue);
+            }
+
+            return false;
+          });
+
+          const newFilteredData: { [key: string]: O } = getSubsetFromObject(
+            filteredData,
+            keys,
+          );
+
+          return newFilteredData;
+        }, data);
+
+        return result;
+      };
+
+      const searchData = (search: string | undefined, data: { [key: string]: O
+      }) => {
+        if (!search || search.length === 0) {
+          return data;
+        }
+
+        const keys = Object.keys(data).filter((key) => {
+          const item = data[key];
+
+          const searchable = Object.values(item)
+            .map((value) => JSON.stringify(value))
+            .join(",")
+            .toLowerCase();
+
+          return searchable.includes(search.toLowerCase());
+        });
+
+        return getSubsetFromObject(data, keys);
+      };
+
+
+      export type ModelKey = string;
+
+
+      export const read: Endpoint<"read"> = async (context) => {
+        const {
+          rowIds,
+          search,
+          startFromIndex,
+          maxRows,
+          filter,
+          sort,
+          objectParameterKeys,
+          ignoreObjectParameterKeys,
+          databaseSlug,
+          vectorSearch,
+          Authorization,
+        } = context;
+        const apiKey = Authorization?.slice("Bearer ".length);
+        if (!databaseSlug) {
+          return { isSuccessful: false, message: "please provide a slug" };
+        }
+
+        const { databaseDetails } = await getDatabaseDetails(databaseSlug);
+
+        if (!databaseDetails) {
+          return { isSuccessful: false, message: "Couldn't find database details" };
+        }
+
+        if (
+          databaseDetails.authToken !== undefined &&
+          databaseDetails.authToken !== "" &&
+          apiKey !== databaseDetails.authToken &&
+          apiKey !== databaseDetails.adminAuthToken
+        ) {
+          return { isSuccessful: false, message: "Unauthorized" };
+        }
+
+        const result = await upstashRedisGetRange({
+          redisRestToken: databaseDetails.rest_token,
+          redisRestUrl: databaseDetails.endpoint,
+          baseKey: undefined,
+        });
+
+        if (!result) {
+          return { isSuccessful: false, message: "No result" };
+        }
+
+        let normalized: O[] | undefined = undefined;
+        let vectorSearchIds: string[] | undefined = undefined;
+        if (vectorSearch) {
+          const { input, minimumSimilarity, propertyKey, topK } = vectorSearch;
+          const { openaiApiKey, vectorIndexColumnDetails } = databaseDetails;
+          const vectorIndexDetails = vectorIndexColumnDetails?.find(
+            (x) => x.propertyKey === propertyKey,
+          );
+
+          if (vectorIndexDetails && openaiApiKey) {
+            const { vectorRestToken, vectorRestUrl, model } = vectorIndexDetails;
+
+            const results = await embeddingsClient.search({
+              input,
+              topK,
+              vectorRestToken,
+              vectorRestUrl,
+              openaiApiKey,
+              model,
+            });
+
+            //console.log({ results });
+
+            const similarResults = results.filter((x) => {
+              if (!minimumSimilarity) {
+                return true;
+              }
+              return x.score >= minimumSimilarity;
+            });
+
+            normalized = similarResults.map((x) => ({
+              propertyKey,
+              score: x.score,
+              id: x.id as string,
+            }));
+
+            vectorSearchIds = normalized.map((x) => x.id);
+          }
+        }
+
+        // TODO: Make this more efficient
+        const vectorResult = vectorSearchIds
+          ? objectMapSync(
+              getSubsetFromObject(result, vectorSearchIds),
+              (id, value) => ({
+                ...value,
+                _score: normalized?.find((x) => x.id === id)?.score,
+              }),
+            )
+          : result;
+
+        // console.log({ vectorSearchIds, normalized, vectorResult });
+
+        // TODO: make this more efficient
+        const specificResult =
+          rowIds && rowIds.length > 0
+            ? getSubsetFromObject(vectorResult, rowIds)
+            : vectorResult;
+
+        const searchedData = searchData(search, specificResult);
+
+        // NB: filter the sliced data, if needed
+        const filteredData = filterData(filter, searchedData);
+
+        // NB: sort the filtered data, if needed
+        const sortedData = sortData(sort, filteredData);
+
+        const subsetData = objectParameterKeys?.length
+          ? objectMapSync(sortedData, (key, value) =>
+              getSubsetFromObject(
+                value,
+                objectParameterKeys! as readonly (keyof O)[],
+              ),
+            )
+          : sortedData;
+
+        const ignoredData = ignoreObjectParameterKeys?.length
+          ? objectMapSync(subsetData, (key, item) => {
+              return removeOptionalKeysFromObjectStrings(
+                item as { [key: string]: any },
+                ignoreObjectParameterKeys!,
+              );
+            })
+          : subsetData;
+
+        // NB: slice the data, if needed
+        const slicedStartData = startFromIndex
+          ? getSubsetFromObject(
+              ignoredData,
+              Object.keys(ignoredData).slice(startFromIndex),
+            )
+          : ignoredData;
+
+        const slicedLimitData = maxRows
+          ? getSubsetFromObject(
+              slicedStartData,
+              Object.keys(slicedStartData).slice(0, maxRows),
+            )
+          : slicedStartData;
+
+        const hasMore = slicedLimitData.length < slicedStartData.length;
+
+        const finalData = slicedLimitData;
+
+        // console.log({ result });
+        return {
+          isSuccessful: true,
+          message: "Found json and schema",
+          hasMore,
+          items: finalData,
+          // $schema,
+          // schema,
+        };
+      };
+    remove.ts: >
+      import { Redis } from "@upstash/redis";
+
+      import { Endpoint } from "../client.js";
+
+      import { getDatabaseDetails } from "../getDatabaseDetails.js";
+
+      import { embeddingsClient } from "../embeddings.js";
+
+
+      export type ActionSchemaDeleteResponse = {
+        isSuccessful: boolean;
+        message: string;
+        deleteCount?: number;
+      };
+
+
+      export const remove: Endpoint<"remove"> = async (context) => {
+        const { rowIds, databaseSlug, Authorization } = context;
+        const apiKey = Authorization?.slice("Bearer ".length);
+        if (!databaseSlug) {
+          return { isSuccessful: false, message: "please provide a slug" };
+        }
+        const { databaseDetails } = await getDatabaseDetails(databaseSlug);
+
+        if (!databaseDetails) {
+          return { isSuccessful: false, message: "Couldn't find database details" };
+        }
+
+        if (
+          databaseDetails.authToken !== undefined &&
+          databaseDetails.authToken !== "" &&
+          apiKey !== databaseDetails.authToken &&
+          apiKey !== databaseDetails.adminAuthToken
+        ) {
+          return { isSuccessful: false, message: "Unauthorized" };
+        }
+
+        if (rowIds === undefined || rowIds.length === 0) {
+          return { isSuccessful: false, message: "Invalid inputs" };
+        }
+
+        const redis = new Redis({
+          url: `https://${databaseDetails.endpoint}`,
+          token: databaseDetails.rest_token,
+        });
+
+        databaseDetails.vectorIndexColumnDetails?.map((item) => {
+          const { vectorRestUrl, vectorRestToken } = item;
+          return embeddingsClient.deleteVector({
+            vectorRestUrl,
+            vectorRestToken,
+            ids: rowIds,
+          });
+        });
+
+        const deleteCount = await redis.del(...rowIds);
+
+        return { isSuccessful: true, message: "Row(s) deleted", deleteCount };
+      };
+    removeDatabase.ts: ""
+    setApp.ts: ""
+    update.ts: >
+      import { O, getSubsetFromObject, objectMapSync } from "from-anywhere";
+
+      import { upstashRedisSetItems } from "../upstashRedis.js";
+
+      import { Endpoint } from "../client.js";
+
+      import { getDatabaseDetails } from "../getDatabaseDetails.js";
+
+      import { upsertIndexVectors } from "../embeddings.js";
+
+
+      /**
+
+      Update an item in a specified row in a table.
+
+
+      - applies authorization
+
+      - validates the partial item against the schema to ensure its correct
+
+       */
+      export const update: Endpoint<"update"> = async (context) => {
+        const { id, databaseSlug, partialItem, Authorization } = context;
+        const apiKey = Authorization?.slice("Bearer ".length);
+        if (!databaseSlug) {
+          return { isSuccessful: false, message: "please provide a slug" };
+        }
+        const { databaseDetails } = await getDatabaseDetails(databaseSlug);
+
+        if (!databaseDetails) {
+          return { isSuccessful: false, message: "Couldn't find database details" };
+        }
+
+        if (
+          databaseDetails.authToken !== undefined &&
+          databaseDetails.authToken !== "" &&
+          apiKey !== databaseDetails.authToken &&
+          apiKey !== databaseDetails.adminAuthToken
+        ) {
+          return { isSuccessful: false, message: "Unauthorized", status: 403 };
+        }
+
+        if (id === undefined || !partialItem) {
+          return { isSuccessful: false, message: "Invalid inputs", status: 422 };
+        }
+
+        const partialItemPropertyKeys = Object.keys(partialItem);
+
+        if (!databaseDetails.schema.properties) {
+          return { isSuccessful: false, message: "Schema not found" };
+        }
+
+        const schemaPropertyKeys = Object.keys(databaseDetails.schema.properties);
+
+        const validPartialItemPropertyKeys = partialItemPropertyKeys.filter((k) =>
+          schemaPropertyKeys.includes(k),
+        );
+
+        const prunedPartialItem: O = getSubsetFromObject(
+          partialItem,
+          validPartialItemPropertyKeys,
+        );
+
+        // Ensure all values that are null become undefined
+        const castedPartialItem = objectMapSync(
+          prunedPartialItem as O,
+          (key, value) => (value === null ? undefined : value),
+        );
+
+        await upstashRedisSetItems({
+          redisRestToken: databaseDetails.rest_token,
+          redisRestUrl: databaseDetails.endpoint,
+          items: { [id]: castedPartialItem },
+        });
+
+        // also update vectors if they're there
+        await upsertIndexVectors(databaseDetails, id, castedPartialItem);
+
+        return { isSuccessful: true, message: "Updated" };
+      };
+  types.ts: >
+    import { JSONSchema7 } from "json-schema";
+
+
+    export type OpenaiEmbeddingModelEnum =
+      | "text-embedding-ada-002"
+      | "text-embedding-3-small"
+      | "text-embedding-3-large";
+    /**
+     * Details that are found in the KV store after de-serialisation
+     *
+     * Key should be a databaseSlug, then these values should be there
+     */
+    export type DatabaseDetails = {
+      upstashApiKey: string;
+      upstashEmail: string;
+      database_id: string;
+      endpoint: string;
+      rest_token: string;
+      authToken: string;
+      adminAuthToken: string;
+      schema: JSONSchema7;
+
+      openaiApiKey?: string;
+      // TODO: put the right stuff in there after creating the indexes, so we can easily perform actions with it.
+      vectorIndexColumnDetails?: {
+        propertyKey: string;
+        vectorRestToken: string;
+        vectorRestUrl: string;
+        dimensions: number;
+        model: OpenaiEmbeddingModelEnum;
+      }[];
+    };
+  openapi-types.ts: >-
+    export interface paths {
+        "/listDatabases": {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            /** List your databases */
+            get: operations["listDatabases"];
+            put?: never;
+            post?: never;
+            delete?: never;
+            options?: never;
+            head?: never;
+            patch?: never;
+            trace?: never;
+        };
+        "/createDatabase": {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            get?: never;
+            put?: never;
+            post: operations["createDatabase"];
+            delete?: never;
+            options?: never;
+            head?: never;
+            patch?: never;
+            trace?: never;
+        };
+        "/openapi.json": {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            /** Get openapi */
+            get: operations["getOpenapi"];
+            put?: never;
+            post?: never;
+            delete?: never;
+            options?: never;
+            head?: never;
+            patch?: never;
+            trace?: never;
+        };
+        "/{databaseSlug}/openapi.json": {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    databaseSlug: string;
+                };
+                cookie?: never;
+            };
+            /** Get openapi for this database table alone */
+            get: operations["getCrudOpenapi"];
+            put?: never;
+            post?: never;
+            delete?: never;
+            options?: never;
+            head?: never;
+            patch?: never;
+            trace?: never;
+        };
+        "/{databaseSlug}/schema.json": {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    databaseSlug: string;
+                };
+                cookie?: never;
+            };
+            /** Get schema for a database */
+            get: operations["getSchema"];
+            put?: never;
+            post?: never;
+            delete?: never;
+            options?: never;
+            head?: never;
+            patch?: never;
+            trace?: never;
+        };
+        "/read": {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            get?: never;
+            put?: never;
+            post: operations["read"];
+            delete?: never;
+            options?: never;
+            head?: never;
+            patch?: never;
+            trace?: never;
+        };
+        "/create": {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            get?: never;
+            put?: never;
+            post: operations["create"];
+            delete?: never;
+            options?: never;
+            head?: never;
+            patch?: never;
+            trace?: never;
+        };
+        "/remove": {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            get?: never;
+            put?: never;
+            post: operations["remove"];
+            delete?: never;
+            options?: never;
+            head?: never;
+            patch?: never;
+            trace?: never;
+        };
+        "/update": {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            get?: never;
+            put?: never;
+            post: operations["update"];
+            delete?: never;
+            options?: never;
+            head?: never;
+            patch?: never;
+            trace?: never;
+        };
+    }
+
+    export type webhooks = Record<string, never>;
+
+    export interface components {
+        schemas: {
+            /** @description Slug compatible with URLs */
+            UrlSlug: string;
+            CreateResponse: {
+                isSuccessful: boolean;
+                message: string;
+                /** @description The rowIds created */
+                result?: string[];
+            };
+            CreateContext: {
+                databaseSlug?: string;
+                items: components["schemas"]["ModelItem"][];
+            };
+            Sort: {
+                /** @enum {string} */
+                sortDirection: "ascending" | "descending";
+                objectParameterKey: string;
+            };
+            Filter: {
+                /** @enum {string} */
+                operator: "equal" | "notEqual" | "endsWith" | "startsWith" | "includes" | "includesLetters" | "greaterThan" | "lessThan" | "greaterThanOrEqual" | "lessThanOrEqual" | "isIncludedIn" | "isFalsy" | "isTruthy";
+                value: string;
+                objectParameterKey: string;
+            };
+            ReadResponse: {
+                isSuccessful: boolean;
+                message: string;
+                $schema?: string;
+                items?: {
+                    [key: string]: components["schemas"]["ModelItem"] | undefined;
+                };
+                schema?: {
+                    [key: string]: unknown;
+                };
+                canWrite?: boolean;
+                hasMore?: boolean;
+            };
+            ReadContext: {
+                databaseSlug?: string;
+                search?: string;
+                vectorSearch?: {
+                    propertyKey: string;
+                    input: string;
+                    topK: number;
+                    minimumSimilarity: number;
+                };
+                rowIds?: string[];
+                startFromIndex?: number;
+                maxRows?: number;
+                filter?: components["schemas"]["Filter"][];
+                sort?: components["schemas"]["Sort"][];
+                objectParameterKeys?: string[];
+                ignoreObjectParameterKeys?: string[];
+            };
+            UpdateContext: {
+                databaseSlug?: string;
+                /** @description The id (indexed key) of the item to update. Update that functions as upsert. If the id didn't exist, it will be created. */
+                id: string;
+                /** @description New (partial) value of the item. Will update all keys provided here. Please note that it cannot be set to 'undefined' as this doesn't transfer over JSON, but if you set it to 'null', the value will be removed from the database. */
+                partialItem: components["schemas"]["ModelItem"];
+            };
+            UpdateResponse: {
+                isSuccessful: boolean;
+                message: string;
+            };
+            ModelItem: {
+                [key: string]: unknown;
+            };
+            RemoveContext: {
+                databaseSlug?: string;
+                /** @description Which IDs should be removed */
+                rowIds: string[];
+            };
+            RemoveResponse: {
+                isSuccessful: boolean;
+                message: string;
+                /** @description The number of items deleted */
+                deleteCount?: number;
+            };
+            CreateDatabaseResponse: {
+                isSuccessful: boolean;
+                message?: string;
+                authToken?: string;
+                adminAuthToken?: string;
+                databaseSlug?: string;
+                openapiUrl?: string;
+            };
+            /** @description A list of vector indexes to be created for several columns in your schema */
+            VectorIndexColumns: {
+                propertyKey: string;
+                /** @enum {string} */
+                model: "text-embedding-ada-002" | "text-embedding-3-small" | "text-embedding-3-large";
+                /** @enum {string} */
+                region: "us-east-1" | "eu-west-1" | "us-central1";
+                dimension_count: number;
+                /** @enum {string} */
+                similarity_function: "COSINE" | "EUCLIDIAN" | "DOT_PRODUCT";
+            }[];
+            StandardResponse: {
+                status?: number;
+                isSuccessful: boolean;
+                message?: string;
+                priceCredit?: number;
+            };
+            Contact: {
+                name?: string;
+                /** Format: uri-reference */
+                url?: string;
+                /** Format: email */
+                email?: string;
+                /** Format: phone */
+                "x-phoneNumber"?: string;
+                "x-description"?: string;
+            };
+            License: {
+                name: string;
+                /** Format: uri-reference */
+                url?: string;
+            };
+            /** @description Ratelimiting extension by ActionSchema. Can be applied globally, per plan, per tag, or per operation */
+            RateLimit: {
+                limit?: number;
+                /** @enum {string} */
+                interval?: "second" | "minute";
+            };
+            Info: {
+                title: string;
+                description?: string;
+                /** Format: uri-reference */
+                termsOfService?: string;
+                /** @description Contact information for the exposed API. */
+                contact?: components["schemas"]["Contact"];
+                /** @description The license information for the exposed API. */
+                license?: components["schemas"]["License"];
+                /** @description The version of the OpenAPI document (which is distinct from the OpenAPI Specification version or the API implementation version). */
+                version: string;
+                /** @description Different people in the company and their capabilities and communication channels */
+                "x-people"?: components["schemas"]["Contact"][];
+                /** @description Product info. */
+                "x-product"?: unknown;
+                /** @description Important links needed for agents to make using the API easier. */
+                "x-links"?: {
+                    signupUrl?: string;
+                    loginUrl?: string;
+                    forgotPasswordUrl?: string;
+                    pricingUrl?: string;
+                    /** @description Page from where logged-in user can make purchases, cancel subscription, etc. */
+                    billingUrl?: string;
+                    /** @description URL of a page where the user can see their usage and its cost. */
+                    usageUrl?: string;
+                    docsUrl?: string;
+                    supportUrl?: string;
+                    /** @description Url of the page where the user can find the required information for authorizing on the API. Usually this is a page where the user can create and see their API tokens. */
+                    apiAuthorizationSettingsUrl?: string;
+                };
+                /** @description Pricing info including monthly fees. */
+                "x-pricing"?: {
+                    /** @description General summary of all plans */
+                    description?: string;
+                    plans?: {
+                        price: number;
+                        currency: string;
+                        title: string;
+                        /** @description How much credit do you get for this. Credit matches the credit spent with 'priceCredit' extension for operations */
+                        credit: number;
+                        /**
+                         * @description How long will you retain the credit you receive?
+                         * @enum {string}
+                         */
+                        persistence?: "forever" | "interval" | "capped";
+                        /** @description Required when filling in persistence 'capped' */
+                        persistenceCappedDays?: number;
+                        /**
+                         * @description If the plan is a subscription based plan, fill in the interval on which every time the price is paid, and credit is given.
+                         *
+                         *     If there is a pay-as-you-go price, fill in the minimum purchase size for each step. It will be assumed the price to credit ratio is linear.
+                         * @enum {string}
+                         */
+                        interval?: "week" | "month" | "quarter" | "year";
+                        /** @description Plan-based RateLimit info that overwrites the general rateLimit. */
+                        rateLimit?: components["schemas"]["RateLimit"];
+                    }[];
+                };
+                /** @description Global ratelimit info. Can be overwritten either by plans or by operations. */
+                "x-rateLimit"?: components["schemas"]["RateLimit"];
+                /** @description General product reviews, collected. */
+                "x-reviews"?: unknown;
+                /** @description General latency info. */
+                "x-latency"?: unknown;
+                /** @description Link to other openapis that could be good alternatives. */
+                "x-alternatives"?: string[];
+                /** @description Logo metadata. Standard taken from https://apis.guru */
+                "x-logo"?: {
+                    /**
+                     * Format: uri
+                     * @description URL to a logo image
+                     */
+                    url?: string;
+                    backgroundColor?: string;
+                    secondaryColor?: string;
+                };
+            };
+            ExternalDocumentation: {
+                description?: string;
+                /** Format: uri-reference */
+                url: string;
+                /** @description Scraped markdown from the url */
+                markdown?: unknown;
+            };
+            ServerVariable: {
+                enum?: string[];
+                default: string;
+                description?: string;
+            };
+            Server: {
+                url: string;
+                description?: string;
+                variables?: {
+                    [key: string]: components["schemas"]["ServerVariable"] | undefined;
+                };
+            };
+            SecurityRequirement: {
+                [key: string]: string[] | undefined;
+            };
+            Tag: {
+                name: string;
+                description?: string;
+                externalDocs?: components["schemas"]["ExternalDocumentation"];
+                /** @description Tag-based ratelimit info. */
+                "x-rateLimit"?: components["schemas"]["RateLimit"];
+            };
+            Paths: Record<string, never>;
+            Components: {
+                schemas?: Record<string, never>;
+                responses?: Record<string, never>;
+                parameters?: Record<string, never>;
+                examples?: Record<string, never>;
+                requestBodies?: Record<string, never>;
+                headers?: Record<string, never>;
+                securitySchemes?: Record<string, never>;
+                links?: Record<string, never>;
+                callbacks?: Record<string, never>;
+            };
+            /**
+             * OpenAPI Document
+             * @description The description of OpenAPI v3.0.x documents, as defined by https://spec.openapis.org/oas/v3.0.3 and extended by ActionSchema.
+             */
+            "openapi.schema": {
+                /** Format: uri-reference */
+                $schema: string;
+                /** Format: uri-reference */
+                $id?: string;
+                /**
+                 * Format: uri-reference
+                 * @description If given, should be a url linking to the original file, the starting point, if this is not already the one. Used to determine if anything has changed.
+                 */
+                $source?: string;
+                /** @description Version */
+                openapi: string;
+                /**
+                 * @description Version of actionschema.
+                 * @default 0.0.1
+                 */
+                "x-actionschema": string;
+                /** @description Provides metadata about the API. The metadata MAY be used by tooling as required. */
+                info: components["schemas"]["Info"];
+                /** @description Additional external documentation. */
+                externalDocs?: components["schemas"]["ExternalDocumentation"];
+                /** @description An array of Server Objects, which provide connectivity information to a target server. If the servers property is not provided, or is an empty array, the default value would be a Server Object with a url value of /. */
+                servers?: components["schemas"]["Server"][];
+                /** @description An array of Server Objects, indicating the original servers. Useful when defining a proxy. */
+                "x-origin-servers"?: components["schemas"]["Server"][];
+                /**
+                 * @description Security Requirement Object (https://spec.openapis.org/oas/latest.html#security-requirement-object)
+                 *
+                 *     Lists the required security schemes to execute this operation. The name used for each property MUST correspond to a security scheme declared in the Security Schemes under the Components Object.
+                 *
+                 *     Security Requirement Objects that contain multiple schemes require that all schemes MUST be satisfied for a request to be authorized. This enables support for scenarios where multiple query parameters or HTTP headers are required to convey security information.
+                 *
+                 *     When a list of Security Requirement Objects is defined on the OpenAPI Object or Operation Object, only one of the Security Requirement Objects in the list needs to be satisfied to authorize the request.
+                 *
+                 *     A declaration of which security mechanisms can be used across the API. The list of values includes alternative security requirement objects that can be used. Only one of the security requirement objects need to be satisfied to authorize a request. Individual operations can override this definition. To make security optional, an empty security requirement ({}) can be included in the array.
+                 *
+                 *     Please note: Every item in this array is an object with keys being the scheme names (can be anything). These names should then also be defined in components.securitySchemes.
+                 * @default [
+                 *       {
+                 *         "apiKey": []
+                 *       }
+                 *     ]
+                 */
+                security: components["schemas"]["SecurityRequirement"][];
+                /** @description Used for grouping endpoints together.
+                 *
+                 *     A list of tags used by the specification with additional metadata. The order of the tags can be used to reflect on their order by the parsing tools. Not all tags that are used by the Operation Object must be declared. The tags that are not declared MAY be organized randomly or based on the tools' logic. Each tag name in the list MUST be unique. */
+                tags?: components["schemas"]["Tag"][];
+                /** @description The available paths and operations for the API. */
+                paths: components["schemas"]["Paths"];
+                /** @description An element to hold various schemas for the specification. */
+                components?: components["schemas"]["Components"];
+            };
+        };
+        responses: never;
+        parameters: never;
+        requestBodies: never;
+        headers: never;
+        pathItems: never;
+    }
+
+    export type $defs = Record<string, never>;
+
+    export interface operations {
+        listDatabases: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description My DB List */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            isSuccessful?: boolean;
+                            message?: string;
+                            status?: number;
+                            databases?: {
+                                databaseSlug: string;
+                                openapiUrl: string;
+                                /** @description Bearer Authorization token to be used for the openapi of this specific database. Can be used interchangeably to the admin authtoken. */
+                                authToken: string;
+                                schema: string;
+                            }[];
+                        };
+                    };
+                };
+            };
+        };
+        createDatabase: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /**
+                         * Database ID
+                         * @description Unique slug for the database to be used as prefix to the endpoints.
+                         */
+                        databaseSlug: components["schemas"]["UrlSlug"];
+                        /**
+                         * Schema
+                         * @description JSON of the schema you want the database to refer to. Should be a Object JSON Schema.
+                         */
+                        schemaString: string;
+                        /** @description Token required to authrorize using the CRUD endpoints. Will be generated if not given. */
+                        authToken?: string;
+                        /**
+                         * @description Can be set for a new database. Cannot be changed
+                         * @enum {string}
+                         */
+                        region?: "eu-west-1" | "us-east-1" | "us-west-1" | "ap-northeast-1" | "us-central1";
+                        vectorIndexColumns?: components["schemas"]["VectorIndexColumns"];
+                        /** @description Needed if you use vectorIndexColumns */
+                        openaiApiKey?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Create database response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["CreateDatabaseResponse"];
+                    };
+                };
+            };
+        };
+        getOpenapi: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OpenAPI */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["openapi.schema"];
+                    };
+                };
+            };
+        };
+        getCrudOpenapi: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    databaseSlug: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OpenAPI */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["openapi.schema"] | {
+                            isSuccessful: boolean;
+                            message?: string;
+                        };
+                    };
+                };
+            };
+        };
+        getSchema: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    databaseSlug: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Schema */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: unknown;
+                        };
+                    };
+                };
+            };
+        };
+        read: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["ReadContext"];
+                };
+            };
+            responses: {
+                /** @description OpenAPI */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ReadResponse"];
+                    };
+                };
+            };
+        };
+        create: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["CreateContext"];
+                };
+            };
+            responses: {
+                /** @description OpenAPI */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["CreateResponse"];
+                    };
+                };
+            };
+        };
+        remove: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["RemoveContext"];
+                };
+            };
+            responses: {
+                /** @description OpenAPI */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["RemoveResponse"];
+                    };
+                };
+            };
+        };
+        update: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["UpdateContext"];
+                };
+            };
+            responses: {
+                /** @description OpenAPI */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["UpdateResponse"];
+                    };
+                };
+            };
+        };
+    }
+
+
+
+    export type UrlSlug = components["schemas"]["UrlSlug"]
+
+    export type CreateResponse = components["schemas"]["CreateResponse"]
+
+    export type CreateContext = components["schemas"]["CreateContext"]
+
+    export type Sort = components["schemas"]["Sort"]
+
+    export type Filter = components["schemas"]["Filter"]
+
+    export type ReadResponse = components["schemas"]["ReadResponse"]
+
+    export type ReadContext = components["schemas"]["ReadContext"]
+
+    export type UpdateContext = components["schemas"]["UpdateContext"]
+
+    export type UpdateResponse = components["schemas"]["UpdateResponse"]
+
+    export type ModelItem = components["schemas"]["ModelItem"]
+
+    export type RemoveContext = components["schemas"]["RemoveContext"]
+
+    export type RemoveResponse = components["schemas"]["RemoveResponse"]
+
+    export type CreateDatabaseResponse =
+    components["schemas"]["CreateDatabaseResponse"]
+
+    export type VectorIndexColumns = components["schemas"]["VectorIndexColumns"]
+
+    export type StandardResponse = components["schemas"]["StandardResponse"]
+      
+    export const operationUrlObject = {
+      "listDatabases": {
+        "method": "get",
+        "path": "/listDatabases"
+      },
+      "createDatabase": {
+        "method": "post",
+        "path": "/createDatabase"
+      },
+      "getOpenapi": {
+        "method": "get",
+        "path": "/openapi.json"
+      },
+      "getCrudOpenapi": {
+        "method": "get",
+        "path": "/{databaseSlug}/openapi.json"
+      },
+      "getSchema": {
+        "method": "get",
+        "path": "/{databaseSlug}/schema.json"
+      },
+      "read": {
+        "method": "post",
+        "path": "/read"
+      },
+      "create": {
+        "method": "post",
+        "path": "/create"
+      },
+      "remove": {
+        "method": "post",
+        "path": "/remove"
+      },
+      "update": {
+        "method": "post",
+        "path": "/update"
+      }
+    }
+
+    export const operationKeys = Object.keys(operationUrlObject);
+tsconfig.json: |
+  {
+    "include": ["src", "api"],
+    "compilerOptions": {
+      "target": "ESNext",
+      "lib": ["es2022", "DOM"],
+      "module": "ESNext",
+      "outDir": "build",
+      "moduleResolution": "Node",
+      "resolveJsonModule": true,
+      "allowJs": true,
+      "checkJs": false,
+      "esModuleInterop": true,
+      "isolatedModules": true,
+      "allowSyntheticDefaultImports": true,
+      "forceConsistentCasingInFileNames": true,
+      "strict": true,
+      "skipLibCheck": true,
+      "sourceMap": true,
+      "declarationMap": true,
+      "declaration": true,
+      "jsx": "react-jsx"
+    }
+  }

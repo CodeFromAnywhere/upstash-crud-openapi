@@ -1,0 +1,22 @@
+crud-openapi:
+  api:
+    index.ts: 10761
+  src:
+    api:
+      create.ts: 1816
+      createDatabase.ts: 5166
+      getAppOpenapi.ts: 3483
+      getCrudOpenapi.ts: 3483
+      getOpenapi.ts: 333
+      getSchema.ts: 523
+      listApps.ts: 0
+      listDatabases.ts: 2120
+      oauthCallback.ts: 0
+      read.ts: 8841
+      remove.ts: 1630
+      removeDatabase.ts: 0
+      setApp.ts: 0
+      update.ts: 2305
+    types.ts: 849
+    openapi-types.ts: 27379
+  tsconfig.json: 558
