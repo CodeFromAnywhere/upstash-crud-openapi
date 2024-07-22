@@ -141,7 +141,10 @@ export const upsertDatabase: Endpoint<"upsertDatabase"> = async (context) => {
     });
 
     if (!created.result) {
-      return { isSuccessful: false, message: created.message };
+      return {
+        isSuccessful: false,
+        message: `Upstash result failed: ${created.message}`,
+      };
     }
 
     const adminAuthToken = apiKey || generateRandomString(64);
