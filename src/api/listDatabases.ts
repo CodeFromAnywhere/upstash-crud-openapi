@@ -1,7 +1,7 @@
 import { Redis } from "@upstash/redis";
 import { Endpoint, ResponseType } from "../client.js";
 import { getUpstashRedisDatabase } from "../upstashRedis.js";
-import { DatabaseDetails } from "../types.js";
+import { DatabaseDetails, DbKey } from "../types.js";
 import { notEmpty } from "from-anywhere";
 
 export const listDatabases: Endpoint<"listDatabases"> = async (context) => {
@@ -41,7 +41,7 @@ export const listDatabases: Endpoint<"listDatabases"> = async (context) => {
     token: rootDatabaseDetails.rest_token,
   });
 
-  const slugs: string[] = await root.smembers(`adminslugs_${apiKey}`);
+  const slugs: string[] = await root.smembers(`dbs_${apiKey}` satisfies DbKey);
 
   if (!slugs) {
     return { isSuccessful: false, message: "Unauthorized", status: 403 };
@@ -51,7 +51,9 @@ export const listDatabases: Endpoint<"listDatabases"> = async (context) => {
     return { isSuccessful: true, message: "No dbs yet" };
   }
 
-  const details: (DatabaseDetails | null)[] = await root.mget(...slugs);
+  const details: (DatabaseDetails | null)[] = await root.mget(
+    ...slugs.map((slug) => `db_${slug}` satisfies DbKey),
+  );
 
   const databases = details
     .map((x, index) =>

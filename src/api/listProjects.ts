@@ -1,6 +1,7 @@
 import { Endpoint } from "../client.js";
 import { Redis } from "@upstash/redis";
 import { getDatabaseDetails } from "../getDatabaseDetails.js";
+import { DbKey } from "../types.js";
 
 export const listProjects: Endpoint<"listProjects"> = async (context) => {
   const { Authorization } = context;
@@ -31,10 +32,14 @@ export const listProjects: Endpoint<"listProjects"> = async (context) => {
     token: databaseDetails.rest_token,
   });
 
-  const projectSlugs: string[] = await root.smembers(`projects_${apiKey}`);
+  const projectSlugs: string[] = await root.smembers(
+    `projects_${apiKey}` satisfies DbKey,
+  );
   const projects = await Promise.all(
     projectSlugs.map(async (slug) => {
-      const description = (await root.get(`project_${slug}`)) as string;
+      const description = (await root.get(
+        `project_${slug}` satisfies DbKey,
+      )) as string;
       return { projectSlug: slug, description };
     }),
   );

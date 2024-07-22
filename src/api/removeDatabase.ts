@@ -2,7 +2,7 @@ import { Endpoint } from "../client.js";
 import { Redis } from "@upstash/redis";
 import { getDatabaseDetails } from "../getDatabaseDetails.js";
 import { embeddingsClient } from "../embeddings.js";
-import { DatabaseDetails } from "../types.js";
+import { DatabaseDetails, DbKey } from "../types.js";
 
 export const removeDatabase: Endpoint<"removeDatabase"> = async (context) => {
   const { databaseSlug, Authorization } = context;
@@ -35,9 +35,9 @@ export const removeDatabase: Endpoint<"removeDatabase"> = async (context) => {
     token: rootDetails.rest_token,
   });
 
-  const databaseDetails = (await root.get(databaseSlug)) as
-    | DatabaseDetails
-    | undefined;
+  const databaseDetails = (await root.get(
+    `db_${databaseSlug}` satisfies DbKey,
+  )) as DatabaseDetails | undefined;
 
   if (!databaseDetails || databaseDetails.adminAuthToken !== apiKey) {
     return {
@@ -60,8 +60,8 @@ export const removeDatabase: Endpoint<"removeDatabase"> = async (context) => {
   }
 
   // Remove the database from Upstash
-  await root.del(databaseSlug);
-  await root.srem(`adminslugs_${apiKey}`, databaseSlug);
+  await root.del(`db_${databaseSlug}` satisfies DbKey);
+  await root.srem(`dbs_${apiKey}` satisfies DbKey, databaseSlug);
 
   return { isSuccessful: true, message: "Database removed successfully" };
 };

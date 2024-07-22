@@ -40,8 +40,7 @@ export type DbKey =
   | `admin_${string}`
   | `db_${string}`
   | `project_${string}`
-  | `db_${string}_${string}`
-  | string;
+  | `db_${string}_${string}`;
 
 export type OpenaiEmbeddingModelEnum =
   | "text-embedding-ada-002"

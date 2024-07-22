@@ -1,5 +1,5 @@
 import { Redis } from "@upstash/redis";
-import { DatabaseDetails } from "./types.js";
+import { DatabaseDetails, DbKey } from "./types.js";
 
 /** In order to go from databaseSlug to databaseId, we need a simple global KV for that */
 export const getDatabaseDetails = async (databaseSlug: string) => {
@@ -28,7 +28,9 @@ export const getDatabaseDetails = async (databaseSlug: string) => {
     token: rootUpstashRestToken,
   });
 
-  const databaseDetails: DatabaseDetails | null = await root.get(databaseSlug);
+  const databaseDetails: DatabaseDetails | null = await root.get(
+    `db_${databaseSlug}` satisfies DbKey,
+  );
 
   //respond with details
   return { databaseDetails, isSuccessful: true, message: "Got your details" };

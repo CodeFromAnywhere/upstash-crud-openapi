@@ -1,6 +1,7 @@
 import { Endpoint } from "../client.js";
 import { Redis } from "@upstash/redis";
 import { getDatabaseDetails } from "../getDatabaseDetails.js";
+import { DbKey } from "../types.js";
 
 export const removeProject: Endpoint<"removeProject"> = async (context) => {
   const { projectSlug, Authorization } = context;
@@ -31,8 +32,8 @@ export const removeProject: Endpoint<"removeProject"> = async (context) => {
     token: databaseDetails.rest_token,
   });
 
-  await root.del(`project_${projectSlug}`);
-  await root.srem(`projects_${apiKey}`, projectSlug);
+  await root.del(`project_${projectSlug}` satisfies DbKey);
+  await root.srem(`projects_${apiKey}` satisfies DbKey, projectSlug);
 
   return { isSuccessful: true, message: "Project removed successfully" };
 };

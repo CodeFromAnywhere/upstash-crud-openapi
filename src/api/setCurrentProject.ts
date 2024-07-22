@@ -1,6 +1,7 @@
 import { Redis } from "@upstash/redis";
 import { Endpoint } from "../client.js";
 import { getDatabaseDetails } from "../getDatabaseDetails.js";
+import { DbKey } from "../types.js";
 
 export const setCurrentProject: Endpoint<"setCurrentProject"> = async (
   context,
@@ -33,10 +34,10 @@ export const setCurrentProject: Endpoint<"setCurrentProject"> = async (
     token: databaseDetails.rest_token,
   });
 
-  let alreadyProject = await root.get(`project_${projectSlug}`);
+  let alreadyProject = await root.get(`project_${projectSlug}` satisfies DbKey);
 
-  await root.set(`project_${projectSlug}`, description);
-  await root.sadd(`projects_${apiKey}`, projectSlug);
+  await root.set(`project_${projectSlug}` satisfies DbKey, description);
+  await root.sadd(`projects_${apiKey}` satisfies DbKey, projectSlug);
 
   return { isSuccessful: true, message: "Project set successfully" };
 };
