@@ -136,7 +136,7 @@ export const upsertDatabase: Endpoint<"upsertDatabase"> = async (context) => {
     const created = await createUpstashRedisDatabase({
       upstashApiKey: rootUpstashApiKey,
       upstashEmail: rootUpstashEmail,
-      name: databaseSlug,
+      name: `db_${databaseSlug}`,
       region,
     });
 

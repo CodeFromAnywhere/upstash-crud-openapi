@@ -20,7 +20,7 @@ adminDetails
 
 databaseDetails
 
-- key = slug
+- key = db_{slug}
 - value = details (has auth to be checked)
 
 projectDetails
@@ -28,13 +28,20 @@ projectDetails
 - key = `project_{slug}`
 - value = details (description, auth to be checked)
 
+DB key-value:
+
+- key = `db_{slug}_{key}`
+- value = the content of the row (according to its schema)
+
  */
 export type DbKey =
   | `dbs_${string}`
   | `projects_${string}`
   | `admin_${string}`
   | `db_${string}`
-  | `project_${string}`;
+  | `project_${string}`
+  | `db_${string}_${string}`
+  | string;
 
 export type OpenaiEmbeddingModelEnum =
   | "text-embedding-ada-002"
