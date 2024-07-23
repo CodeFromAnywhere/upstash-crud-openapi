@@ -8,9 +8,9 @@
 
 ## Performance
 
-In `read`, make a direct keys mget that doesn't use range incase of specified rowIds.
+✅ In `read`, make a direct keys mget that doesn't use range incase of specified rowIds.
 
-Test if it's fast now.
+✅ Test if it's fast now. **It is! Lots better**
 
 Try to see why the DB endpoints are so slow, lets log timing for calling the client endpoints. Can it be made faster somehow?
 
