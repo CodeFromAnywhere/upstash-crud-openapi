@@ -5,7 +5,10 @@ import {
   objectMapSync,
   removeOptionalKeysFromObjectStrings,
 } from "from-anywhere";
-import { upstashRedisGetRange } from "../upstashRedis.js";
+import {
+  upstashRedisGetMultiple,
+  upstashRedisGetRange,
+} from "../upstashRedis.js";
 import { Endpoint } from "../client.js";
 import { Filter, Sort } from "../openapi-types.js";
 import { getDatabaseDetails } from "../getDatabaseDetails.js";
@@ -201,11 +204,26 @@ export const read: Endpoint<"read"> = async (context) => {
     return { isSuccessful: false, message: "Unauthorized" };
   }
 
-  const result = await upstashRedisGetRange({
-    redisRestToken: databaseDetails.rest_token,
-    redisRestUrl: databaseDetails.endpoint,
-    baseKey: undefined,
-  });
+  const result = rowIds
+    ? (
+        await upstashRedisGetMultiple({
+          redisRestToken: databaseDetails.rest_token,
+          redisRestUrl: databaseDetails.endpoint,
+          keys: rowIds,
+        })
+      ).reduce(
+        (previous, current, currentIndex) => {
+          return { ...previous, [rowIds[currentIndex]]: current };
+        },
+        {} as {
+          [x: string]: O;
+        },
+      )
+    : await upstashRedisGetRange({
+        redisRestToken: databaseDetails.rest_token,
+        redisRestUrl: databaseDetails.endpoint,
+        baseKey: undefined,
+      });
 
   if (!result) {
     return { isSuccessful: false, message: "No result" };

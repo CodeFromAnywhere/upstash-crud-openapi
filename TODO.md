@@ -1,5 +1,28 @@
 🚫 BLOCKED 🚫 make oauth for admin, logging in with github via ChatGPT
 
+## CRUDDY OAUTH2
+
+✅ Add oauth to cruddy, so it requires admin login.
+
+✅ Confirm it finds your admin auth based on the github login.
+
+## Performance
+
+In `read`, make a direct keys mget that doesn't use range incase of specified rowIds.
+
+Test if it's fast now.
+
+Try to see why the DB endpoints are so slow, lets log timing for calling the client endpoints. Can it be made faster somehow?
+
+## Reduce DB requirement
+
+We have a limit of # of databases per user. Therefore, let's try to fit all databases in a single database by changing the key value structure. `db_{slug}_{key}` should contain a row of db {slug}
+
+- Figure out how the range works so I can get all items in a certain db, but nothing else
+- Change it everywhere so dbs don't need to be created but use the root-db with `db_{slug}_` prefix
+- Remove all dbs except the root one, using a simple query
+- Add limits on db-size and admin-db-count, that are sensible to the bottlenecks of upstash
+
 ## User or group separation header
 
 Confirm oauth works in the GPT so it gets logged in into ActionSchema.

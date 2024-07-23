@@ -7,7 +7,7 @@
     "version": "1.0",
     "description": ""
   },
-  "security": [{ "apiKey": [] }],
+  "security": [{ "oauth2": [] }],
 
   "servers": [{ "url": "https://data.actionschema.com" }],
   "paths": {
@@ -290,7 +290,14 @@
       "get": {
         "summary": "Get openapi for this database table alone",
         "operationId": "getCrudOpenapi",
-
+        "parameters": [
+          {
+            "in": "path",
+            "name": "databaseSlug",
+            "schema": { "type": "string" },
+            "required": true
+          }
+        ],
         "responses": {
           "200": {
             "description": "OpenAPI",
@@ -319,21 +326,21 @@
             }
           }
         }
-      },
-      "parameters": [
-        {
-          "in": "path",
-          "name": "databaseSlug",
-          "schema": { "type": "string" },
-          "required": true
-        }
-      ]
+      }
     },
 
-    "/app/{projectSlug}/openapi.json": {
+    "/project/{projectSlug}/openapi.json": {
       "get": {
-        "summary": "Get Projectf OpenAPI",
+        "summary": "Get Project OpenAPI",
         "operationId": "getProjectOpenapi",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "projectSlug",
+            "schema": { "type": "string" },
+            "required": true
+          }
+        ],
         "responses": {
           "200": {
             "description": "Successful response",
@@ -346,22 +353,21 @@
             }
           }
         }
-      },
-      "parameters": [
-        {
-          "in": "path",
-          "name": "projectSlug",
-          "schema": { "type": "string" },
-          "required": true
-        }
-      ]
+      }
     },
 
     "/{databaseSlug}/schema.json": {
       "get": {
         "summary": "Get schema for a database",
         "operationId": "getSchema",
-
+        "parameters": [
+          {
+            "in": "path",
+            "name": "databaseSlug",
+            "schema": { "type": "string" },
+            "required": true
+          }
+        ],
         "responses": {
           "200": {
             "description": "Schema",
@@ -376,15 +382,7 @@
             }
           }
         }
-      },
-      "parameters": [
-        {
-          "in": "path",
-          "name": "databaseSlug",
-          "schema": { "type": "string" },
-          "required": true
-        }
-      ]
+      }
     },
 
     "/read": {
@@ -490,11 +488,18 @@
 
   "components": {
     "securitySchemes": {
-      "apiKey": {
-        "type": "http",
-        "bearerFormat": "Bearer",
-        "scheme": "bearer",
-        "description": "Admin Authtoken"
+      "oauth2": {
+        "type": "oauth2",
+        "flows": {
+          "authorizationCode": {
+            "authorizationUrl": "https://auth.actionschema.com/oauth/authorize",
+            "tokenUrl": "https://auth.actionschema.com/oauth/access_token",
+            "scopes": {
+              "admin": "Full access to all services",
+              "readonly": "Only read what services are available"
+            }
+          }
+        }
       }
     },
     "schemas": {
