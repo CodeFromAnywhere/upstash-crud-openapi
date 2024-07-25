@@ -320,6 +320,8 @@
                 "schema": {
                   "type": "object",
                   "properties": {
+                    "isSuccessful": { "type": "boolean" },
+                    "message": { "type": "string" },
                     "projects": {
                       "type": "array",
                       "items": {
@@ -330,6 +332,10 @@
                           },
                           "description": {
                             "type": "string"
+                          },
+                          "databaseSlugs": {
+                            "type": "array",
+                            "items": { "type": "string" }
                           }
                         }
                       }
