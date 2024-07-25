@@ -472,6 +472,10 @@ export const upstashRedisGetMultiple = async (context: {
   });
 
   const realKeys = baseKey ? keys.map((k) => `${baseKey}${k}`) : keys;
+
+  if (realKeys.length === 0) {
+    return [];
+  }
   const mgetResult = (await redis.mget(...realKeys)) as (O | null)[];
 
   return mgetResult;

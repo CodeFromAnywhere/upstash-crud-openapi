@@ -1,1 +1,1 @@
-{"version":3,"file":"removeProject.d.ts","sourceRoot":"","sources":["../../../src/api/removeProject.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,QAAQ,EAAE,MAAM,cAAc,CAAC;AAQxC,eAAO,MAAM,aAAa,EAAE,QAAQ,CAAC,eAAe,CAuEnD,CAAC"}
+{"version":3,"file":"removeProject.d.ts","sourceRoot":"","sources":["../../../src/api/removeProject.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,QAAQ,EAAE,MAAM,cAAc,CAAC;AAQxC,eAAO,MAAM,aAAa,EAAE,QAAQ,CAAC,eAAe,CA2EnD,CAAC"}

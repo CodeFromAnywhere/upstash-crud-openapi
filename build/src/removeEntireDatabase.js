@@ -33,7 +33,7 @@ export const removeEntireDatabase = async (context) => {
     if (projectDetails) {
         await root.set(`project_${databaseDetails.projectSlug}`, {
             ...projectDetails,
-            projectDetails: projectDetails.databaseSlugs.filter((x) => x !== databaseSlug),
+            databaseSlugs: projectDetails.databaseSlugs.filter((x) => x !== databaseSlug),
         });
     }
     // Remove vector indexes if they exist

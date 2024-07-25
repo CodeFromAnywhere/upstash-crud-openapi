@@ -10,7 +10,7 @@ Should make a project openapi from the schema fetched from projectSlug
 The idea here is that we could have a oauth2 based database that can be used from the frontend directly.
 */
 export const getProjectOpenapi = async (context) => {
-    const { projectSlug, Authorization } = context;
+    const { projectSlug } = context;
     // comes from path parameter
     const { projectDetails, databases, isSuccessful, message } = await getProjectDetails(projectSlug);
     if (!projectDetails || !isSuccessful) {

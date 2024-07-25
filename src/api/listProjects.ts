@@ -3,6 +3,7 @@ import { Redis } from "@upstash/redis";
 import { getDatabaseDetails } from "../getDatabaseDetails.js";
 import { DbKey, ProjectDetails } from "../types.js";
 import { notEmpty } from "from-anywhere";
+import { getUpstashRedisDatabase } from "../upstashRedis.js";
 
 export const listProjects: Endpoint<"listProjects"> = async (context) => {
   const { Authorization } = context;
@@ -23,9 +24,13 @@ export const listProjects: Endpoint<"listProjects"> = async (context) => {
     };
   }
 
-  const { databaseDetails } = await getDatabaseDetails(rootUpstashDatabaseId);
+  const rootDatabaseDetails = await getUpstashRedisDatabase({
+    upstashEmail: rootUpstashEmail,
+    databaseId: rootUpstashDatabaseId,
+    upstashApiKey: rootUpstashApiKey,
+  });
 
-  if (!databaseDetails) {
+  if (!rootDatabaseDetails) {
     return {
       isSuccessful: false,
       status: 404,
@@ -34,8 +39,8 @@ export const listProjects: Endpoint<"listProjects"> = async (context) => {
   }
 
   const root = new Redis({
-    url: `https://${databaseDetails.endpoint}`,
-    token: databaseDetails.rest_token,
+    url: `https://${rootDatabaseDetails.endpoint}`,
+    token: rootDatabaseDetails.rest_token,
   });
 
   const projectSlugs: string[] = await root.smembers(
@@ -52,7 +57,7 @@ export const listProjects: Endpoint<"listProjects"> = async (context) => {
 
   const projectKeys = projectSlugs.map((s) => `project_${s}` satisfies DbKey);
 
-  const projects = (await root.mget(projectKeys))
+  const projects = (await root.mget(...projectKeys))
     .map((item, index) => {
       const typed = item as ProjectDetails | null;
 

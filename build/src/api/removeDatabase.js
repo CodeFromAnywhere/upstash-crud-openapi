@@ -1,11 +1,10 @@
 import { Redis } from "@upstash/redis";
-import { getAdminAuthorized } from "../getAdminAuthorized.js";
-import { getDatabaseDetails } from "../getDatabaseDetails.js";
 import { removeEntireDatabase } from "../removeEntireDatabase.js";
+import { getUpstashRedisDatabase } from "../upstashRedis.js";
 export const removeDatabase = async (context) => {
     const { databaseSlug, Authorization } = context;
     const apiKey = Authorization?.slice("Bearer ".length);
-    if (!apiKey || !(await getAdminAuthorized(Authorization))) {
+    if (!apiKey || apiKey.length < 64) {
         return { isSuccessful: false, message: "Unauthorized", status: 403 };
     }
     const rootUpstashApiKey = process.env["X_UPSTASH_API_KEY"];
@@ -17,16 +16,20 @@ export const removeDatabase = async (context) => {
             message: "Missing environment variables",
         };
     }
-    const { databaseDetails: rootDetails } = await getDatabaseDetails(rootUpstashDatabaseId);
-    if (!rootDetails) {
+    const rootDatabaseDetails = await getUpstashRedisDatabase({
+        upstashEmail: rootUpstashEmail,
+        databaseId: rootUpstashDatabaseId,
+        upstashApiKey: rootUpstashApiKey,
+    });
+    if (!rootDatabaseDetails) {
         return {
             isSuccessful: false,
             message: "Couldn't find root database details",
         };
     }
     const root = new Redis({
-        url: `https://${rootDetails.endpoint}`,
-        token: rootDetails.rest_token,
+        url: `https://${rootDatabaseDetails.endpoint}`,
+        token: rootDatabaseDetails.rest_token,
     });
     const databaseDetails = (await root.get(`db_${databaseSlug}`));
     if (!databaseDetails || databaseDetails.adminAuthToken !== apiKey) {
@@ -36,7 +39,12 @@ export const removeDatabase = async (context) => {
             status: 403,
         };
     }
-    await removeEntireDatabase({ root, databaseSlug, databaseDetails });
+    const result = await removeEntireDatabase({
+        root,
+        databaseSlug,
+        databaseDetails,
+    });
+    console.log(result);
     return { isSuccessful: true, message: "Database removed successfully" };
 };
 //# sourceMappingURL=removeDatabase.js.map

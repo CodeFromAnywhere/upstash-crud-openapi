@@ -1,7 +1,8 @@
 export const createClient = (operationUrlObject, config) => {
     const client = async (operation, body, customConfiguration) => {
         const details = operationUrlObject[operation];
-        const { headers, baseUrl } = customConfiguration || config;
+        const headers = customConfiguration?.headers || config?.headers;
+        const baseUrl = customConfiguration?.baseUrl || config?.baseUrl;
         if (!details) {
             throw new Error("No details found for operation:" + String(operation));
         }

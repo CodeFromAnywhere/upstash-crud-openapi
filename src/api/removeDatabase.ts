@@ -3,6 +3,7 @@ import { Endpoint } from "../client.js";
 import { getDatabaseDetails } from "../getDatabaseDetails.js";
 import { removeEntireDatabase } from "../removeEntireDatabase.js";
 import { DatabaseDetails, DbKey } from "../types.js";
+import { getUpstashRedisDatabase } from "../upstashRedis.js";
 
 export const removeDatabase: Endpoint<"removeDatabase"> = async (context) => {
   const { databaseSlug, Authorization } = context;
@@ -21,12 +22,13 @@ export const removeDatabase: Endpoint<"removeDatabase"> = async (context) => {
       message: "Missing environment variables",
     };
   }
+  const rootDatabaseDetails = await getUpstashRedisDatabase({
+    upstashEmail: rootUpstashEmail,
+    databaseId: rootUpstashDatabaseId,
+    upstashApiKey: rootUpstashApiKey,
+  });
 
-  const { databaseDetails: rootDetails } = await getDatabaseDetails(
-    rootUpstashDatabaseId,
-  );
-
-  if (!rootDetails) {
+  if (!rootDatabaseDetails) {
     return {
       isSuccessful: false,
       message: "Couldn't find root database details",
@@ -34,8 +36,8 @@ export const removeDatabase: Endpoint<"removeDatabase"> = async (context) => {
   }
 
   const root = new Redis({
-    url: `https://${rootDetails.endpoint}`,
-    token: rootDetails.rest_token,
+    url: `https://${rootDatabaseDetails.endpoint}`,
+    token: rootDatabaseDetails.rest_token,
   });
 
   const databaseDetails = (await root.get(

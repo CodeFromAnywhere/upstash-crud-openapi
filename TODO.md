@@ -16,11 +16,15 @@
 
 ✅ 🤔 Test auth locally and figure out why `permission` endpoint isn't authorized. Why does it try to authorize with `permission` in the first place? It doesn't use the adminAuthToken from the DB since it has stuff stored directly without being an admin in `auth`. That's not an issue for me... So let's remove `getAdminAuthorized` for now when it's not REALLY needed.
 
-Fix the client everywhere so `client.auth("permission")` allows for non-200 status codes without crashing. Can I add this into the type?
+✅ Fixed some crucial bugs in redis: mget empty set, and improper setting of keys to wrong values
 
-Now test all https://data.actionschema.com/reference.html endpoints and confirm it works there without crashes.
+✅ Now test all https://data.actionschema.com/reference.html endpoints and confirm it works there without crashes.
+
+Fix oauth authorization in ChatGPT... `Missing access token, received 403 from https://auth.actionschema.com/oauth/access_token: response_data={'error': 'Unauthorized'}`. Likely, I just don't have the right linking to the client.
 
 Improve `/project/{slug}/openapi.json` so it has proper schema references!
+
+Fix the client everywhere so `client.auth("permission")` allows for non-200 status codes without crashing. Can I add this into the type?
 
 🎉 Confirm crud works again
 🎉 Confirm auth works again

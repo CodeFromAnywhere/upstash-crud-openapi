@@ -1,7 +1,12 @@
 import { Redis } from "@upstash/redis";
 
 import { Endpoint } from "../client.js";
-import { AdminDetails, DatabaseDetails, DbKey } from "../types.js";
+import {
+  AdminDetails,
+  DatabaseDetails,
+  DbKey,
+  ProjectDetails,
+} from "../types.js";
 import {
   createUpstashRedisDatabase,
   getUpstashRedisDatabase,
@@ -219,10 +224,18 @@ export const upsertDatabase: Endpoint<"upsertDatabase"> = async (context) => {
   // re-set the database details
   await root.set(`db_${databaseSlug}` satisfies DbKey, databaseDetails);
   // add database slug to project
-  await root.sadd(
-    `project_${admin.currentProjectSlug}` satisfies DbKey,
-    databaseSlug,
-  );
+
+  const projectKey = `project_${admin.currentProjectSlug}` satisfies DbKey;
+  const projectDetails = (await root.get(projectKey)) as ProjectDetails | null;
+  await root.set(projectKey, {
+    ...(projectDetails || {
+      description: `Project ${databaseSlug}`,
+      adminAuthToken: apiKey,
+    }),
+    databaseSlugs: (projectDetails?.databaseSlugs || [])
+      .concat(databaseSlug)
+      .filter(onlyUnique2()),
+  } satisfies ProjectDetails);
 
   // add the project, if not already
   // TODO: can later be removed

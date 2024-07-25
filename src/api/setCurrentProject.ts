@@ -3,6 +3,7 @@ import { Endpoint } from "../client.js";
 import { getDatabaseDetails } from "../getDatabaseDetails.js";
 import { AdminDetails, DbKey, ProjectDetails } from "../types.js";
 import { getProjectDetails } from "../getProjectDetails.js";
+import { getUpstashRedisDatabase } from "../upstashRedis.js";
 
 export const setCurrentProject: Endpoint<"setCurrentProject"> = async (
   context,
@@ -33,12 +34,13 @@ export const setCurrentProject: Endpoint<"setCurrentProject"> = async (
       message: "Unauthorized",
     };
   }
+  const rootDatabaseDetails = await getUpstashRedisDatabase({
+    upstashEmail: rootUpstashEmail,
+    databaseId: rootUpstashDatabaseId,
+    upstashApiKey: rootUpstashApiKey,
+  });
 
-  const { databaseDetails: rootDetails } = await getDatabaseDetails(
-    rootUpstashDatabaseId,
-  );
-
-  if (!rootDetails) {
+  if (!rootDatabaseDetails) {
     return {
       isSuccessful: false,
       message: "Couldn't find root database details",
@@ -46,8 +48,8 @@ export const setCurrentProject: Endpoint<"setCurrentProject"> = async (
   }
 
   const root = new Redis({
-    url: `https://${rootDetails.endpoint}`,
-    token: rootDetails.rest_token,
+    url: `https://${rootDatabaseDetails.endpoint}`,
+    token: rootDatabaseDetails.rest_token,
   });
 
   await root.set(

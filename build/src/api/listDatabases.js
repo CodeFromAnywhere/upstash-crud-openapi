@@ -1,13 +1,12 @@
 import { Redis } from "@upstash/redis";
 import { getUpstashRedisDatabase } from "../upstashRedis.js";
 import { notEmpty } from "from-anywhere";
-import { getAdminAuthorized } from "../getAdminAuthorized.js";
 import { getProjectDetails } from "../getProjectDetails.js";
 /** Lists databases for your current project */
 export const listDatabases = async (context) => {
     const { Authorization } = context;
     const apiKey = Authorization?.slice("Bearer ".length);
-    if (!apiKey || !(await getAdminAuthorized(Authorization))) {
+    if (!apiKey || apiKey.length < 64) {
         return { isSuccessful: false, message: "Unauthorized", status: 403 };
     }
     // auth admin
@@ -43,10 +42,14 @@ export const listDatabases = async (context) => {
     }
     const project = await getProjectDetails(admin.currentProjectSlug);
     if (!project.projectDetails) {
-        return { isSuccessful: false, message: project.message, status: 404 };
+        return {
+            isSuccessful: false,
+            message: `Project not found: ${project.message}`,
+            status: 404,
+        };
     }
     const slugs = project.projectDetails.databaseSlugs;
-    const details = await root.mget(slugs.map((slug) => `db_${slug}`));
+    const details = await root.mget(...slugs.map((slug) => `db_${slug}`));
     const databases = details
         .map((x, index) => x
         ? {

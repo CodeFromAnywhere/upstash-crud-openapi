@@ -4,6 +4,7 @@ import { getDatabaseDetails } from "../getDatabaseDetails.js";
 import { DatabaseDetails, DbKey } from "../types.js";
 import { getProjectDetails } from "../getProjectDetails.js";
 import { removeEntireDatabase } from "../removeEntireDatabase.js";
+import { getUpstashRedisDatabase } from "../upstashRedis.js";
 
 export const removeProject: Endpoint<"removeProject"> = async (context) => {
   const { projectSlug, Authorization } = context;
@@ -32,12 +33,13 @@ export const removeProject: Endpoint<"removeProject"> = async (context) => {
       message: "Unauthorized",
     };
   }
+  const rootDatabaseDetails = await getUpstashRedisDatabase({
+    upstashEmail: rootUpstashEmail,
+    databaseId: rootUpstashDatabaseId,
+    upstashApiKey: rootUpstashApiKey,
+  });
 
-  const { databaseDetails: rootDetails } = await getDatabaseDetails(
-    rootUpstashDatabaseId,
-  );
-
-  if (!rootDetails) {
+  if (!rootDatabaseDetails) {
     return {
       isSuccessful: false,
       message: "Couldn't find root database details",
@@ -45,15 +47,16 @@ export const removeProject: Endpoint<"removeProject"> = async (context) => {
   }
 
   const root = new Redis({
-    url: `https://${rootDetails.endpoint}`,
-    token: rootDetails.rest_token,
+    url: `https://${rootDatabaseDetails.endpoint}`,
+    token: rootDatabaseDetails.rest_token,
   });
 
-  const details: (DatabaseDetails | null)[] = await root.mget(
-    projectDetails.databaseSlugs.map(
-      (databaseSlug) => `db_${databaseSlug}` satisfies DbKey,
-    ),
+  const keys = projectDetails.databaseSlugs.map(
+    (databaseSlug) => `db_${databaseSlug}` satisfies DbKey,
   );
+
+  const details: (DatabaseDetails | null)[] =
+    keys.length === 0 ? [] : await root.mget(...keys);
 
   const databases = projectDetails.databaseSlugs.map((databaseSlug, index) => ({
     databaseSlug,

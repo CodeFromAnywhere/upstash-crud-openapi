@@ -1,1 +1,1 @@
-{"version":3,"file":"setCurrentProject.d.ts","sourceRoot":"","sources":["../../../src/api/setCurrentProject.ts"],"names":[],"mappings":"AACA,OAAO,EAAE,QAAQ,EAAE,MAAM,cAAc,CAAC;AAMxC,eAAO,MAAM,iBAAiB,EAAE,QAAQ,CAAC,mBAAmB,CAiE3D,CAAC"}
+{"version":3,"file":"setCurrentProject.d.ts","sourceRoot":"","sources":["../../../src/api/setCurrentProject.ts"],"names":[],"mappings":"AACA,OAAO,EAAE,QAAQ,EAAE,MAAM,cAAc,CAAC;AAMxC,eAAO,MAAM,iBAAiB,EAAE,QAAQ,CAAC,mBAAmB,CAoE3D,CAAC"}

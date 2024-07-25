@@ -1,1 +1,1 @@
-{"version":3,"file":"createClient.d.ts","sourceRoot":"","sources":["../../../src/sdk/createClient.ts"],"names":[],"mappings":"AAEA,eAAO,MAAM,YAAY;;;;;;;;;;;;;YAUwB,MAAM;UAAQ,MAAM;;;IAIjE;;OAEG;;;;;yUAcuB,IAAI,mMAAJ,IAAI,+LAAJ,IAAI,iMAAJ,IAAI,kDACN,IAAI;;;;;yFA+H/B,CAAC"}
+{"version":3,"file":"createClient.d.ts","sourceRoot":"","sources":["../../../src/sdk/createClient.ts"],"names":[],"mappings":"AAAA,eAAO,MAAM,YAAY;;;;;;;;;;;;;YAUwB,MAAM;UAAQ,MAAM;;;IAIjE;;OAEG;;;;;yUAcuB,IAAI,mMAAJ,IAAI,+LAAJ,IAAI,iMAAJ,IAAI,kDACN,IAAI;;;;;yFAgI/B,CAAC"}

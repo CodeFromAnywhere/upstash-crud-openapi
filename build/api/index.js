@@ -14,13 +14,17 @@ import { listProjects } from "../src/api/listProjects.js";
 import { removeProject } from "../src/api/removeProject.js";
 import { removeDatabase } from "../src/api/removeDatabase.js";
 import openapi from "../src/openapi.json" assert { type: "json" };
+import crudOpenapi from "../src/crud-openapi.json" assert { type: "json" };
 import { resolveReferenceOrContinue } from "../src/resolveReferenceOrContinue.js";
 import { upsertDatabase } from "../src/api/upsertDatabase.js";
+import { getProjectOpenapi } from "../src/api/getProjectOpenapi.js";
+import { getProjectSchema } from "../src/api/getProjectSchema.js";
 /** Retreives the right body from the request based on the openapi and operation */
 export const getRequestOperationBody = async (openapi, operation, documentLocation, request) => {
     if (!operation.requestBody) {
         return { schema: undefined, data: undefined };
     }
+    // TODO: it's better if this is cached!
     const requestBody = await resolveReferenceBrowser(operation.requestBody, openapi, documentLocation);
     const mediaTypes = requestBody?.content
         ? Object.keys(requestBody.content)
@@ -234,10 +238,21 @@ export const resolveOpenapiAppRequest = async (request, method, config) => {
         headers: { ...defaultHeaders, "Content-Type": "application/json" },
     });
 };
+const fullOpenapi = {
+    ...openapi,
+    paths: { ...openapi.paths, ...crudOpenapi.paths },
+    components: {
+        ...openapi.components,
+        schemas: {
+            ...openapi.components.schemas,
+            ...crudOpenapi.components.schemas,
+        },
+    },
+};
 /** function creator to DRY */
 const getHandler = (method) => (request) => {
     return resolveOpenapiAppRequest(request, method, {
-        openapi: openapi,
+        openapi: fullOpenapi,
         prefixParameterName: "databaseSlug",
         functions: {
             create,
@@ -245,6 +260,8 @@ const getHandler = (method) => (request) => {
             update,
             remove,
             getOpenapi,
+            getProjectOpenapi,
+            getProjectSchema,
             getCrudOpenapi,
             upsertDatabase,
             getSchema,

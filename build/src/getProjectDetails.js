@@ -26,7 +26,7 @@ export const getProjectDetails = async (projectSlug) => {
         return { isSuccessful: false, message: "Not found" };
     }
     // NB: just do a single query getting all details for all databases
-    const details = await root.mget(projectDetails.databaseSlugs.map((databaseSlug) => `db_${databaseSlug}`));
+    const details = await root.mget(...projectDetails.databaseSlugs.map((databaseSlug) => `db_${databaseSlug}`));
     const databases = projectDetails.databaseSlugs.map((databaseSlug, index) => ({
         databaseSlug,
         details: details[index],

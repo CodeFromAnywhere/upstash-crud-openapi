@@ -1,10 +1,10 @@
 import { Redis } from "@upstash/redis";
 import { createUpstashRedisDatabase, getUpstashRedisDatabase, } from "../upstashRedis.js";
-import { generateRandomString, notEmpty, tryParseJson, } from "from-anywhere";
+import { generateRandomString, notEmpty, onlyUnique2, tryParseJson, } from "from-anywhere";
 import { rootDatabaseName } from "../state.js";
 import { embeddingsClient } from "../embeddings.js";
 export const upsertDatabase = async (context) => {
-    const { databaseSlug, schemaString, region, openaiApiKey, vectorIndexColumns, Authorization, } = context;
+    const { databaseSlug, schemaString, region, openaiApiKey, vectorIndexColumns, Authorization, authToken, isUserLevelSeparationEnabled, } = context;
     const apiKey = Authorization?.slice("Bearer ".length);
     if (!apiKey || apiKey.length < 64) {
         return { isSuccessful: false, message: "Please provide your auth token" };
@@ -44,6 +44,7 @@ export const upsertDatabase = async (context) => {
             currentProjectSlug: generateRandomString(16),
         };
         await root.set(`admin_${apiKey}`, newAdmin);
+        await root.sadd(`projects_${apiKey}`, newAdmin.currentProjectSlug);
         admin = newAdmin;
     }
     if (!admin) {
@@ -113,7 +114,7 @@ export const upsertDatabase = async (context) => {
             }
         }
         const adminAuthToken = apiKey || generateRandomString(64);
-        const realAuthToken = generateRandomString(64);
+        const realAuthToken = authToken || generateRandomString(64);
         databaseDetails = {
             projectSlug: admin.currentProjectSlug,
             openaiApiKey,
@@ -123,6 +124,7 @@ export const upsertDatabase = async (context) => {
             upstashEmail: rootUpstashEmail,
             authToken: realAuthToken,
             schema,
+            isUserLevelSeparationEnabled,
             // Set the correct DB Details!
             database_id: useRootDatabase
                 ? rootDatabaseDetails.database_id
@@ -142,12 +144,26 @@ export const upsertDatabase = async (context) => {
             upstashApiKey: rootUpstashApiKey,
             upstashEmail: rootUpstashEmail,
             schema,
+            authToken: authToken || previousDatabaseDetails.authToken,
         };
     }
     // re-set the database details
     await root.set(`db_${databaseSlug}`, databaseDetails);
     // add database slug to project
-    await root.sadd(`project_${admin.currentProjectSlug}`, databaseSlug);
+    const projectKey = `project_${admin.currentProjectSlug}`;
+    const projectDetails = (await root.get(projectKey));
+    await root.set(projectKey, {
+        ...(projectDetails || {
+            description: `Project ${databaseSlug}`,
+            adminAuthToken: apiKey,
+        }),
+        databaseSlugs: (projectDetails?.databaseSlugs || [])
+            .concat(databaseSlug)
+            .filter(onlyUnique2()),
+    });
+    // add the project, if not already
+    // TODO: can later be removed
+    await root.sadd(`projects_${databaseDetails.adminAuthToken}`, admin.currentProjectSlug);
     return {
         isSuccessful: true,
         message: "Database created",

@@ -1,1 +1,1 @@
-{"version":3,"file":"upsertDatabase.d.ts","sourceRoot":"","sources":["../../../src/api/upsertDatabase.ts"],"names":[],"mappings":"AAEA,OAAO,EAAE,QAAQ,EAAE,MAAM,cAAc,CAAC;AAiBxC,eAAO,MAAM,cAAc,EAAE,QAAQ,CAAC,gBAAgB,CAiNrD,CAAC"}
+{"version":3,"file":"upsertDatabase.d.ts","sourceRoot":"","sources":["../../../src/api/upsertDatabase.ts"],"names":[],"mappings":"AAEA,OAAO,EAAE,QAAQ,EAAE,MAAM,cAAc,CAAC;AAsBxC,eAAO,MAAM,cAAc,EAAE,QAAQ,CAAC,gBAAgB,CA2OrD,CAAC"}

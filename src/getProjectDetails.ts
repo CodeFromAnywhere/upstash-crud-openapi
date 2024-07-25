@@ -36,12 +36,12 @@ export const getProjectDetails = async (projectSlug: string) => {
     return { isSuccessful: false, message: "Not found" };
   }
 
-  // NB: just do a single query getting all details for all databases
-  const details: (DatabaseDetails | null)[] = await root.mget(
-    projectDetails.databaseSlugs.map(
-      (databaseSlug) => `db_${databaseSlug}` satisfies DbKey,
-    ),
+  const keys = projectDetails.databaseSlugs.map(
+    (databaseSlug) => `db_${databaseSlug}` satisfies DbKey,
   );
+  // NB: just do a single query getting all details for all databases
+  const details: (DatabaseDetails | null)[] =
+    keys.length > 0 ? await root.mget(...keys) : [];
   const databases = projectDetails.databaseSlugs.map((databaseSlug, index) => ({
     databaseSlug,
     details: details[index],

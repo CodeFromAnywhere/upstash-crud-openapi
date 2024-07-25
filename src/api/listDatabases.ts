@@ -65,10 +65,10 @@ export const listDatabases: Endpoint<"listDatabases"> = async (context) => {
   }
 
   const slugs = project.projectDetails.databaseSlugs;
+  const keys = slugs.map((slug) => `db_${slug}` satisfies DbKey);
 
-  const details: (DatabaseDetails | null)[] = await root.mget(
-    slugs.map((slug) => `db_${slug}` satisfies DbKey),
-  );
+  const details: (DatabaseDetails | null)[] =
+    keys.length === 0 ? [] : await root.mget(...keys);
 
   const databases = details
     .map((x, index) =>

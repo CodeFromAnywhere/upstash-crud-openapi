@@ -1,7 +1,7 @@
-import { createClient } from "./createClient";
-import { operationUrlObject as authOperationUrlObject } from "./auth.js";
-import { operationUrlObject as adminOperationUrlObject } from "./admin.js";
-import { operationUrlObject as crudOperationUrlObject } from "./crud.js";
+import { createClient } from "./createClient.js";
+import { operationUrlObject as authOperationUrlObject, } from "./auth.js";
+import { operationUrlObject as adminOperationUrlObject, } from "./admin.js";
+import { operationUrlObject as crudOperationUrlObject, } from "./crud.js";
 //@ts-ignore
 export const auth = createClient(authOperationUrlObject, {
     baseUrl: "https://auth.actionschema.com",
