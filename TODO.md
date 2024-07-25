@@ -10,11 +10,19 @@
 
 ✅ Test all CRUD operations for the above. Verify each time within upstash.
 
-Now add the admin oauth values as previously under the same Auth
+✅ Now add the admin oauth values as previously under the same Auth
+
+Fix the client everywhere so `client.auth("permission")` allows for non-200 status codes without crashing. Can I add this into the type?
+
+Test auth locally and figure out why `permission` endpoint isn't authorized. Why does it try to authorize with `permission` in the first place?
 
 Now test all https://data.actionschema.com/reference.html endpoints and confirm it works there without crashes.
 
 Improve `/project/{slug}/openapi.json` so it has proper schema references!
+
+🎉 Confirm crud works again
+🎉 Confirm auth works again
+🎉 Confirm agents work again
 
 # Feature rate limits
 

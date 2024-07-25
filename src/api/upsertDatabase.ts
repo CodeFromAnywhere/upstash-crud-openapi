@@ -26,6 +26,8 @@ export const upsertDatabase: Endpoint<"upsertDatabase"> = async (context) => {
     openaiApiKey,
     vectorIndexColumns,
     Authorization,
+    authToken,
+    isUserLevelSeparationEnabled,
   } = context;
 
   const apiKey = Authorization?.slice("Bearer ".length);
@@ -184,7 +186,7 @@ export const upsertDatabase: Endpoint<"upsertDatabase"> = async (context) => {
     }
 
     const adminAuthToken = apiKey || generateRandomString(64);
-    const realAuthToken = generateRandomString(64);
+    const realAuthToken = authToken || generateRandomString(64);
 
     databaseDetails = {
       projectSlug: admin.currentProjectSlug,
@@ -195,7 +197,7 @@ export const upsertDatabase: Endpoint<"upsertDatabase"> = async (context) => {
       upstashEmail: rootUpstashEmail,
       authToken: realAuthToken,
       schema,
-
+      isUserLevelSeparationEnabled,
       // Set the correct DB Details!
       database_id: useRootDatabase
         ? rootDatabaseDetails.database_id
@@ -215,6 +217,7 @@ export const upsertDatabase: Endpoint<"upsertDatabase"> = async (context) => {
       upstashApiKey: rootUpstashApiKey,
       upstashEmail: rootUpstashEmail,
       schema,
+      authToken: authToken || previousDatabaseDetails.authToken,
     };
   }
 
