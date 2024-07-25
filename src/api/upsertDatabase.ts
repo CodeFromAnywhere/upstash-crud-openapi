@@ -16,6 +16,7 @@ import {
 import { JSONSchema7 } from "json-schema";
 import { rootDatabaseName } from "../state.js";
 import { embeddingsClient } from "../embeddings.js";
+import { getAdminAuthorized } from "../getAdminAuthorized.js";
 
 export const upsertDatabase: Endpoint<"upsertDatabase"> = async (context) => {
   const {
@@ -31,6 +32,10 @@ export const upsertDatabase: Endpoint<"upsertDatabase"> = async (context) => {
 
   if (!apiKey || apiKey.length < 64) {
     return { isSuccessful: false, message: "Please provide your auth token" };
+  }
+
+  if (!(await getAdminAuthorized(Authorization))) {
+    return { isSuccessful: false, message: "Unauthorized" };
   }
 
   // comes from .env

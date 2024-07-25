@@ -1,6 +1,6 @@
 # Deployment and production-readiness
 
-OAuth2 needs CRUD-OpenAPI and CRUD-OpenAPI needs OAuth2. Im stuck! Let's make an admin token that always works in `.env` and deploy this.
+✅ OAuth2 needs CRUD-OpenAPI and CRUD-OpenAPI needs OAuth2. Im stuck! Let's make an admin token that always works in `.env` and deploy this.
 
 Test creating a database via https://data.actionschema.com/reference.html and confirm the creation works as expected, as well as projects, and CRUD. Verify each time within upstash.
 
