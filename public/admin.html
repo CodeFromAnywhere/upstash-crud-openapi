@@ -12,12 +12,21 @@
 <body class="bg-gray-100">
     <div id="app" class="container mx-auto p-4">
         <h1 class="text-3xl font-bold mb-4">ActionSchema Admin Dashboard</h1>
+        <div class="flex items-center space-x-4 mb-4">
+            <a href="reference.html"
+                class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Documentation</a>
+            <div class="flex-grow">
+                <input type="text" id="authTokenInput" class="w-full px-3 py-2 border rounded" readonly>
+            </div>
+            <button onclick="copyAuthToken()" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
+                <i class="fas fa-copy mr-2"></i>Copy
+            </button>
+        </div>
         <div id="loading" class="text-center py-4 hidden">
             <i class="fas fa-spinner fa-spin fa-2x"></i>
             <p>Loading...</p>
         </div>
         <div id="projectList" class="space-y-4"></div>
-        <a href="reference.html" class="mt-4 inline-block bg-blue-500 text-white px-4 py-2 rounded">Documentation</a>
     </div>
 
     <script>
@@ -32,12 +41,20 @@
             document.getElementById('loading').classList.add('hidden');
         }
 
+        function copyAuthToken() {
+            const authTokenInput = document.getElementById('authTokenInput');
+            authTokenInput.select();
+            document.execCommand('copy');
+            alert('Auth token copied to clipboard!');
+        }
+
         async function fetchWithAuth(url, options = {}) {
             const authToken = localStorage.getItem('authToken');
             if (!authToken) {
                 window.location.href = AUTH_URL;
                 return;
             }
+            document.getElementById('authTokenInput').value = authToken;
             return fetch(url, {
                 ...options,
                 headers: {
@@ -140,7 +157,15 @@
             }
         }
 
-        document.addEventListener('DOMContentLoaded', listProjects);
+        document.addEventListener('DOMContentLoaded', () => {
+            const authToken = localStorage.getItem('authToken');
+            if (!authToken) {
+                window.location.href = AUTH_URL;
+            } else {
+                document.getElementById('authTokenInput').value = authToken;
+                listProjects();
+            }
+        });
     </script>
 </body>
 

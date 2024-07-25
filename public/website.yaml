@@ -6,7 +6,8 @@ index.html: make me a nice landing page in html + tailwind css CDN + js
   do it in a marketing copy way, and don't add all sections just like in the readme. Instead, please be more salelsy and follow principles of a good landingpage.
   Think step by step
 
-admin.html:
+admin.html: Make a new super cool website in HTML, Tailwind CSS CDN, and JS.
+
   Get authToken in localstorage, if it's not present, redirect to https://auth.actionschema.com/oauth/authorize?client_id=crud_website&redirect_uri=https://data.actionschema.com/admin.html
 
   If authToken is present, retreive /listProjects and render all projects with for each project the description and databaseSlugs.
@@ -15,7 +16,9 @@ admin.html:
   - Allow deletion of each database via /removeDatabase (delete icon button)
   - Allow clicking a database, leading to /model.html?databaseSlug={slug}
 
-  There should be a button linking to `reference.html` at the bottom.
+  There should be a docs button linking to `reference.html`. Besides it, an text-input prefilled with the auth-token. copyable with a button.
+
+  Use the OpenAPI as reference for your endpoints.
 
 model.html:
   Uses ?databaseSlug=xxx and the authToken from localStorage, and calls `/read` and `/getSchema` when loading, showing the results in a table.
