@@ -6,181 +6,161 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ActionSchema Admin Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.3.4/axios.min.js"></script>
 </head>
 
 <body class="bg-gray-100">
-    <div id="app" class="container mx-auto p-4">
-        <h1 class="text-3xl font-bold mb-4">ActionSchema Admin Dashboard</h1>
-        <div class="flex flex-wrap items-center space-x-2 space-y-2 mb-4">
-            <a href="reference.html" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
-                <i class="fas fa-book mr-2"></i>Documentation
-            </a>
-            <div class="flex-grow min-w-[200px]">
-                <input type="text" id="authTokenInput" class="w-full px-3 py-2 border rounded" readonly>
+    <div id="app" class="container mx-auto px-4 py-8">
+        <header class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-800 mb-4">ActionSchema Admin Dashboard</h1>
+            <div class="flex flex-wrap items-center gap-4">
+                <a href="reference.html"
+                    class="btn bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded">
+                    <i class="fas fa-book mr-2"></i>Docs
+                </a>
+                <div class="flex items-center">
+                    <input type="text" id="authToken"
+                        class="border rounded py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                        readonly>
+                    <button onclick="copyAuthToken()"
+                        class="ml-2 bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded">
+                        <i class="fas fa-copy"></i>
+                    </button>
+                </div>
+                <a href="jsonschema.html"
+                    class="btn bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded">
+                    <i class="fas fa-code mr-2"></i>JSON Schema
+                </a>
+                <a href="new.html" class="btn bg-purple-500 hover:bg-purple-600 text-white font-bold py-2 px-4 rounded">
+                    <i class="fas fa-plus mr-2"></i>New DB
+                </a>
+                <a href="https://chatgpt.com/g/g-VmL8hNaEo-data-agent" target="_blank"
+                    class="btn bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-2 px-4 rounded">
+                    <i class="fas fa-robot mr-2"></i>GPT
+                </a>
             </div>
-            <button onclick="copyAuthToken()" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
-                <i class="fas fa-copy mr-2"></i>Copy Token
-            </button>
-            <a href="jsonschema.html" class="bg-purple-500 text-white px-4 py-2 rounded hover:bg-purple-600">
-                <i class="fas fa-code mr-2"></i>JSON Schema
-            </a>
-            <a href="new.html" class="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600">
-                <i class="fas fa-plus mr-2"></i>Create New DB
-            </a>
-        </div>
-        <div id="loading" class="text-center py-4 hidden">
-            <i class="fas fa-spinner fa-spin fa-2x"></i>
-            <p>Loading...</p>
-        </div>
-        <div id="projectList" class="space-y-4"></div>
+        </header>
+
+        <main>
+            <div id="loading" class="text-center py-8">
+                <i class="fas fa-spinner fa-spin fa-3x text-blue-500"></i>
+                <p class="mt-4 text-gray-600">Loading projects...</p>
+            </div>
+            <div id="projects" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+        </main>
     </div>
 
     <script>
-        const API_BASE_URL = 'https://data.actionschema.com';
-        const AUTH_URL = 'https://auth.actionschema.com/oauth/authorize?client_id=crud_website&redirect_uri=https://data.actionschema.com/admin.html';
-
-        function showLoading() {
-            document.getElementById('loading').classList.remove('hidden');
-        }
-
-        function hideLoading() {
-            document.getElementById('loading').classList.add('hidden');
-        }
+        const API_URL = 'https://data.actionschema.com';
+        let authToken = localStorage.getItem('authToken');
 
         function copyAuthToken() {
-            const authTokenInput = document.getElementById('authTokenInput');
+            const authTokenInput = document.getElementById('authToken');
             authTokenInput.select();
             document.execCommand('copy');
-            alert('Auth token copied to clipboard!');
+            alert('Auth Token copied to clipboard!');
         }
 
-        async function fetchWithAuth(url, options = {}) {
-            const authToken = localStorage.getItem('authToken');
-            if (!authToken) {
-                window.location.href = AUTH_URL;
-                return;
-            }
-            document.getElementById('authTokenInput').value = authToken;
-            return fetch(url, {
-                ...options,
-                headers: {
-                    ...options.headers,
-                    'Authorization': `Bearer ${authToken}`
-                }
-            });
-        }
-
-        async function listProjects() {
-            showLoading();
+        async function fetchProjects() {
             try {
-                const response = await fetchWithAuth(`${API_BASE_URL}/listProjects`);
-                const data = await response.json();
-                hideLoading();
-                if (data.isSuccessful) {
-                    renderProjects(data.projects);
-                } else {
-                    alert(`Failed to list projects: ${data.message}`);
-                }
+                const response = await axios.get(`${API_URL}/listProjects`, {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                return response.data.projects;
             } catch (error) {
-                hideLoading();
-                alert(`Error: ${error.message}`);
+                console.error('Error fetching projects:', error);
+                return [];
+            }
+        }
+
+        async function removeProject(projectSlug) {
+            try {
+                await axios.post(`${API_URL}/removeProject`, { projectSlug }, {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                loadProjects();
+            } catch (error) {
+                console.error('Error removing project:', error);
+                alert('Failed to remove project. Please try again.');
+            }
+        }
+
+        async function removeDatabase(databaseSlug) {
+            try {
+                await axios.post(`${API_URL}/removeDatabase`, { databaseSlug }, {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                loadProjects();
+            } catch (error) {
+                console.error('Error removing database:', error);
+                alert('Failed to remove database. Please try again.');
             }
         }
 
         function renderProjects(projects) {
-            const projectList = document.getElementById('projectList');
-            projectList.innerHTML = '';
+            const projectsContainer = document.getElementById('projects');
+            projectsContainer.innerHTML = '';
+
             projects.forEach(project => {
                 const projectElement = document.createElement('div');
-                projectElement.className = 'bg-white p-4 rounded shadow';
+                projectElement.className = 'bg-white shadow-md rounded-lg p-6';
                 projectElement.innerHTML = `
-                    <h2 class="text-xl font-semibold mb-2">${project.projectSlug}</h2>
-                    <p class="mb-2">${project.description || 'No description'}</p>
-                    <div class="mb-2">
-                        <a href="/project/${project.projectSlug}/schema.json" class="text-blue-500 hover:underline mr-4">
-                            <i class="fas fa-file-code mr-1"></i>Schema JSON
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-xl font-semibold text-gray-800">${project.projectSlug}</h2>
+                        <button onclick="removeProject('${project.projectSlug}')" class="text-red-500 hover:text-red-700">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                    <p class="text-gray-600 mb-4">${project.description || 'No description'}</p>
+                    <div class="flex gap-2 mb-4">
+                        <a href="${API_URL}/project/${project.projectSlug}/schema.json" target="_blank" class="text-blue-500 hover:text-blue-700">
+                            <i class="fas fa-file-code mr-1"></i>Schema
                         </a>
-                        <a href="/project/${project.projectSlug}/reference.html" class="text-blue-500 hover:underline">
+                        <a href="${API_URL}/project/${project.projectSlug}/reference.html" target="_blank" class="text-green-500 hover:text-green-700">
                             <i class="fas fa-book mr-1"></i>Reference
                         </a>
                     </div>
-                    <h3 class="font-semibold mb-1">Databases:</h3>
-                    <ul class="list-disc pl-5 mb-2">
+                    <h3 class="font-semibold text-gray-700 mb-2">Databases:</h3>
+                    <ul class="space-y-2">
                         ${project.databaseSlugs.map(slug => `
                             <li class="flex justify-between items-center">
-                                <a href="/model.html?databaseSlug=${slug}" class="text-blue-500 hover:underline">${slug}</a>
+                                <a href="model.html?databaseSlug=${slug}" class="text-indigo-500 hover:text-indigo-700">
+                                    ${slug} <i class="fas fa-arrow-right ml-1"></i>
+                                </a>
                                 <button onclick="removeDatabase('${slug}')" class="text-red-500 hover:text-red-700">
                                     <i class="fas fa-trash"></i>
                                 </button>
                             </li>
                         `).join('')}
                     </ul>
-                    <button onclick="removeProject('${project.projectSlug}')" class="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600">
-                        <i class="fas fa-trash mr-1"></i> Delete Project
-                    </button>
                 `;
-                projectList.appendChild(projectElement);
+                projectsContainer.appendChild(projectElement);
             });
         }
 
-        async function removeProject(projectSlug) {
-            if (confirm(`Are you sure you want to delete the project "${projectSlug}"?`)) {
-                showLoading();
-                try {
-                    const response = await fetchWithAuth(`${API_BASE_URL}/removeProject`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ projectSlug })
-                    });
-                    const data = await response.json();
-                    hideLoading();
-                    if (data.isSuccessful) {
-                        alert('Project removed successfully');
-                        listProjects();
-                    } else {
-                        alert(`Failed to remove project: ${data.message}`);
-                    }
-                } catch (error) {
-                    hideLoading();
-                    alert(`Error: ${error.message}`);
-                }
-            }
+        async function loadProjects() {
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('projects').style.display = 'none';
+
+            const projects = await fetchProjects();
+            renderProjects(projects);
+
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('projects').style.display = 'grid';
         }
 
-        async function removeDatabase(databaseSlug) {
-            if (confirm(`Are you sure you want to delete the database "${databaseSlug}"?`)) {
-                showLoading();
-                try {
-                    const response = await fetchWithAuth(`${API_BASE_URL}/removeDatabase`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ databaseSlug })
-                    });
-                    const data = await response.json();
-                    hideLoading();
-                    if (data.isSuccessful) {
-                        alert('Database removed successfully');
-                        listProjects();
-                    } else {
-                        alert(`Failed to remove database: ${data.message}`);
-                    }
-                } catch (error) {
-                    hideLoading();
-                    alert(`Error: ${error.message}`);
-                }
-            }
-        }
-
-        document.addEventListener('DOMContentLoaded', () => {
-            const authToken = localStorage.getItem('authToken');
+        function init() {
             if (!authToken) {
-                window.location.href = AUTH_URL;
-            } else {
-                document.getElementById('authTokenInput').value = authToken;
-                listProjects();
+                window.location.href = 'https://auth.actionschema.com/oauth/authorize?client_id=crud_website&redirect_uri=https://data.actionschema.com/admin.html';
+                return;
             }
-        });
+
+            document.getElementById('authToken').value = authToken;
+            loadProjects();
+        }
+
+        init();
     </script>
 </body>
 

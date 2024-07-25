@@ -20,7 +20,7 @@
 
 ✅ Now test all https://data.actionschema.com/reference.html endpoints and confirm it works there without crashes.
 
-Improve `/project/{slug}/openapi.json` so it has proper schema references!
+Improve `/project/{slug}/openapi.json` so it has proper schema references, and operationIds for the duplicated operations!
 
 Fix the client everywhere so `client.auth("permission")` allows for non-200 status codes without crashing. Can I add this into the type?
 

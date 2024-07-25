@@ -15,16 +15,17 @@ admin.html: Make a new super cool website in HTML, Tailwind CSS CDN, and JS.
   - For each project link to /project/{projectSlug}/schema.json and /project/{projectSlug}/reference.html
   - Allow deletion of each project via /removeProject (delete icon button)
   - Allow deletion of each database via /removeDatabase (delete icon button)
-  - Allow clicking a database, leading to /model.html?databaseSlug={slug}
+  - Allow clicking a database, leading to /model.html?databaseSlug={slug} add arrow icon as well
 
   There should be a section on top with some buttons.
   - a docs button linking to `reference.html`.
   - Besides it, an text-input prefilled with the auth-token. copyable with a button.
   - a button linking to `jsonschema.html`
   - a button to create a new db, linking to new.html
-  - button to AI [GPT](https://chatgpt.com/g/g-VmL8hNaEo-data-agent)
+  - button to GPT (https://chatgpt.com/g/g-VmL8hNaEo-data-agent)
 
-  Use the OpenAPI as reference for your endpoints.
+
+  Use the OpenAPI as reference for your endpoints. Use the best web dev standards and design principles. Make it look enterprisegrade
 
 new.html:
   Create an HTML page with Tailwind CSS CDN and JavaScript for creating a new database.
