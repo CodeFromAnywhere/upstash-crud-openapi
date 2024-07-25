@@ -177,7 +177,7 @@ https://data.actionschema.com/openapi.json GPT? good to have compatibility
 
 ✅ Try to see why the DB endpoints are so slow, lets log timing for calling the client endpoints. Can it be made faster somehow? **Yes. I've added a count = 1000 to the `range` searcher (scan) and this seems to help!**
 
-# OAuth2 verification in CRUD Openapi (july 23rd)
+## OAuth2 verification in CRUD Openapi (july 23rd)
 
 ✅ Added `isTrustedOauthLink` to oauth-provider
 
@@ -195,3 +195,49 @@ Every permission given to actionschema:
 - ✅ Must become `oauth-permission` kv-map
 
 ✅ Add endpoint `/authenticate(adminAuth, authToken)` that checks the permissioned authToken, and responds with the permission item or a 403 (for now entire me item)
+
+## User or group separation header (July 25th)
+
+✅ Confirm oauth works in the GPT so it gets logged in into ActionSchema.
+
+✅ Add `isUserLevelSeparationEnabled` property to db details
+
+✅ Alter the crud openapi and project openapi so they have the oauth2 scheme.
+
+✅ Figure out how to do Key Ranges or other way to efficiently index/separate on keys
+
+## Auth Refactor (July 25th)
+
+✅ Refactor `getOpenapi, getCrudOpenapi, getProjectOpenapi` to add auth2 flows but also keep secondary options available.
+
+✅ For all CRUD endpoints, use permission endpoint of `auth` to authenticate with `admin + user` scope.
+
+✅ For all admin endpoints, use permission endpoint of `auth` to authenticate with `admin` scope.
+
+✅ Ensure admin can only manage their own projects.
+
+## Projects Refactor (July 25th)
+
+✅ Backup important data: especially oauth-admin info
+
+✅ Alter `getProjectOpenapi` to include all models for the project
+
+✅ Fix other problematic errors in files.
+
+✅ Upstash limits max databases to 100. Therefore, create option `USE_ROOT_DATABASE` to not create a database in `.env`
+
+✅ Fit all databases in a single database by changing the key value structure.
+
+✅ Find row(s): If `isUserLevelSeparationEnabled` then `db_{databaseSlug}_{auth}_{id}` else `db_{databaseSlug}_{auth}_{id}`
+
+✅ Db selection: If `USE_ROOT_DATABASE`: use `root`, otherwise use `{databaseSlug}`
+
+✅ Apply `USE_ROOT_DATABSE` everywhere where needed.
+
+✅ Remake all admin-endpoints to support projects according to new kv-store idea.
+
+✅ Add `ADMIN_MAX_*` on db-size and admin-db-count, that are sensible to the bottlenecks of upstash.
+
+✅ Remove all DBs except the root one, using a simple one-time query.
+
+✅ Deployed openapi-util/migrate and finally crud-openapi

@@ -20,11 +20,27 @@ export const getCrudOperationAuthorized = async (
     return false;
   }
 
-  if (Authorization === `Bearer ${databaseDetails.adminAuthToken}`) {
+  if (
+    process.env.ADMIN_SECRET &&
+    Authorization === `Bearer ${process.env.ADMIN_SECRET}`
+  ) {
+    // allow system admin
     return true;
   }
 
-  if (Authorization === `Bearer ${databaseDetails.authToken}`) {
+  if (
+    databaseDetails.adminAuthToken &&
+    Authorization === `Bearer ${databaseDetails.adminAuthToken}`
+  ) {
+    // allow db manager admin
+    return true;
+  }
+
+  if (
+    databaseDetails.authToken &&
+    Authorization === `Bearer ${databaseDetails.authToken}`
+  ) {
+    // allow model admin
     return true;
   }
 
@@ -40,6 +56,7 @@ export const getCrudOperationAuthorized = async (
       permission.scope?.split(" ").find((s) => s === scope),
     )
   ) {
+    // allow oauth2 user
     return true;
   }
 

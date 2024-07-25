@@ -5,6 +5,15 @@ export const getAdminAuthorized = async (Authorization: string | undefined) => {
   if (!Authorization) {
     return false;
   }
+
+  if (
+    process.env.ADMIN_SECRET &&
+    Authorization === `Bearer ${process.env.ADMIN_SECRET}`
+  ) {
+    // allow system admin
+    return true;
+  }
+
   const permission = await client.auth("permission", undefined, {
     headers: { Authorization },
   });
