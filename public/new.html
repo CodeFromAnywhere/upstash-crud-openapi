@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create New Database</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/ace.js"></script>
+</head>
+
+<body class="bg-gray-100">
+    <div class="container mx-auto p-6">
+        <h1 class="text-3xl font-bold mb-6">Create New Database</h1>
+        <a href="admin.html" class="mb-4 inline-block text-blue-600 hover:text-blue-800">← Back to Admin</a>
+
+        <form id="createDatabaseForm" class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
+            <div class="mb-4">
+                <label class="block text-gray-700 text-sm font-bold mb-2" for="projectSelect">
+                    Project
+                    <span class="text-gray-500 text-xs ml-1" title="Select the project for this database">ⓘ</span>
+                </label>
+                <select id="projectSelect"
+                    class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                    required>
+                    <option value="">Select a project</option>
+                </select>
+            </div>
+
+            <div class="mb-4">
+                <label class="block text-gray-700 text-sm font-bold mb-2" for="databaseName">
+                    Database Name
+                    <span class="text-gray-500 text-xs ml-1" title="Enter a unique name for your database">ⓘ</span>
+                </label>
+                <input type="text" id="databaseName"
+                    class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                    required>
+            </div>
+
+            <div class="mb-4">
+                <label class="block text-gray-700 text-sm font-bold mb-2" for="databaseDescription">
+                    Database Description
+                    <span class="text-gray-500 text-xs ml-1"
+                        title="Provide a brief description of your database">ⓘ</span>
+                </label>
+                <textarea id="databaseDescription"
+                    class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                    rows="3"></textarea>
+            </div>
+
+            <div class="mb-4">
+                <label class="block text-gray-700 text-sm font-bold mb-2" for="jsonSchemaEditor">
+                    JSON Schema
+                    <span class="text-gray-500 text-xs ml-1"
+                        title="Define your database schema using JSON Schema format">ⓘ</span>
+                </label>
+                <div id="jsonSchemaEditor" class="h-64 border rounded"></div>
+            </div>
+
+            <div class="flex items-center justify-between">
+                <button type="submit"
+                    class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                    Create Database
+                </button>
+            </div>
+        </form>
+
+        <div id="previewSection" class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4 hidden">
+            <h2 class="text-xl font-bold mb-4">Preview</h2>
+            <pre id="previewContent" class="bg-gray-100 p-4 rounded"></pre>
+        </div>
+
+        <div id="feedbackMessage" class="mb-4 p-4 rounded hidden"></div>
+    </div>
+
+    <script>
+        // Check for authToken
+        const authToken = localStorage.getItem('authToken');
+        if (!authToken) {
+            window.location.href = 'index.html';
+        }
+
+        // Initialize Ace editor
+        const editor = ace.edit("jsonSchemaEditor");
+        editor.setTheme("ace/theme/monokai");
+        editor.getSession().setMode("ace/mode/json");
+
+        // Fetch projects
+        async function fetchProjects() {
+            try {
+                const response = await fetch('https://data.actionschema.com/listProjects', {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                const data = await response.json();
+                if (data.isSuccessful) {
+                    const select = document.getElementById('projectSelect');
+                    data.projects.forEach(project => {
+                        const option = document.createElement('option');
+                        option.value = project.projectSlug;
+                        option.textContent = project.projectSlug;
+                        select.appendChild(option);
+                    });
+                } else {
+                    showFeedback('Error fetching projects: ' + data.message, 'error');
+                }
+            } catch (error) {
+                showFeedback('Error fetching projects: ' + error.message, 'error');
+            }
+        }
+
+        // Form submission
+        document.getElementById('createDatabaseForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const projectSlug = document.getElementById('projectSelect').value;
+            const databaseName = document.getElementById('databaseName').value;
+            const description = document.getElementById('databaseDescription').value;
+            const schemaString = editor.getValue();
+
+            if (!projectSlug || !databaseName || !schemaString) {
+                showFeedback('Please fill all required fields', 'error');
+                return;
+            }
+
+            try {
+                JSON.parse(schemaString);
+            } catch (error) {
+                showFeedback('Invalid JSON Schema: ' + error.message, 'error');
+                return;
+            }
+
+            showFeedback('Creating database...', 'info');
+
+            try {
+                const response = await fetch('https://data.actionschema.com/upsertDatabase', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({
+                        databaseSlug: databaseName,
+                        schemaString: schemaString
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.isSuccessful) {
+                    showFeedback('Database created successfully!', 'success');
+                } else {
+                    showFeedback('Error creating database: ' + data.message, 'error');
+                }
+            } catch (error) {
+                showFeedback('Error creating database: ' + error.message, 'error');
+            }
+        });
+
+        // Show feedback message
+        function showFeedback(message, type) {
+            const feedbackEl = document.getElementById('feedbackMessage');
+            feedbackEl.textContent = message;
+            feedbackEl.classList.remove('hidden', 'bg-green-200', 'bg-red-200', 'bg-blue-200');
+            feedbackEl.classList.add(
+                type === 'success' ? 'bg-green-200' :
+                    type === 'error' ? 'bg-red-200' : 'bg-blue-200'
+            );
+        }
+
+        // Update preview
+        function updatePreview() {
+            const previewSection = document.getElementById('previewSection');
+            const previewContent = document.getElementById('previewContent');
+            const projectSlug = document.getElementById('projectSelect').value;
+            const databaseName = document.getElementById('databaseName').value;
+            const description = document.getElementById('databaseDescription').value;
+            const schemaString = editor.getValue();
+
+            if (projectSlug && databaseName && schemaString) {
+                const preview = {
+                    projectSlug,
+                    databaseName,
+                    description,
+                    schema: JSON.parse(schemaString)
+                };
+                previewContent.textContent = JSON.stringify(preview, null, 2);
+                previewSection.classList.remove('hidden');
+            } else {
+                previewSection.classList.add('hidden');
+            }
+        }
+
+        // Add event listeners for preview updates
+        document.getElementById('projectSelect').addEventListener('change', updatePreview);
+        document.getElementById('databaseName').addEventListener('input', updatePreview);
+        document.getElementById('databaseDescription').addEventListener('input', updatePreview);
+        editor.getSession().on('change', updatePreview);
+
+        // Initialize
+        fetchProjects();
+    </script>
+</body>
+
+</html>
