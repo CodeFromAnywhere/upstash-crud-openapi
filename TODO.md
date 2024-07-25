@@ -20,8 +20,6 @@
 
 ✅ Now test all https://data.actionschema.com/reference.html endpoints and confirm it works there without crashes.
 
-Fix oauth authorization in ChatGPT... `Missing access token, received 403 from https://auth.actionschema.com/oauth/access_token: response_data={'error': 'Unauthorized'}`. Likely, I just don't have the right linking to the client.
-
 Improve `/project/{slug}/openapi.json` so it has proper schema references!
 
 Fix the client everywhere so `client.auth("permission")` allows for non-200 status codes without crashing. Can I add this into the type?
@@ -29,6 +27,8 @@ Fix the client everywhere so `client.auth("permission")` allows for non-200 stat
 🎉 Confirm crud works again
 🎉 Confirm auth works again
 🎉 Confirm agents work again
+
+Fix oauth authorization in ChatGPT... `Missing access token, received 403 from https://auth.actionschema.com/oauth/access_token: response_data={'error': 'Unauthorized'}`. Likely, I just don't have the right linking to the client.
 
 # Feature rate limits
 

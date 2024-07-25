@@ -4,132 +4,118 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CRUD Admin Panel</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            line-height: 1.6;
-            margin: 0;
-            padding: 20px;
-            background-color: #f4f4f4;
-        }
-
-        .container {
-            max-width: 800px;
-            margin: auto;
-            background: white;
-            padding: 20px;
-            border-radius: 5px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        }
-
-        h1 {
-            color: #333;
-        }
-
-        input[type="text"],
-        button {
-            width: 100%;
-            padding: 10px;
-            margin: 10px 0;
-        }
-
-        button {
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            cursor: pointer;
-        }
-
-        button:hover {
-            background-color: #45a049;
-        }
-
-        ul {
-            list-style-type: none;
-            padding: 0;
-        }
-
-        li {
-            background: #f4f4f4;
-            margin: 5px 0;
-            padding: 10px;
-            border-radius: 3px;
-        }
-
-        a {
-            color: #333;
-            text-decoration: none;
-        }
-
-        a:hover {
-            color: #666;
-        }
-    </style>
+    <title>Project Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.3.4/axios.min.js"></script>
 </head>
 
-<body>
-    <div class="container">
-        <h1>CRUD Admin Panel</h1>
-        <input type="text" id="adminToken" placeholder="Enter admin token">
-        <button onclick="setAdminToken()">Set Admin Token</button>
-        <ul id="databaseList"></ul>
+<body class="bg-gray-100">
+    <div id="app" class="container mx-auto p-4">
+        <h1 class="text-3xl font-bold mb-4">Project Dashboard</h1>
+        <div id="loading" class="text-center py-4">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto"></div>
+            <p class="mt-2">Loading...</p>
+        </div>
+        <div id="projects" class="space-y-4"></div>
+        <a href="reference.html"
+            class="mt-8 inline-block bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">View Reference</a>
     </div>
 
     <script>
-        function setAdminToken() {
-            const token = document.getElementById('adminToken').value;
-            localStorage.setItem('adminToken', token);
-            fetchDatabases();
-        }
+        const API_BASE_URL = 'https://data.actionschema.com';
+        const AUTH_URL = 'https://auth.actionschema.com/oauth/authorize?client_id=crud_website&redirect_uri=https://data.actionschema.com/admin.html';
 
-        async function fetchDatabases() {
-            const token = localStorage.getItem('adminToken');
-            if (!token) {
-                alert('Please set the admin token first.');
+        async function init() {
+            const authToken = localStorage.getItem('authToken');
+            if (!authToken) {
+                window.location.href = AUTH_URL;
                 return;
             }
 
             try {
-                const response = await fetch('https://data.actionschema.com/listDatabases', {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
-                const data = await response.json();
-
-                if (data.isSuccessful) {
-                    localStorage.setItem('databases', JSON.stringify(data.databases));
-                    displayDatabases(data.databases);
-                } else {
-                    alert('Failed to fetch databases: ' + data.message);
-                }
+                await fetchAndRenderProjects(authToken);
             } catch (error) {
-                console.error('Error:', error);
-                alert('An error occurred while fetching databases.');
+                console.error('Error fetching projects:', error);
+                document.getElementById('loading').innerHTML = '<p class="text-red-500">Error loading projects. Please try again.</p>';
             }
         }
 
-        function displayDatabases(databases) {
-            const list = document.getElementById('databaseList');
-            list.innerHTML = '';
-            databases.forEach(db => {
-                const li = document.createElement('li');
-                const a = document.createElement('a');
-                a.href = `model.html?databaseSlug=${db.databaseSlug}`;
-                a.textContent = db.databaseSlug;
-                li.appendChild(a);
-                list.appendChild(li);
+        async function fetchAndRenderProjects(authToken) {
+            const response = await axios.get(`${API_BASE_URL}/listProjects`, {
+                headers: { 'Authorization': `Bearer ${authToken}` }
             });
+
+            const projects = response.data.projects;
+            const projectsContainer = document.getElementById('projects');
+            projectsContainer.innerHTML = '';
+
+            for (const project of projects) {
+                const projectElement = await createProjectElement(project, authToken);
+                projectsContainer.appendChild(projectElement);
+            }
+
+            document.getElementById('loading').style.display = 'none';
         }
 
-        // Check if admin token exists and fetch databases on page load
-        window.onload = () => {
-            const token = localStorage.getItem('adminToken');
-            if (token) {
-                fetchDatabases();
+        async function createProjectElement(project, authToken) {
+            const projectDiv = document.createElement('div');
+            projectDiv.className = 'bg-white p-4 rounded shadow';
+            projectDiv.innerHTML = `
+                <h2 class="text-xl font-semibold mb-2">${project.projectSlug}</h2>
+                <p class="text-gray-600 mb-4">${project.description || 'No description'}</p>
+                <h3 class="text-lg font-semibold mb-2">Databases:</h3>
+                <ul id="databases-${project.projectSlug}" class="list-disc pl-5 mb-4"></ul>
+                <button onclick="deleteProject('${project.projectSlug}')" class="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600">Delete Project</button>
+            `;
+
+            const databasesResponse = await axios.get(`${API_BASE_URL}/listDatabases`, {
+                headers: { 'Authorization': `Bearer ${authToken}` }
+            });
+
+            const databases = databasesResponse.data.databases.filter(db => db.projectSlug === project.projectSlug);
+            const databasesList = projectDiv.querySelector(`#databases-${project.projectSlug}`);
+
+            databases.forEach(database => {
+                const li = document.createElement('li');
+                li.className = 'mb-2';
+                li.innerHTML = `
+                    <span>${database.databaseSlug}</span>
+                    <button onclick="deleteDatabase('${database.databaseSlug}')" class="ml-2 text-red-500 hover:text-red-700">Delete</button>
+                    <a href="/model.html?databaseSlug=${database.databaseSlug}" class="ml-2 text-blue-500 hover:text-blue-700">View</a>
+                `;
+                databasesList.appendChild(li);
+            });
+
+            return projectDiv;
+        }
+
+        async function deleteProject(projectSlug) {
+            const authToken = localStorage.getItem('authToken');
+            try {
+                await axios.post(`${API_BASE_URL}/removeProject`, { projectSlug }, {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                await fetchAndRenderProjects(authToken);
+            } catch (error) {
+                console.error('Error deleting project:', error);
+                alert('Failed to delete project. Please try again.');
             }
-        };
+        }
+
+        async function deleteDatabase(databaseSlug) {
+            const authToken = localStorage.getItem('authToken');
+            try {
+                await axios.post(`${API_BASE_URL}/removeDatabase`, { databaseSlug }, {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                await fetchAndRenderProjects(authToken);
+            } catch (error) {
+                console.error('Error deleting database:', error);
+                alert('Failed to delete database. Please try again.');
+            }
+        }
+
+        init();
     </script>
 </body>
 
