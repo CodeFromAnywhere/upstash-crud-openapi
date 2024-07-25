@@ -3,7 +3,6 @@ import { Endpoint } from "../client.js";
 import { getDatabaseDetails } from "../getDatabaseDetails.js";
 import { AdminDetails, DbKey, ProjectDetails } from "../types.js";
 import { getProjectDetails } from "../getProjectDetails.js";
-import { getAdminAuthorized } from "../getAdminAuthorized.js";
 
 export const setCurrentProject: Endpoint<"setCurrentProject"> = async (
   context,
@@ -11,7 +10,7 @@ export const setCurrentProject: Endpoint<"setCurrentProject"> = async (
   const { projectSlug, Authorization, description } = context;
   const apiKey = Authorization?.slice("Bearer ".length);
 
-  if (!apiKey || !(await getAdminAuthorized(Authorization))) {
+  if (!apiKey || apiKey.length < 64) {
     return { isSuccessful: false, message: "Unauthorized", status: 403 };
   }
 
@@ -35,9 +34,11 @@ export const setCurrentProject: Endpoint<"setCurrentProject"> = async (
     };
   }
 
-  const { databaseDetails } = await getDatabaseDetails(rootUpstashDatabaseId);
+  const { databaseDetails: rootDetails } = await getDatabaseDetails(
+    rootUpstashDatabaseId,
+  );
 
-  if (!databaseDetails) {
+  if (!rootDetails) {
     return {
       isSuccessful: false,
       message: "Couldn't find root database details",
@@ -45,8 +46,8 @@ export const setCurrentProject: Endpoint<"setCurrentProject"> = async (
   }
 
   const root = new Redis({
-    url: `https://${databaseDetails.endpoint}`,
-    token: databaseDetails.rest_token,
+    url: `https://${rootDetails.endpoint}`,
+    token: rootDetails.rest_token,
   });
 
   await root.set(

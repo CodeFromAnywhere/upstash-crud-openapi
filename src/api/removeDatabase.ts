@@ -8,7 +8,7 @@ import { DatabaseDetails, DbKey } from "../types.js";
 export const removeDatabase: Endpoint<"removeDatabase"> = async (context) => {
   const { databaseSlug, Authorization } = context;
   const apiKey = Authorization?.slice("Bearer ".length);
-  if (!apiKey || !(await getAdminAuthorized(Authorization))) {
+  if (!apiKey || apiKey.length < 64) {
     return { isSuccessful: false, message: "Unauthorized", status: 403 };
   }
 
@@ -51,7 +51,13 @@ export const removeDatabase: Endpoint<"removeDatabase"> = async (context) => {
     };
   }
 
-  await removeEntireDatabase({ root, databaseSlug, databaseDetails });
+  const result = await removeEntireDatabase({
+    root,
+    databaseSlug,
+    databaseDetails,
+  });
+
+  console.log(result);
 
   return { isSuccessful: true, message: "Database removed successfully" };
 };

@@ -8,7 +8,7 @@ import { notEmpty } from "from-anywhere";
 export const listProjects: Endpoint<"listProjects"> = async (context) => {
   const { Authorization } = context;
   const apiKey = Authorization?.slice("Bearer ".length);
-  if (!apiKey || !(await getAdminAuthorized(Authorization))) {
+  if (!apiKey || apiKey.length < 64) {
     return { isSuccessful: false, message: "Unauthorized", status: 403 };
   }
 
@@ -19,6 +19,7 @@ export const listProjects: Endpoint<"listProjects"> = async (context) => {
   if (!rootUpstashApiKey || !rootUpstashEmail || !rootUpstashDatabaseId) {
     return {
       isSuccessful: false,
+      status: 404,
       message: "Missing environment variables",
     };
   }
@@ -28,6 +29,7 @@ export const listProjects: Endpoint<"listProjects"> = async (context) => {
   if (!databaseDetails) {
     return {
       isSuccessful: false,
+      status: 404,
       message: "Couldn't find root database details",
     };
   }
@@ -40,6 +42,14 @@ export const listProjects: Endpoint<"listProjects"> = async (context) => {
   const projectSlugs: string[] = await root.smembers(
     `projects_${apiKey}` satisfies DbKey,
   );
+
+  if (projectSlugs.length === 0) {
+    return {
+      isSuccessful: false,
+      status: 403,
+      message: "No projects",
+    };
+  }
 
   const projectKeys = projectSlugs.map((s) => `project_${s}` satisfies DbKey);
 

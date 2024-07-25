@@ -10,7 +10,7 @@ import { getProjectDetails } from "../getProjectDetails.js";
 export const listDatabases: Endpoint<"listDatabases"> = async (context) => {
   const { Authorization } = context;
   const apiKey = Authorization?.slice("Bearer ".length);
-  if (!apiKey || !(await getAdminAuthorized(Authorization))) {
+  if (!apiKey || apiKey.length < 64) {
     return { isSuccessful: false, message: "Unauthorized", status: 403 };
   }
 
@@ -50,6 +50,7 @@ export const listDatabases: Endpoint<"listDatabases"> = async (context) => {
   const admin: AdminDetails | null = await root.get(
     `admin_${apiKey}` satisfies DbKey,
   );
+
   if (!admin) {
     return { isSuccessful: false, message: "Unauthorized", status: 403 };
   }
@@ -57,7 +58,11 @@ export const listDatabases: Endpoint<"listDatabases"> = async (context) => {
   const project = await getProjectDetails(admin.currentProjectSlug);
 
   if (!project.projectDetails) {
-    return { isSuccessful: false, message: project.message, status: 404 };
+    return {
+      isSuccessful: false,
+      message: `Project not found: ${project.message}`,
+      status: 404,
+    };
   }
 
   const slugs = project.projectDetails.databaseSlugs;

@@ -10,7 +10,7 @@ export const removeProject: Endpoint<"removeProject"> = async (context) => {
   const { projectSlug, Authorization } = context;
   const apiKey = Authorization?.slice("Bearer ".length);
 
-  if (!apiKey || !(await getAdminAuthorized(Authorization))) {
+  if (!apiKey || apiKey.length < 64) {
     return { isSuccessful: false, message: "Unauthorized", status: 403 };
   }
 
@@ -64,13 +64,16 @@ export const removeProject: Endpoint<"removeProject"> = async (context) => {
   // NB: When removing databases, also remove all database entries!
   // This does 4 API requests per database.
   await Promise.all(
-    databases.map((item) =>
-      removeEntireDatabase({
-        databaseSlug: item.databaseSlug,
-        databaseDetails: item.details,
-        root,
-      }),
-    ),
+    databases
+      // NB: doublecheck for correct adminAuthToken
+      .filter((item) => item.details?.adminAuthToken === apiKey)
+      .map((item) =>
+        removeEntireDatabase({
+          databaseSlug: item.databaseSlug,
+          databaseDetails: item.details,
+          root,
+        }),
+      ),
   );
 
   await root.del(`project_${projectSlug}` satisfies DbKey);
