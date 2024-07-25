@@ -83,7 +83,15 @@ export const upsertDatabase: Endpoint<"upsertDatabase"> = async (context) => {
       currentProjectSlug: generateRandomString(16),
     };
 
-    await root.set(`admin_${apiKey}`, newAdmin satisfies AdminDetails);
+    await root.set(
+      `admin_${apiKey}` satisfies DbKey,
+      newAdmin satisfies AdminDetails,
+    );
+
+    await root.sadd(
+      `projects_${apiKey}` satisfies DbKey,
+      newAdmin.currentProjectSlug,
+    );
 
     admin = newAdmin;
   }
@@ -216,6 +224,13 @@ export const upsertDatabase: Endpoint<"upsertDatabase"> = async (context) => {
   await root.sadd(
     `project_${admin.currentProjectSlug}` satisfies DbKey,
     databaseSlug,
+  );
+
+  // add the project, if not already
+  // TODO: can later be removed
+  await root.sadd(
+    `projects_${databaseDetails.adminAuthToken}`,
+    admin.currentProjectSlug,
   );
 
   return {
