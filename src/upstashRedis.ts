@@ -446,7 +446,10 @@ export const upstashRedisGetRange = async (context: {
           return null;
         }
 
-        return { [allKeys[index]]: value };
+        const key = baseKey
+          ? allKeys[index].slice(baseKey.length)
+          : allKeys[index];
+        return { [key]: value };
       })
       .filter(notEmpty),
   );

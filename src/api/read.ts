@@ -157,6 +157,10 @@ const searchData = (search: string | undefined, data: { [key: string]: O }) => {
   const keys = Object.keys(data).filter((key) => {
     const item = data[key];
 
+    if (!item) {
+      return false;
+    }
+
     const searchable = Object.values(item)
       .map((value) => JSON.stringify(value))
       .join(",")
@@ -214,7 +218,8 @@ export const read = async (
         })
       ).reduce(
         (previous, current, currentIndex) => {
-          return { ...previous, [rowIds[currentIndex]]: current };
+          const key = rowIds[currentIndex];
+          return { ...previous, [key]: current };
         },
         {} as {
           [x: string]: O;
