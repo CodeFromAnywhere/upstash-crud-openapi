@@ -24,9 +24,12 @@ import { removeProject } from "../src/api/removeProject.js";
 import { removeDatabase } from "../src/api/removeDatabase.js";
 
 import openapi from "../src/openapi.json" assert { type: "json" };
+import crudOpenapi from "../src/crud-openapi.json" assert { type: "json" };
 
 import { resolveReferenceOrContinue } from "../src/resolveReferenceOrContinue.js";
 import { upsertDatabase } from "../src/api/upsertDatabase.js";
+import { getProjectOpenapi } from "../src/api/getProjectOpenapi.js";
+import { getProjectSchema } from "../src/api/getProjectSchema.js";
 
 /** Retreives the right body from the request based on the openapi and operation */
 export const getRequestOperationBody = async (
@@ -39,6 +42,7 @@ export const getRequestOperationBody = async (
     return { schema: undefined, data: undefined };
   }
 
+  // TODO: it's better if this is cached!
   const requestBody = await resolveReferenceBrowser(
     operation.requestBody,
     openapi,
@@ -366,10 +370,22 @@ export const resolveOpenapiAppRequest = async (
   });
 };
 
+const fullOpenapi = {
+  ...openapi,
+  paths: { ...openapi.paths, ...crudOpenapi.paths },
+  components: {
+    ...openapi.components,
+    schemas: {
+      ...openapi.components.schemas,
+      ...crudOpenapi.components.schemas,
+    },
+  },
+};
+
 /** function creator to DRY */
 const getHandler = (method: string) => (request: Request) => {
   return resolveOpenapiAppRequest(request, method, {
-    openapi: openapi as OpenapiDocument,
+    openapi: fullOpenapi as OpenapiDocument,
     prefixParameterName: "databaseSlug",
     functions: {
       create,
@@ -377,6 +393,8 @@ const getHandler = (method: string) => (request: Request) => {
       update,
       remove,
       getOpenapi,
+      getProjectOpenapi,
+      getProjectSchema,
       getCrudOpenapi,
       upsertDatabase,
       getSchema,

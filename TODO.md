@@ -2,17 +2,27 @@
 
 ✅ OAuth2 needs CRUD-OpenAPI and CRUD-OpenAPI needs OAuth2. Im stuck! Let's make an admin token that always works in `.env` and deploy this.
 
-Test creating a database via https://data.actionschema.com/reference.html and confirm the creation works as expected, as well as projects, and CRUD. Verify each time within upstash.
+✅ Test creating a database via https://data.actionschema.com/reference.html and confirm the creation works as expected, as well as projects, and CRUD.
 
-Recreate DBs for agents and for auth and confirm this works smoothly.
+✅ Recreate DBs for agents and for auth and also deploy the keys.
+
+`"message": "Invalid method."`. Fix that I can crud at: https://data.actionschema.com/actionschema-oauth-state/reference.html#/operations/read . The endpoints aren't accessible now due to the resolver.
+
+Test all CRUD operations for the above. Verify each time within upstash.
+
+Now add the admin oauth values as previously under the same Auth
+
+Now test all https://data.actionschema.com/reference.html endpoints and confirm it works there without crashes.
+
+Improve `/project/{slug}/openapi.json` so it has proper schema references!
+
+# Feature rate limits
 
 Apply `ADMIN_MAX_DB_COUNT` in `upsertDatabase`
 
 Apply `ADMIN_MAX_DB_SIZE` in `update` and `create`
 
 Apply `ADMIN_MAX_REQUESTS_PER_HOUR` in all CRUD operations.
-
-Ensure `/project/{slug}/openapi.json` has proper schema references!
 
 # POC: Landing Pages
 

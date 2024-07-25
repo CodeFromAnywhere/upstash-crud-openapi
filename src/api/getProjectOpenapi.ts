@@ -17,7 +17,7 @@ The idea here is that we could have a oauth2 based database that can be used fro
 export const getProjectOpenapi: Endpoint<"getProjectOpenapi"> = async (
   context,
 ) => {
-  const { projectSlug, Authorization } = context;
+  const { projectSlug } = context;
 
   // comes from path parameter
 
