@@ -4,25 +4,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CRUD Admin</title>
+    <title>ActionSchema Admin Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 </head>
 
 <body class="bg-gray-100">
     <div id="app" class="container mx-auto p-4">
-        <h1 class="text-3xl font-bold mb-4">CRUD Admin</h1>
+        <h1 class="text-3xl font-bold mb-4">ActionSchema Admin Dashboard</h1>
         <div id="loading" class="text-center py-4 hidden">
-            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto"></div>
-            <p class="mt-2">Loading...</p>
+            <i class="fas fa-spinner fa-spin fa-2x"></i>
+            <p>Loading...</p>
         </div>
-        <div id="projects" class="space-y-4"></div>
-        <a href="reference.html"
-            class="mt-4 inline-block bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Documentation</a>
+        <div id="projectList" class="space-y-4"></div>
+        <a href="reference.html" class="mt-4 inline-block bg-blue-500 text-white px-4 py-2 rounded">Documentation</a>
     </div>
 
     <script>
         const API_BASE_URL = 'https://data.actionschema.com';
         const AUTH_URL = 'https://auth.actionschema.com/oauth/authorize?client_id=crud_website&redirect_uri=https://data.actionschema.com/admin.html';
+
+        function showLoading() {
+            document.getElementById('loading').classList.remove('hidden');
+        }
+
+        function hideLoading() {
+            document.getElementById('loading').classList.add('hidden');
+        }
 
         async function fetchWithAuth(url, options = {}) {
             const authToken = localStorage.getItem('authToken');
@@ -39,96 +47,100 @@
             });
         }
 
-        async function removeProject(projectSlug) {
-            const response = await fetchWithAuth(`${API_BASE_URL}/removeProject`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ projectSlug })
-            });
-            if (response.ok) {
-                loadProjects();
-            } else {
-                alert('Failed to remove project');
-            }
-        }
-
-        async function removeDatabase(databaseSlug) {
-            const response = await fetchWithAuth(`${API_BASE_URL}/removeDatabase`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ databaseSlug })
-            });
-            if (response.ok) {
-                loadProjects();
-            } else {
-                alert('Failed to remove database');
+        async function listProjects() {
+            showLoading();
+            try {
+                const response = await fetchWithAuth(`${API_BASE_URL}/listProjects`);
+                const data = await response.json();
+                hideLoading();
+                if (data.isSuccessful) {
+                    renderProjects(data.projects);
+                } else {
+                    alert(`Failed to list projects: ${data.message}`);
+                }
+            } catch (error) {
+                hideLoading();
+                alert(`Error: ${error.message}`);
             }
         }
 
         function renderProjects(projects) {
-            const projectsContainer = document.getElementById('projects');
-            projectsContainer.innerHTML = '';
-
+            const projectList = document.getElementById('projectList');
+            projectList.innerHTML = '';
             projects.forEach(project => {
                 const projectElement = document.createElement('div');
                 projectElement.className = 'bg-white p-4 rounded shadow';
                 projectElement.innerHTML = `
-                    <h2 class="text-xl font-semibold">${project.projectSlug}</h2>
-                    <p class="text-gray-600">${project.description || 'No description'}</p>
-                    <h3 class="text-lg font-semibold mt-2">Databases:</h3>
-                    <ul class="list-disc pl-5">
-                        ${project.databases.map(db => `
-                            <li class="flex items-center justify-between">
-                                <a href="/model.html?databaseSlug=${db.databaseSlug}" class="text-blue-500 hover:underline">${db.databaseSlug}</a>
-                                <button class="text-red-500 hover:text-red-700" onclick="removeDatabase('${db.databaseSlug}')">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                        <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
-                                    </svg>
+                    <h2 class="text-xl font-semibold mb-2">${project.projectSlug}</h2>
+                    <p class="mb-2">${project.description || 'No description'}</p>
+                    <h3 class="font-semibold mb-1">Databases:</h3>
+                    <ul class="list-disc pl-5 mb-2">
+                        ${project.databaseSlugs.map(slug => `
+                            <li class="flex justify-between items-center">
+                                <a href="/model.html?databaseSlug=${slug}" class="text-blue-500 hover:underline">${slug}</a>
+                                <button onclick="removeDatabase('${slug}')" class="text-red-500 hover:text-red-700">
+                                    <i class="fas fa-trash"></i>
                                 </button>
                             </li>
                         `).join('')}
                     </ul>
-                    <button class="mt-2 text-red-500 hover:text-red-700" onclick="removeProject('${project.projectSlug}')">
-                        Remove Project
+                    <button onclick="removeProject('${project.projectSlug}')" class="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600">
+                        <i class="fas fa-trash mr-1"></i> Delete Project
                     </button>
                 `;
-                projectsContainer.appendChild(projectElement);
+                projectList.appendChild(projectElement);
             });
         }
 
-        async function loadProjects() {
-            const loadingElement = document.getElementById('loading');
-            loadingElement.classList.remove('hidden');
-
-            try {
-                const response = await fetchWithAuth(`${API_BASE_URL}/listProjects`);
-                if (response.ok) {
+        async function removeProject(projectSlug) {
+            if (confirm(`Are you sure you want to delete the project "${projectSlug}"?`)) {
+                showLoading();
+                try {
+                    const response = await fetchWithAuth(`${API_BASE_URL}/removeProject`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ projectSlug })
+                    });
                     const data = await response.json();
-                    renderProjects(data.projects);
-                } else {
-                    throw new Error('Failed to load projects');
+                    hideLoading();
+                    if (data.isSuccessful) {
+                        alert('Project removed successfully');
+                        listProjects();
+                    } else {
+                        alert(`Failed to remove project: ${data.message}`);
+                    }
+                } catch (error) {
+                    hideLoading();
+                    alert(`Error: ${error.message}`);
                 }
-            } catch (error) {
-                console.error('Error loading projects:', error);
-                alert('Failed to load projects. Please try again.');
-            } finally {
-                loadingElement.classList.add('hidden');
             }
         }
 
-        // Check for authToken and load projects on page load
-        document.addEventListener('DOMContentLoaded', () => {
-            const authToken = localStorage.getItem('authToken');
-            if (!authToken) {
-                window.location.href = AUTH_URL;
-            } else {
-                loadProjects();
+        async function removeDatabase(databaseSlug) {
+            if (confirm(`Are you sure you want to delete the database "${databaseSlug}"?`)) {
+                showLoading();
+                try {
+                    const response = await fetchWithAuth(`${API_BASE_URL}/removeDatabase`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ databaseSlug })
+                    });
+                    const data = await response.json();
+                    hideLoading();
+                    if (data.isSuccessful) {
+                        alert('Database removed successfully');
+                        listProjects();
+                    } else {
+                        alert(`Failed to remove database: ${data.message}`);
+                    }
+                } catch (error) {
+                    hideLoading();
+                    alert(`Error: ${error.message}`);
+                }
             }
-        });
+        }
+
+        document.addEventListener('DOMContentLoaded', listProjects);
     </script>
 </body>
 
