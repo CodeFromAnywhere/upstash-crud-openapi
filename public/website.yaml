@@ -22,6 +22,7 @@ admin.html: Make a new super cool website in HTML, Tailwind CSS CDN, and JS.
   - Besides it, an text-input prefilled with the auth-token. copyable with a button.
   - a button linking to `jsonschema.html`
   - a button to create a new db, linking to new.html
+  - button to AI [GPT](https://chatgpt.com/g/g-VmL8hNaEo-data-agent)
 
   Use the OpenAPI as reference for your endpoints.
 
@@ -40,10 +41,11 @@ update.html:
   Submitting the JSON will call `/update` for that `rowId`. If there's no rowId given, generate a random `rowId` of 16 characters when submitting.
 
 jsonschema.html:
-  make a form in which you can build up a JSON Schema of type object.
+  Make a form in which you can build up a JSON Schema of type object.
+  - string number and boolean don't have extra behavior
+  - if you select object for a property, it should embed the form again, recursively to select properties for that object.
+  - if you select array for a property, it should allow to select type type of item and recursively continue like that.
 
-  if you select object for a property, it should embed the form again, recursively to select properties for that object.
+  When clicking 'done', it copies an '\' escaped JSON string of the entire JSON Schema to your CLIPBOARD. ensure to copy/paste with escape characters (\) before every quote ("). also send an alert when clicked done
 
-  show the Generated JSON in realtime.
-
-  use basic html, css, and js with tailwind. use tailwind to show the form and the generated JSON side by side
+  IMPORTANT. use barebones HTML, CSS, and JS with tailwind CDN. use tailwind to show the form and the generated JSON side by side. Use good web design principles. Let's think step by step

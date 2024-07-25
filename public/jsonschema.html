@@ -8,124 +8,115 @@
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 
-<body class="bg-gray-100 p-8">
+<body class="bg-gray-100 min-h-screen p-8">
     <div class="container mx-auto">
-        <h1 class="text-3xl font-bold mb-6">JSON Schema Builder</h1>
-        <div class="flex space-x-4">
-            <div class="w-1/2 bg-white p-6 rounded-lg shadow-md">
+        <h1 class="text-3xl font-bold mb-8 text-center">JSON Schema Builder</h1>
+        <div class="flex flex-col md:flex-row gap-8">
+            <div class="w-full md:w-1/2 bg-white p-6 rounded-lg shadow-md">
                 <h2 class="text-xl font-semibold mb-4">Schema Builder</h2>
                 <div id="schema-form">
-                    <div id="root-object"></div>
+                    <!-- The form will be dynamically generated here -->
                 </div>
+                <button id="done-btn" class="mt-4 bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded">
+                    Done
+                </button>
             </div>
-            <div class="w-1/2 bg-white p-6 rounded-lg shadow-md">
+            <div class="w-full md:w-1/2 bg-white p-6 rounded-lg shadow-md">
                 <h2 class="text-xl font-semibold mb-4">Generated JSON Schema</h2>
-                <pre id="json-output" class="bg-gray-100 p-4 rounded-md overflow-auto max-h-[calc(100vh-12rem)]"></pre>
+                <pre id="json-output" class="bg-gray-100 p-4 rounded-lg overflow-x-auto"></pre>
             </div>
         </div>
     </div>
 
     <script>
-        function createPropertyForm(parentId) {
-            const propertyId = `property-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-            const propertyForm = document.createElement('div');
-            propertyForm.id = propertyId;
-            propertyForm.classList.add('mb-4', 'pl-4', 'border-l-2', 'border-gray-300');
+        function createPropertyForm(parentElement, property = '') {
+            const propertyDiv = document.createElement('div');
+            propertyDiv.className = 'mb-4 p-4 border border-gray-200 rounded-lg';
 
-            propertyForm.innerHTML = `
-                <div class="flex items-center space-x-2 mb-2">
-                    <input type="text" placeholder="Property Name" class="border rounded px-2 py-1 w-1/3">
-                    <select class="border rounded px-2 py-1 w-1/3">
-                        <option value="string">String</option>
-                        <option value="number">Number</option>
-                        <option value="boolean">Boolean</option>
-                        <option value="object">Object</option>
-                        <option value="array">Array</option>
-                    </select>
-                    <button class="bg-red-500 text-white px-2 py-1 rounded" onclick="removeProperty('${propertyId}')">Remove</button>
-                </div>
-            `;
+            const nameInput = document.createElement('input');
+            nameInput.type = 'text';
+            nameInput.placeholder = 'Property Name';
+            nameInput.value = property;
+            nameInput.className = 'w-full p-2 mb-2 border border-gray-300 rounded';
+            propertyDiv.appendChild(nameInput);
 
-            const parentElement = document.getElementById(parentId);
-            parentElement.appendChild(propertyForm);
+            const typeSelect = document.createElement('select');
+            typeSelect.className = 'w-full p-2 mb-2 border border-gray-300 rounded';
+            ['string', 'number', 'boolean', 'object', 'array'].forEach(type => {
+                const option = document.createElement('option');
+                option.value = option.textContent = type;
+                typeSelect.appendChild(option);
+            });
+            propertyDiv.appendChild(typeSelect);
 
-            const typeSelect = propertyForm.querySelector('select');
-            typeSelect.addEventListener('change', (e) => {
-                if (e.target.value === 'object') {
-                    const objectContainer = document.createElement('div');
-                    objectContainer.id = `${propertyId}-object`;
-                    propertyForm.appendChild(objectContainer);
-                    addPropertyButton(objectContainer.id);
-                } else {
-                    const objectContainer = propertyForm.querySelector(`#${propertyId}-object`);
-                    if (objectContainer) {
-                        propertyForm.removeChild(objectContainer);
-                    }
+            const childrenDiv = document.createElement('div');
+            childrenDiv.className = 'ml-4';
+            propertyDiv.appendChild(childrenDiv);
+
+            typeSelect.addEventListener('change', () => {
+                childrenDiv.innerHTML = '';
+                if (typeSelect.value === 'object') {
+                    const addPropertyBtn = document.createElement('button');
+                    addPropertyBtn.textContent = 'Add Property';
+                    addPropertyBtn.className = 'bg-green-500 hover:bg-green-600 text-white font-bold py-1 px-2 rounded text-sm mt-2';
+                    addPropertyBtn.onclick = () => createPropertyForm(childrenDiv);
+                    childrenDiv.appendChild(addPropertyBtn);
+                } else if (typeSelect.value === 'array') {
+                    createPropertyForm(childrenDiv, 'items');
                 }
-                updateJsonOutput();
             });
 
-            propertyForm.querySelector('input').addEventListener('input', updateJsonOutput);
-            typeSelect.addEventListener('change', updateJsonOutput);
-
-            updateJsonOutput();
+            parentElement.appendChild(propertyDiv);
         }
 
-        function addPropertyButton(parentId) {
-            const addButton = document.createElement('button');
-            addButton.textContent = 'Add Property';
-            addButton.classList.add('bg-blue-500', 'text-white', 'px-2', 'py-1', 'rounded', 'mt-2');
-            addButton.onclick = () => createPropertyForm(parentId);
+        function generateSchema(element) {
+            const schema = {};
+            const nameInput = element.querySelector('input[type="text"]');
+            const typeSelect = element.querySelector('select');
 
-            const parentElement = document.getElementById(parentId);
-            parentElement.appendChild(addButton);
-        }
+            if (nameInput && typeSelect) {
+                const name = nameInput.value.trim();
+                const type = typeSelect.value;
 
-        function removeProperty(propertyId) {
-            const propertyElement = document.getElementById(propertyId);
-            propertyElement.parentNode.removeChild(propertyElement);
-            updateJsonOutput();
-        }
+                if (name) {
+                    schema[name] = { type };
 
-        function updateJsonOutput() {
-            const schema = {
-                type: 'object',
-                properties: {}
-            };
-
-            function buildSchemaObject(parentElement) {
-                const properties = {};
-                parentElement.querySelectorAll(':scope > div').forEach(propertyDiv => {
-                    const nameInput = propertyDiv.querySelector('input');
-                    const typeSelect = propertyDiv.querySelector('select');
-
-                    if (nameInput && typeSelect) {
-                        const propertyName = nameInput.value.trim();
-                        const propertyType = typeSelect.value;
-
-                        if (propertyName) {
-                            properties[propertyName] = { type: propertyType };
-
-                            if (propertyType === 'object') {
-                                const nestedObjectContainer = propertyDiv.querySelector(`#${propertyDiv.id}-object`);
-                                if (nestedObjectContainer) {
-                                    properties[propertyName].properties = buildSchemaObject(nestedObjectContainer);
-                                }
-                            }
-                        }
+                    if (type === 'object') {
+                        schema[name].properties = {};
+                        element.querySelectorAll(':scope > div > div').forEach(childDiv => {
+                            Object.assign(schema[name].properties, generateSchema(childDiv));
+                        });
+                    } else if (type === 'array') {
+                        const itemsSchema = generateSchema(element.querySelector(':scope > div > div'));
+                        schema[name].items = itemsSchema.items || { type: 'string' };
                     }
-                });
-                return properties;
+                }
             }
 
-            schema.properties = buildSchemaObject(document.getElementById('root-object'));
-
-            document.getElementById('json-output').textContent = JSON.stringify(schema, null, 2);
+            return schema;
         }
 
-        // Initialize the root object
-        createPropertyForm('root-object');
-        addPropertyButton('root-object');
+        document.addEventListener('DOMContentLoaded', () => {
+            const schemaForm = document.getElementById('schema-form');
+            const jsonOutput = document.getElementById('json-output');
+            const doneBtn = document.getElementById('done-btn');
+
+            createPropertyForm(schemaForm, 'root');
+
+            doneBtn.addEventListener('click', () => {
+                const schema = generateSchema(schemaForm);
+                const jsonString = JSON.stringify(schema, null, 2);
+                jsonOutput.textContent = jsonString;
+
+                // Escape quotes and copy to clipboard
+                const escapedJsonString = JSON.stringify(schema).replace(/"/g, '\\"');
+                navigator.clipboard.writeText(escapedJsonString)
+                    .then(() => {
+                        alert('JSON Schema copied to clipboard with escaped quotes!');
+                    })
+                    .catch(err => console.error('Failed to copy: ', err));
+            });
+        });
     </script>
 </body>
 
