@@ -28,7 +28,6 @@ export const getCrudOperationAuthorized = async (
     return true;
   }
 
-  console.log({ databaseDetails });
   if (
     databaseDetails.adminAuthToken &&
     Authorization === `Bearer ${databaseDetails.adminAuthToken}`

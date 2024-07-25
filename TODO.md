@@ -6,9 +6,9 @@
 
 ✅ Recreate DBs for agents and for auth and also deploy the keys.
 
-`"message": "Invalid method."`. Fix that I can crud at: https://data.actionschema.com/actionschema-oauth-state/reference.html#/operations/read . The endpoints aren't accessible now due to the resolver.
+✅ `"message": "Invalid method."`. Fix that I can crud at: https://data.actionschema.com/actionschema-oauth-state/reference.html#/operations/read . The endpoints aren't accessible now due to the resolver.
 
-Test all CRUD operations for the above. Verify each time within upstash.
+✅ Test all CRUD operations for the above. Verify each time within upstash.
 
 Now add the admin oauth values as previously under the same Auth
 
