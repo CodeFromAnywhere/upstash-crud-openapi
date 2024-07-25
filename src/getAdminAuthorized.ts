@@ -18,6 +18,10 @@ export const getAdminAuthorized = async (Authorization: string | undefined) => {
     headers: { Authorization },
   });
 
+  if (!permission) {
+    return false;
+  }
+
   if (permission.scope?.split(" ").find((s) => s === "admin")) {
     return true;
   }

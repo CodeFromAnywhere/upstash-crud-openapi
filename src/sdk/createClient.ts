@@ -1,5 +1,3 @@
-
-
 export const createClient = <
   operations extends {
     [key: string]: {
@@ -73,7 +71,8 @@ export const createClient = <
     operations[K]["responses"][200]["content"]["application/json"]
   > => {
     const details = operationUrlObject[operation];
-    const { headers, baseUrl } = customConfiguration || config;
+    const headers = customConfiguration?.headers || config?.headers;
+    const baseUrl = customConfiguration?.baseUrl || config?.baseUrl;
 
     if (!details) {
       throw new Error("No details found for operation:" + String(operation));
@@ -107,7 +106,7 @@ export const createClient = <
           }
           if (!response.headers.get("Content-Type")?.includes("json")) {
             response.headers.forEach((value, key) => {
-            console.log({key,value})
+              console.log({ key, value });
             });
 
             console.log("No JSON?");

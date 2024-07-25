@@ -48,12 +48,16 @@ export const getCrudOperationAuthorized = async (
     headers: { Authorization },
   });
 
+  if (!permission) {
+    return false;
+  }
+
   //allow entire project for admin as well as user
   const allowedScopes = [`admin`, `user`];
 
   if (
     allowedScopes.find((scope) =>
-      permission.scope?.split(" ").find((s) => s === scope),
+      permission?.scope?.split(" ").find((s) => s === scope),
     )
   ) {
     // allow oauth2 user
