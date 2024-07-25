@@ -14,7 +14,7 @@
 
 ✅ Fixed authToken bug and other keys in `upsertDatabase`. Ran migration again.
 
-Test auth locally and figure out why `permission` endpoint isn't authorized. Why does it try to authorize with `permission` in the first place? It doesn't use the adminAuthToken from the DB since it has stuff stored directly without being an admin in `auth`. That's not an issue for me... So let's remove `getAdminAuthorized` for now when it's not REALLY needed.
+✅ 🤔 Test auth locally and figure out why `permission` endpoint isn't authorized. Why does it try to authorize with `permission` in the first place? It doesn't use the adminAuthToken from the DB since it has stuff stored directly without being an admin in `auth`. That's not an issue for me... So let's remove `getAdminAuthorized` for now when it's not REALLY needed.
 
 Fix the client everywhere so `client.auth("permission")` allows for non-200 status codes without crashing. Can I add this into the type?
 

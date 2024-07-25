@@ -2,7 +2,6 @@ import { Endpoint } from "../client.js";
 import { Redis } from "@upstash/redis";
 import { getDatabaseDetails } from "../getDatabaseDetails.js";
 import { DbKey, ProjectDetails } from "../types.js";
-import { getAdminAuthorized } from "../getAdminAuthorized.js";
 import { notEmpty } from "from-anywhere";
 
 export const listProjects: Endpoint<"listProjects"> = async (context) => {

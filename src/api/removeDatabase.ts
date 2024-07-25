@@ -1,6 +1,5 @@
 import { Redis } from "@upstash/redis";
 import { Endpoint } from "../client.js";
-import { getAdminAuthorized } from "../getAdminAuthorized.js";
 import { getDatabaseDetails } from "../getDatabaseDetails.js";
 import { removeEntireDatabase } from "../removeEntireDatabase.js";
 import { DatabaseDetails, DbKey } from "../types.js";

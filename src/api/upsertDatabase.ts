@@ -16,7 +16,6 @@ import {
 import { JSONSchema7 } from "json-schema";
 import { rootDatabaseName } from "../state.js";
 import { embeddingsClient } from "../embeddings.js";
-import { getAdminAuthorized } from "../getAdminAuthorized.js";
 
 export const upsertDatabase: Endpoint<"upsertDatabase"> = async (context) => {
   const {

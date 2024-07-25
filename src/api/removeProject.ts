@@ -3,7 +3,6 @@ import { Redis } from "@upstash/redis";
 import { getDatabaseDetails } from "../getDatabaseDetails.js";
 import { DatabaseDetails, DbKey } from "../types.js";
 import { getProjectDetails } from "../getProjectDetails.js";
-import { getAdminAuthorized } from "../getAdminAuthorized.js";
 import { removeEntireDatabase } from "../removeEntireDatabase.js";
 
 export const removeProject: Endpoint<"removeProject"> = async (context) => {

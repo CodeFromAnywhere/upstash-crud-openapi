@@ -3,7 +3,6 @@ import { Endpoint, ResponseType } from "../client.js";
 import { getUpstashRedisDatabase } from "../upstashRedis.js";
 import { AdminDetails, DatabaseDetails, DbKey } from "../types.js";
 import { notEmpty } from "from-anywhere";
-import { getAdminAuthorized } from "../getAdminAuthorized.js";
 import { getProjectDetails } from "../getProjectDetails.js";
 
 /** Lists databases for your current project */
