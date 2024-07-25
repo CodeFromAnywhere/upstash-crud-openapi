@@ -160,3 +160,38 @@ https://data.actionschema.com/openapi.json GPT? good to have compatibility
 - ✅ Test the crud itself via 'admintoken' as well as via the crud token and confirm it works with the prefix thingy as well as via the regular path.
 - ✅ Deploy
 - ✅ Test `agent-openapi/src/sdk/client.ts` via `client.test.ts`, ensuring it works. **Fixed some bugs. Now works!**
+
+## CRUDDY OAUTH2 (july 22nd)
+
+✅ Add oauth to cruddy, so it requires admin login.
+
+✅ Confirm it finds your admin auth based on the github login.
+
+## Performance (july 23rd)
+
+✅ Read bug: it does hundreds of this: `0!==17837860735467677114`. Also it's slow and there are some other warnings.
+
+✅ In `read`, make a direct keys mget that doesn't use range incase of specified rowIds.
+
+✅ Test if it's fast now. **It is! Lots better**
+
+✅ Try to see why the DB endpoints are so slow, lets log timing for calling the client endpoints. Can it be made faster somehow? **Yes. I've added a count = 1000 to the `range` searcher (scan) and this seems to help!**
+
+# OAuth2 verification in CRUD Openapi (july 23rd)
+
+✅ Added `isTrustedOauthLink` to oauth-provider
+
+If I'm not logged in and I log in with a trusted provider, it should find the oauth-admin that has logged in with it before. For this we need to map service-id combos (e.g. github:CodeFromAnywhere) to an admin authToken.
+
+- ✅ Create index `oauth-linked-accounts.json` mapping `service:userId` to an admin token
+- ✅ Add an index `oauth-permission.json` mapping `authToken` to `adminAuthToken` so every `authToken` can be used, fast.
+- ✅ Recreate client and fix
+
+Every permission given to actionschema:
+
+- ✅ If trusted provider, must get userId, find or create `oauth-linked-account`
+- ✅ If it found a linked account but you already had another account with other logins, this is problematic. We should handle this scenario well.
+- ✅ Must become an item in `oauthAdmin.permissions` with scopes.
+- ✅ Must become `oauth-permission` kv-map
+
+✅ Add endpoint `/authenticate(adminAuth, authToken)` that checks the permissioned authToken, and responds with the permission item or a 403 (for now entire me item)

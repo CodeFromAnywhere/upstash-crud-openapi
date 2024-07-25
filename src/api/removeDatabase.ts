@@ -1,12 +1,16 @@
-import { Endpoint } from "../client.js";
 import { Redis } from "@upstash/redis";
+import { Endpoint } from "../client.js";
+import { getAdminAuthorized } from "../getAdminAuthorized.js";
 import { getDatabaseDetails } from "../getDatabaseDetails.js";
-import { embeddingsClient } from "../embeddings.js";
+import { removeEntireDatabase } from "../removeEntireDatabase.js";
 import { DatabaseDetails, DbKey } from "../types.js";
 
 export const removeDatabase: Endpoint<"removeDatabase"> = async (context) => {
   const { databaseSlug, Authorization } = context;
   const apiKey = Authorization?.slice("Bearer ".length);
+  if (!apiKey || !(await getAdminAuthorized(Authorization))) {
+    return { isSuccessful: false, message: "Unauthorized", status: 403 };
+  }
 
   const rootUpstashApiKey = process.env["X_UPSTASH_API_KEY"];
   const rootUpstashEmail = process.env["X_UPSTASH_EMAIL"];
@@ -47,21 +51,7 @@ export const removeDatabase: Endpoint<"removeDatabase"> = async (context) => {
     };
   }
 
-  // Remove vector indexes if they exist
-  if (databaseDetails.vectorIndexColumnDetails) {
-    for (const indexDetail of databaseDetails.vectorIndexColumnDetails) {
-      // TODO: implement this
-      //   await embeddingsClient.deleteIndex({
-      //     upstashApiKey: rootUpstashApiKey,
-      //     upstashEmail: rootUpstashEmail,
-      //     vectorIndexName: `${databaseSlug}-${indexDetail.propertyKey}`,
-      //   });
-    }
-  }
-
-  // Remove the database from Upstash
-  await root.del(`db_${databaseSlug}` satisfies DbKey);
-  await root.srem(`dbs_${apiKey}` satisfies DbKey, databaseSlug);
+  await removeEntireDatabase({ root, databaseSlug, databaseDetails });
 
   return { isSuccessful: true, message: "Database removed successfully" };
 };

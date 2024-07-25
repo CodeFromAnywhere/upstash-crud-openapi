@@ -1,12 +1,20 @@
 import { JSONSchema7 } from "json-schema";
 
 /**
+
+Existing scopes:
+
+- admin:{projectSlug}
+- user:{projectSlug}
+
+// MAY BE NICE:
+// - user:read:{projectSlug}
+
+*/
+
+type Scope = `admin:${string}` | `user:${string}`;
+/**
 KEYS
-
-admin-dbs:
-
-- key = `dbs_{auth}`
-- value = slug[]
 
 admin-projects:
 
@@ -26,16 +34,16 @@ databaseDetails
 projectDetails
 
 - key = `project_{slug}`
-- value = details (description, auth to be checked)
+- value = details (description, auth to be checked, and databaseSlugs)
 
 DB key-value:
 
-- key = `db_{slug}_{key}`
+- key = `db_{databaseSlug}_{auth}_{key}`
 - value = the content of the row (according to its schema)
+
 
  */
 export type DbKey =
-  | `dbs_${string}`
   | `projects_${string}`
   | `admin_${string}`
   | `db_${string}`
@@ -64,6 +72,10 @@ export type DatabaseDetails = {
   schema: JSONSchema7;
 
   openaiApiKey?: string;
+
+  /**If true, api will use oauth2 to authenticate, and will add key prefix to it */
+  isUserLevelSeparationEnabled?: boolean;
+
   // TODO: put the right stuff in there after creating the indexes, so we can easily perform actions with it.
   vectorIndexColumnDetails?: {
     propertyKey: string;
@@ -85,6 +97,4 @@ export type ProjectDetails = {
 
 export type AdminDetails = {
   currentProjectSlug: string;
-  githubAuthToken: string;
-  email: string;
 };

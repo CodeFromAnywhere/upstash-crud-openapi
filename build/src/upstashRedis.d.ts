@@ -132,12 +132,8 @@ export declare const getUpstashRedisRangeKeys: (context: {
     redisRestToken: string;
     baseKey: string | undefined;
 }) => Promise<string[]>;
-export declare const deleteUpstashRedisRange: (context: {
-    redisRestUrl: string;
-    redisRestToken: string;
-    baseKey: string;
-}) => Promise<number>;
 export declare const upstashRedisSetItems: (context: {
+    baseKey?: string | undefined;
     redisRestUrl: string;
     redisRestToken: string;
     items: {
@@ -154,5 +150,25 @@ export declare const upstashRedisGetRange: (context: {
 }) => Promise<{
     [x: string]: O;
 } | undefined>;
+/** Gets a range of items from redis by first iterating over the keys (in range or all) and then efficiently getting all values */
+export declare const upstashRedisGetMultiple: (context: {
+    redisRestUrl: string;
+    redisRestToken: string;
+    keys: string[];
+    baseKey?: string;
+}) => Promise<(O | null)[]>;
+interface DeleteDatabasesResult {
+    isSuccessful: boolean;
+    message: string;
+    deletedDatabases?: string[];
+    errors?: {
+        [databaseId: string]: string;
+    };
+}
+export declare const deleteUpstashRedisDatabases: (context: {
+    upstashEmail: string;
+    upstashApiKey: string;
+    excludeDatabaseName: string;
+}) => Promise<DeleteDatabasesResult>;
 export {};
 //# sourceMappingURL=upstashRedis.d.ts.map

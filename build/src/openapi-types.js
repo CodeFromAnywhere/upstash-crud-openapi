@@ -3,9 +3,25 @@ export const operationUrlObject = {
         "method": "get",
         "path": "/listDatabases"
     },
-    "createDatabase": {
+    "upsertDatabase": {
         "method": "post",
-        "path": "/createDatabase"
+        "path": "/upsertDatabase"
+    },
+    "removeDatabase": {
+        "method": "post",
+        "path": "/removeDatabase"
+    },
+    "setCurrentProject": {
+        "method": "post",
+        "path": "/setCurrentProject"
+    },
+    "listProjects": {
+        "method": "get",
+        "path": "/listProjects"
+    },
+    "removeProject": {
+        "method": "post",
+        "path": "/removeProject"
     },
     "getOpenapi": {
         "method": "get",
@@ -15,25 +31,17 @@ export const operationUrlObject = {
         "method": "get",
         "path": "/{databaseSlug}/openapi.json"
     },
+    "getProjectOpenapi": {
+        "method": "get",
+        "path": "/project/{projectSlug}/openapi.json"
+    },
+    "getProjectSchema": {
+        "method": "get",
+        "path": "/project/{projectSlug}/schema.json"
+    },
     "getSchema": {
         "method": "get",
         "path": "/{databaseSlug}/schema.json"
-    },
-    "read": {
-        "method": "post",
-        "path": "/read"
-    },
-    "create": {
-        "method": "post",
-        "path": "/create"
-    },
-    "remove": {
-        "method": "post",
-        "path": "/remove"
-    },
-    "update": {
-        "method": "post",
-        "path": "/update"
     }
 };
 export const operationKeys = Object.keys(operationUrlObject);

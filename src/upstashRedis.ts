@@ -1,4 +1,10 @@
-import { O, mergeObjectsArray, notEmpty, tryParseJson } from "from-anywhere";
+import {
+  O,
+  mapKeys,
+  mergeObjectsArray,
+  notEmpty,
+  tryParseJson,
+} from "from-anywhere";
 import { Redis } from "@upstash/redis";
 
 /**
@@ -363,7 +369,7 @@ export const getUpstashRedisRangeKeys = async (context: {
   while (limit < 10) {
     limit = limit + 1;
     const result = await redis.scan(cursor, {
-      match: baseKey ? `${baseKey}.*` : "*",
+      match: baseKey ? `${baseKey}*` : "*",
       count: 1000,
     });
 
@@ -387,37 +393,22 @@ export const getUpstashRedisRangeKeys = async (context: {
   return allKeys.concat(baseKey || "");
 };
 
-export const deleteUpstashRedisRange = async (context: {
-  redisRestUrl: string;
-  redisRestToken: string;
-  baseKey: string;
-}) => {
-  const { redisRestToken, redisRestUrl, baseKey } = context;
-  const keys = await getUpstashRedisRangeKeys(context);
-
-  const redis = new Redis({
-    url: `https://${redisRestUrl}`,
-    token: redisRestToken,
-  });
-
-  const amountRemoved = await redis.del(...keys);
-
-  return amountRemoved;
-};
-
 export const upstashRedisSetItems = async (context: {
+  baseKey?: string;
   redisRestUrl: string;
   redisRestToken: string;
   items: { [id: string]: { [key: string]: any } };
 }) => {
-  const { redisRestToken, redisRestUrl, items } = context;
+  const { baseKey, redisRestToken, redisRestUrl, items } = context;
 
   const redis = new Redis({
     url: `https://${redisRestUrl}`,
     token: redisRestToken,
   });
 
-  const result = await redis.mset(items);
+  const realItems = await mapKeys(items, (key) => `${baseKey || ""}${key}`);
+
+  const result = await redis.mset(realItems);
 
   return result;
 };
@@ -428,14 +419,18 @@ export const upstashRedisGetRange = async (context: {
   redisRestToken: string;
   baseKey: string | undefined;
 }) => {
-  const { redisRestToken, redisRestUrl } = context;
+  const { redisRestToken, redisRestUrl, baseKey } = context;
 
   const redis = new Redis({
     url: `https://${redisRestUrl}`,
     token: redisRestToken,
   });
 
-  const allKeys = await getUpstashRedisRangeKeys(context);
+  const allKeys = await getUpstashRedisRangeKeys({
+    redisRestToken,
+    redisRestUrl,
+    baseKey,
+  });
 
   if (allKeys.length === 0) {
     return;
@@ -464,15 +459,89 @@ export const upstashRedisGetMultiple = async (context: {
   redisRestUrl: string;
   redisRestToken: string;
   keys: string[];
+  baseKey?: string;
 }) => {
-  const { redisRestToken, redisRestUrl, keys } = context;
+  const { redisRestToken, redisRestUrl, keys, baseKey } = context;
 
   const redis = new Redis({
     url: `https://${redisRestUrl}`,
     token: redisRestToken,
   });
 
-  const mgetResult = (await redis.mget(...keys)) as (O | null)[];
+  const realKeys = baseKey ? keys.map((k) => `${baseKey}${k}`) : keys;
+  const mgetResult = (await redis.mget(...realKeys)) as (O | null)[];
 
   return mgetResult;
+};
+
+interface DeleteDatabasesResult {
+  isSuccessful: boolean;
+  message: string;
+  deletedDatabases?: string[];
+  errors?: { [databaseId: string]: string };
+}
+
+export const deleteUpstashRedisDatabases = async (context: {
+  upstashEmail: string;
+  upstashApiKey: string;
+  excludeDatabaseName: string;
+}): Promise<DeleteDatabasesResult> => {
+  const { upstashEmail, upstashApiKey, excludeDatabaseName } = context;
+  console.log({ upstashApiKey, upstashEmail });
+  const baseUrl = "https://api.upstash.com/v2/redis/database";
+  const auth = `Basic ${btoa(`${upstashEmail}:${upstashApiKey}`)}`;
+
+  const listResult = await listUpstashRedisDatabases({
+    upstashEmail,
+    upstashApiKey,
+  });
+
+  if (!listResult.isSuccessful || !listResult.result) {
+    return {
+      isSuccessful: false,
+      message: "Failed to list databases",
+    };
+  }
+
+  console.log({ result: listResult.result });
+  const databasesToDelete = listResult.result?.filter?.(
+    (db) => db.database_name !== excludeDatabaseName,
+  );
+
+  console.log({
+    databasesToDelete: databasesToDelete.map((x) => x.database_name),
+  });
+
+  const deletedDatabases: string[] = [];
+  const errors: { [databaseId: string]: string } = {};
+
+  for (const db of databasesToDelete) {
+    try {
+      const response = await fetch(`${baseUrl}/${db.database_id}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: auth,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (response.ok) {
+        deletedDatabases.push(db.database_id);
+      } else {
+        const errorText = await response.text();
+        errors[db.database_id] = `Failed to delete: ${errorText}`;
+      }
+    } catch (error) {
+      errors[db.database_id] = `Error: ${
+        error instanceof Error ? error.message : String(error)
+      }`;
+    }
+  }
+
+  const isSuccessful = deletedDatabases.length === databasesToDelete.length;
+  const message = isSuccessful
+    ? `Successfully deleted all databases except '${excludeDatabaseName}'`
+    : `Deleted some databases, but encountered errors. Check the 'errors' object for details.`;
+
+  return { isSuccessful, message, deletedDatabases, errors };
 };

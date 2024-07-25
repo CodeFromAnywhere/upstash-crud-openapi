@@ -30,6 +30,6 @@ If you really want it to be private from us, you can self-host this by cloning t
 
 1. `git clone https://github.com/CodeFromAnywhere/crud-openapi.git`
 2. `cd crud-openapi && npm i`
-3. `cp .env.local.example .env.local` and provide the credentials needed
+3. `cp .env.example .env` and provide the credentials needed
 4. Run `npm run init-db` to create the root-db (and regenerate `.env.local`)
 5. When deploying, copy the settings into your production environment variables as well.

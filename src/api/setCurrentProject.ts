@@ -1,13 +1,19 @@
 import { Redis } from "@upstash/redis";
 import { Endpoint } from "../client.js";
 import { getDatabaseDetails } from "../getDatabaseDetails.js";
-import { DbKey } from "../types.js";
+import { AdminDetails, DbKey, ProjectDetails } from "../types.js";
+import { getProjectDetails } from "../getProjectDetails.js";
+import { getAdminAuthorized } from "../getAdminAuthorized.js";
 
 export const setCurrentProject: Endpoint<"setCurrentProject"> = async (
   context,
 ) => {
   const { projectSlug, Authorization, description } = context;
   const apiKey = Authorization?.slice("Bearer ".length);
+
+  if (!apiKey || !(await getAdminAuthorized(Authorization))) {
+    return { isSuccessful: false, message: "Unauthorized", status: 403 };
+  }
 
   const rootUpstashApiKey = process.env["X_UPSTASH_API_KEY"];
   const rootUpstashEmail = process.env["X_UPSTASH_EMAIL"];
@@ -17,6 +23,15 @@ export const setCurrentProject: Endpoint<"setCurrentProject"> = async (
     return {
       isSuccessful: false,
       message: "Missing environment variables",
+    };
+  }
+
+  const { projectDetails } = await getProjectDetails(projectSlug);
+  if (projectDetails && projectDetails.adminAuthToken !== apiKey) {
+    return {
+      isSuccessful: false,
+      status: 403,
+      message: "Unauthorized",
     };
   }
 
@@ -34,9 +49,24 @@ export const setCurrentProject: Endpoint<"setCurrentProject"> = async (
     token: databaseDetails.rest_token,
   });
 
-  let alreadyProject = await root.get(`project_${projectSlug}` satisfies DbKey);
+  await root.set(
+    `admin_${apiKey}` satisfies DbKey,
+    { currentProjectSlug: projectSlug } satisfies AdminDetails,
+  );
 
-  await root.set(`project_${projectSlug}` satisfies DbKey, description);
+  if (!projectDetails) {
+    // insert new project if not already
+    await root.set(
+      `project_${projectSlug}` satisfies DbKey,
+      {
+        databaseSlugs: [],
+        adminAuthToken: apiKey,
+        description: description || `Project ${projectSlug}`,
+      } satisfies ProjectDetails,
+    );
+  }
+
+  // add to my projects
   await root.sadd(`projects_${apiKey}` satisfies DbKey, projectSlug);
 
   return { isSuccessful: true, message: "Project set successfully" };

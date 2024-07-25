@@ -16,7 +16,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/createDatabase": {
+    "/upsertDatabase": {
         parameters: {
             query?: never;
             header?: never;
@@ -25,7 +25,76 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["createDatabase"];
+        /** Create or update a database model */
+        post: operations["upsertDatabase"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/removeDatabase": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Remove a database */
+        post: operations["removeDatabase"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/setCurrentProject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Set a project */
+        post: operations["setCurrentProject"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/listProjects": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List projects */
+        get: operations["listProjects"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/removeProject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Remove a project */
+        post: operations["removeProject"];
         delete?: never;
         options?: never;
         head?: never;
@@ -53,9 +122,7 @@ export interface paths {
         parameters: {
             query?: never;
             header?: never;
-            path: {
-                databaseSlug: string;
-            };
+            path?: never;
             cookie?: never;
         };
         /** Get openapi for this database table alone */
@@ -68,13 +135,45 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/project/{projectSlug}/openapi.json": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Project OpenAPI */
+        get: operations["getProjectOpenapi"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/project/{projectSlug}/schema.json": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Project OpenAPI */
+        get: operations["getProjectSchema"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/{databaseSlug}/schema.json": {
         parameters: {
             query?: never;
             header?: never;
-            path: {
-                databaseSlug: string;
-            };
+            path?: never;
             cookie?: never;
         };
         /** Get schema for a database */
@@ -87,152 +186,12 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/read": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["read"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/create": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["create"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/remove": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["remove"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/update": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["update"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
         /** @description Slug compatible with URLs */
         UrlSlug: string;
-        CreateResponse: {
-            isSuccessful: boolean;
-            message: string;
-            /** @description The rowIds created */
-            result?: string[];
-        };
-        CreateContext: {
-            databaseSlug: string;
-            items: components["schemas"]["ModelItem"][];
-        };
-        Sort: {
-            /** @enum {string} */
-            sortDirection: "ascending" | "descending";
-            objectParameterKey: string;
-        };
-        Filter: {
-            /** @enum {string} */
-            operator: "equal" | "notEqual" | "endsWith" | "startsWith" | "includes" | "includesLetters" | "greaterThan" | "lessThan" | "greaterThanOrEqual" | "lessThanOrEqual" | "isIncludedIn" | "isFalsy" | "isTruthy";
-            value: string;
-            objectParameterKey: string;
-        };
-        ReadResponse: {
-            isSuccessful: boolean;
-            message: string;
-            $schema?: string;
-            items?: {
-                [key: string]: components["schemas"]["ModelItem"] | undefined;
-            };
-            schema?: {
-                [key: string]: unknown;
-            };
-            canWrite?: boolean;
-            hasMore?: boolean;
-        };
-        ReadContext: {
-            databaseSlug: string;
-            search?: string;
-            vectorSearch?: {
-                propertyKey: string;
-                input: string;
-                topK: number;
-                minimumSimilarity: number;
-            };
-            rowIds?: string[];
-            startFromIndex?: number;
-            maxRows?: number;
-            filter?: components["schemas"]["Filter"][];
-            sort?: components["schemas"]["Sort"][];
-            objectParameterKeys?: string[];
-            ignoreObjectParameterKeys?: string[];
-        };
-        UpdateContext: {
-            databaseSlug: string;
-            /** @description The id (indexed key) of the item to update. Update that functions as upsert. If the id didn't exist, it will be created. */
-            id: string;
-            /** @description New (partial) value of the item. Will update all keys provided here. Please note that it cannot be set to 'undefined' as this doesn't transfer over JSON, but if you set it to 'null', the value will be removed from the database. */
-            partialItem: components["schemas"]["ModelItem"];
-        };
-        UpdateResponse: {
-            isSuccessful: boolean;
-            message: string;
-        };
-        ModelItem: {
-            [key: string]: unknown;
-        };
-        RemoveContext: {
-            databaseSlug: string;
-            /** @description Which IDs should be removed */
-            rowIds: string[];
-        };
-        RemoveResponse: {
-            isSuccessful: boolean;
-            message: string;
-            /** @description The number of items deleted */
-            deleteCount?: number;
-        };
         CreateDatabaseResponse: {
             isSuccessful: boolean;
             message?: string;
@@ -494,7 +453,7 @@ export interface operations {
             };
         };
     };
-    createDatabase: {
+    upsertDatabase: {
         parameters: {
             query?: never;
             header?: never;
@@ -516,6 +475,8 @@ export interface operations {
                     schemaString: string;
                     /** @description Token required to authrorize using the CRUD endpoints. Will be generated if not given. */
                     authToken?: string;
+                    /** @description If true, api will use oauth2 to authenticate, and will add key prefix to it so only the keys for the user will be able to be managed. */
+                    isUserLevelSeparationEnabled?: boolean;
                     /**
                      * @description Can be set for a new database. Cannot be changed
                      * @enum {string}
@@ -535,6 +496,110 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CreateDatabaseResponse"];
+                };
+            };
+        };
+    };
+    removeDatabase: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    databaseSlug: components["schemas"]["UrlSlug"];
+                };
+            };
+        };
+        responses: {
+            /** @description Successful response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StandardResponse"];
+                };
+            };
+        };
+    };
+    setCurrentProject: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    projectSlug: components["schemas"]["UrlSlug"];
+                    description?: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Successful response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StandardResponse"];
+                };
+            };
+        };
+    };
+    listProjects: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        projects?: {
+                            projectSlug?: components["schemas"]["UrlSlug"];
+                            description?: string;
+                        }[];
+                    };
+                };
+            };
+        };
+    };
+    removeProject: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    projectSlug: components["schemas"]["UrlSlug"];
+                };
+            };
+        };
+        responses: {
+            /** @description Successful response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StandardResponse"];
                 };
             };
         };
@@ -584,6 +649,55 @@ export interface operations {
             };
         };
     };
+    getProjectOpenapi: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                projectSlug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["openapi.schema"] | {
+                        isSuccessful: boolean;
+                        message?: string;
+                    };
+                };
+            };
+        };
+    };
+    getProjectSchema: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                projectSlug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+        };
+    };
     getSchema: {
         parameters: {
             query?: never;
@@ -608,115 +722,8 @@ export interface operations {
             };
         };
     };
-    read: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ReadContext"];
-            };
-        };
-        responses: {
-            /** @description OpenAPI */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ReadResponse"];
-                };
-            };
-        };
-    };
-    create: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreateContext"];
-            };
-        };
-        responses: {
-            /** @description OpenAPI */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CreateResponse"];
-                };
-            };
-        };
-    };
-    remove: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["RemoveContext"];
-            };
-        };
-        responses: {
-            /** @description OpenAPI */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["RemoveResponse"];
-                };
-            };
-        };
-    };
-    update: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UpdateContext"];
-            };
-        };
-        responses: {
-            /** @description OpenAPI */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["UpdateResponse"];
-                };
-            };
-        };
-    };
 }
 export type UrlSlug = components["schemas"]["UrlSlug"];
-export type CreateResponse = components["schemas"]["CreateResponse"];
-export type CreateContext = components["schemas"]["CreateContext"];
-export type Sort = components["schemas"]["Sort"];
-export type Filter = components["schemas"]["Filter"];
-export type ReadResponse = components["schemas"]["ReadResponse"];
-export type ReadContext = components["schemas"]["ReadContext"];
-export type UpdateContext = components["schemas"]["UpdateContext"];
-export type UpdateResponse = components["schemas"]["UpdateResponse"];
-export type ModelItem = components["schemas"]["ModelItem"];
-export type RemoveContext = components["schemas"]["RemoveContext"];
-export type RemoveResponse = components["schemas"]["RemoveResponse"];
 export type CreateDatabaseResponse = components["schemas"]["CreateDatabaseResponse"];
 export type VectorIndexColumns = components["schemas"]["VectorIndexColumns"];
 export type StandardResponse = components["schemas"]["StandardResponse"];
@@ -725,7 +732,23 @@ export declare const operationUrlObject: {
         method: string;
         path: string;
     };
-    createDatabase: {
+    upsertDatabase: {
+        method: string;
+        path: string;
+    };
+    removeDatabase: {
+        method: string;
+        path: string;
+    };
+    setCurrentProject: {
+        method: string;
+        path: string;
+    };
+    listProjects: {
+        method: string;
+        path: string;
+    };
+    removeProject: {
         method: string;
         path: string;
     };
@@ -737,23 +760,15 @@ export declare const operationUrlObject: {
         method: string;
         path: string;
     };
+    getProjectOpenapi: {
+        method: string;
+        path: string;
+    };
+    getProjectSchema: {
+        method: string;
+        path: string;
+    };
     getSchema: {
-        method: string;
-        path: string;
-    };
-    read: {
-        method: string;
-        path: string;
-    };
-    create: {
-        method: string;
-        path: string;
-    };
-    remove: {
-        method: string;
-        path: string;
-    };
-    update: {
         method: string;
         path: string;
     };

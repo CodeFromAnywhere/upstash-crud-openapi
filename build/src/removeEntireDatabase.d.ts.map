@@ -1,0 +1,1 @@
+{"version":3,"file":"removeEntireDatabase.d.ts","sourceRoot":"","sources":["../../src/removeEntireDatabase.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,KAAK,EAAE,MAAM,gBAAgB,CAAC;AACvC,OAAO,EAAE,eAAe,EAAyB,MAAM,YAAY,CAAC;AAGpE;;;;;;;;EAQE;AACF,eAAO,MAAM,oBAAoB,YAAmB;IAClD,IAAI,EAAE,KAAK,CAAC;IACZ,YAAY,EAAE,MAAM,CAAC;IACrB,eAAe,EAAE,eAAe,GAAG,IAAI,CAAC;CACzC;;;cAuDA,CAAC"}

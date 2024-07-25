@@ -1,19 +1,21 @@
 import { Redis } from "@upstash/redis";
 import { getDatabaseDetails } from "../getDatabaseDetails.js";
 import { embeddingsClient } from "../embeddings.js";
+import { getCrudOperationAuthorized } from "../getCrudOperationAuthorized.js";
 export const remove = async (context) => {
     const { rowIds, databaseSlug, Authorization } = context;
-    const apiKey = Authorization?.slice("Bearer ".length);
+    if (!databaseSlug) {
+        return { isSuccessful: false, message: "please provide a slug" };
+    }
     const { databaseDetails } = await getDatabaseDetails(databaseSlug);
     if (!databaseDetails) {
         return { isSuccessful: false, message: "Couldn't find database details" };
     }
-    if (databaseDetails.authToken !== undefined &&
-        databaseDetails.authToken !== "" &&
-        apiKey !== databaseDetails.authToken &&
-        apiKey !== databaseDetails.adminAuthToken) {
+    if (!Authorization ||
+        !(await getCrudOperationAuthorized(databaseDetails, Authorization))) {
         return { isSuccessful: false, message: "Unauthorized" };
     }
+    const apiKey = Authorization.slice("Bearer ".length);
     if (rowIds === undefined || rowIds.length === 0) {
         return { isSuccessful: false, message: "Invalid inputs" };
     }
@@ -29,7 +31,12 @@ export const remove = async (context) => {
             ids: rowIds,
         });
     });
-    const deleteCount = await redis.del(...rowIds);
+    const authSuffix = databaseDetails.isUserLevelSeparationEnabled
+        ? `_${apiKey}`
+        : "";
+    const baseKey = `db_${databaseSlug}${authSuffix}_`;
+    const realRowIds = rowIds.map((id) => `${baseKey}${id}`);
+    const deleteCount = await redis.del(...realRowIds);
     return { isSuccessful: true, message: "Row(s) deleted", deleteCount };
 };
 //# sourceMappingURL=remove.js.map

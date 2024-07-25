@@ -1,11 +1,16 @@
 import { Endpoint } from "../client.js";
 import { Redis } from "@upstash/redis";
 import { getDatabaseDetails } from "../getDatabaseDetails.js";
-import { DbKey } from "../types.js";
+import { DbKey, ProjectDetails } from "../types.js";
+import { getAdminAuthorized } from "../getAdminAuthorized.js";
+import { notEmpty } from "from-anywhere";
 
 export const listProjects: Endpoint<"listProjects"> = async (context) => {
   const { Authorization } = context;
   const apiKey = Authorization?.slice("Bearer ".length);
+  if (!apiKey || !(await getAdminAuthorized(Authorization))) {
+    return { isSuccessful: false, message: "Unauthorized", status: 403 };
+  }
 
   const rootUpstashApiKey = process.env["X_UPSTASH_API_KEY"];
   const rootUpstashEmail = process.env["X_UPSTASH_EMAIL"];
@@ -35,14 +40,23 @@ export const listProjects: Endpoint<"listProjects"> = async (context) => {
   const projectSlugs: string[] = await root.smembers(
     `projects_${apiKey}` satisfies DbKey,
   );
-  const projects = await Promise.all(
-    projectSlugs.map(async (slug) => {
-      const description = (await root.get(
-        `project_${slug}` satisfies DbKey,
-      )) as string;
-      return { projectSlug: slug, description };
-    }),
-  );
+
+  const projectKeys = projectSlugs.map((s) => `project_${s}` satisfies DbKey);
+
+  const projects = (await root.mget(projectKeys))
+    .map((item, index) => {
+      const typed = item as ProjectDetails | null;
+
+      if (!typed) {
+        return;
+      }
+      return {
+        description: typed?.description,
+        databaseSlugs: typed?.databaseSlugs,
+        projectSlug: projectSlugs[index],
+      };
+    })
+    .filter(notEmpty);
 
   return {
     isSuccessful: true,

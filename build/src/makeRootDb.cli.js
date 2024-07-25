@@ -36,10 +36,10 @@ X_UPSTASH_API_KEY=${rootUpstashApiKey}
 X_UPSTASH_ROOT_DATABASE_ID=${rootDb.database_id}
 X_UPSTASH_ENDPOINT=${rootDb.endpoint}
 X_UPSTASH_REST_TOKEN=${rootDb.rest_token}`;
-    writeFileSync(".env.local", envString, "utf8");
+    writeFileSync(".env", envString, "utf8");
     return {
         isSuccessful: true,
-        message: "Root db created and written to .env.local. Please fill these details in production too.",
+        message: "Root db created and written to .env. Please fill these details in production too.",
     };
 };
 makeRootDb().then(console.log);

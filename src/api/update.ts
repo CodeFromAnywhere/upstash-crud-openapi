@@ -3,9 +3,10 @@ import {
   upstashRedisGetMultiple,
   upstashRedisSetItems,
 } from "../upstashRedis.js";
-import { Endpoint } from "../client.js";
+import { UpdateContext } from "../sdk/crud.js";
 import { getDatabaseDetails } from "../getDatabaseDetails.js";
 import { upsertIndexVectors } from "../embeddings.js";
+import { getCrudOperationAuthorized } from "../getCrudOperationAuthorized.js";
 
 /**
 Update an item in a specified row in a table.
@@ -14,7 +15,9 @@ Update an item in a specified row in a table.
 - validates the partial item against the schema to ensure its correct
 
  */
-export const update: Endpoint<"update"> = async (context) => {
+export const update = async (
+  context: UpdateContext & { Authorization?: string },
+) => {
   const { id, databaseSlug, partialItem, Authorization } = context;
   const apiKey = Authorization?.slice("Bearer ".length);
   if (!databaseSlug) {
@@ -26,13 +29,8 @@ export const update: Endpoint<"update"> = async (context) => {
     return { isSuccessful: false, message: "Couldn't find database details" };
   }
 
-  if (
-    databaseDetails.authToken !== undefined &&
-    databaseDetails.authToken !== "" &&
-    apiKey !== databaseDetails.authToken &&
-    apiKey !== databaseDetails.adminAuthToken
-  ) {
-    return { isSuccessful: false, message: "Unauthorized", status: 403 };
+  if (!(await getCrudOperationAuthorized(databaseDetails, Authorization))) {
+    return { isSuccessful: false, message: "Unauthorized" };
   }
 
   if (id === undefined || !partialItem) {
@@ -72,7 +70,13 @@ export const update: Endpoint<"update"> = async (context) => {
 
   const mergedItem = { ...(item || {}), ...castedPartialItem } as O;
 
+  const authSuffix = databaseDetails.isUserLevelSeparationEnabled
+    ? `_${apiKey}`
+    : "";
+  const baseKey = `db_${databaseSlug}${authSuffix}_`;
+
   await upstashRedisSetItems({
+    baseKey,
     redisRestToken,
     redisRestUrl,
     items: { [id]: mergedItem },

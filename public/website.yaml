@@ -1,6 +1,12 @@
 # This can be a way to describe websites in English, keys being filenames and values being description in English. Can be ran on every pre-commit to generate html.
 
-index.html:
+index.html: make me a nice landing page in html + tailwind css CDN + js
+  it should be a landing targeted towards devs
+  first, look up README.md
+  do it in a marketing copy way, and don't add all sections just like in the readme. Instead, please be more salelsy and follow principles of a good landingpage.
+  Think step by step
+
+admin.html:
   Login, set the admin-token with prompt, stored at localstorage, then retrieves list via listDatabases, set that to localStorage too.
 
   Then from there, it links each database to model.html?databaseSlug={slug}

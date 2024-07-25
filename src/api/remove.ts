@@ -1,7 +1,8 @@
 import { Redis } from "@upstash/redis";
-import { Endpoint } from "../client.js";
+import { RemoveContext } from "../sdk/crud.js";
 import { getDatabaseDetails } from "../getDatabaseDetails.js";
 import { embeddingsClient } from "../embeddings.js";
+import { getCrudOperationAuthorized } from "../getCrudOperationAuthorized.js";
 
 export type ActionSchemaDeleteResponse = {
   isSuccessful: boolean;
@@ -9,9 +10,11 @@ export type ActionSchemaDeleteResponse = {
   deleteCount?: number;
 };
 
-export const remove: Endpoint<"remove"> = async (context) => {
+export const remove = async (
+  context: RemoveContext & { Authorization?: string },
+) => {
   const { rowIds, databaseSlug, Authorization } = context;
-  const apiKey = Authorization?.slice("Bearer ".length);
+
   if (!databaseSlug) {
     return { isSuccessful: false, message: "please provide a slug" };
   }
@@ -22,13 +25,12 @@ export const remove: Endpoint<"remove"> = async (context) => {
   }
 
   if (
-    databaseDetails.authToken !== undefined &&
-    databaseDetails.authToken !== "" &&
-    apiKey !== databaseDetails.authToken &&
-    apiKey !== databaseDetails.adminAuthToken
+    !Authorization ||
+    !(await getCrudOperationAuthorized(databaseDetails, Authorization))
   ) {
     return { isSuccessful: false, message: "Unauthorized" };
   }
+  const apiKey = Authorization.slice("Bearer ".length);
 
   if (rowIds === undefined || rowIds.length === 0) {
     return { isSuccessful: false, message: "Invalid inputs" };
@@ -48,7 +50,13 @@ export const remove: Endpoint<"remove"> = async (context) => {
     });
   });
 
-  const deleteCount = await redis.del(...rowIds);
+  const authSuffix = databaseDetails.isUserLevelSeparationEnabled
+    ? `_${apiKey}`
+    : "";
+  const baseKey = `db_${databaseSlug}${authSuffix}_`;
+
+  const realRowIds = rowIds.map((id) => `${baseKey}${id}`);
+  const deleteCount = await redis.del(...realRowIds);
 
   return { isSuccessful: true, message: "Row(s) deleted", deleteCount };
 };

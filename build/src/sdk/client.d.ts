@@ -1,0 +1,22 @@
+import { operations as authOperations } from "./auth.js";
+import { operations as adminOperations } from "./admin.js";
+import { operations as crudOperations } from "./crud.js";
+export declare const auth: <K extends "permission">(operation: K, body?: ((authOperations[K]["requestBody"] extends {} ? authOperations[K]["requestBody"]["content"]["application/json"] : {}) & (((Extract<authOperations[K]["parameters"]["cookie"], {}> extends infer T ? T extends Extract<authOperations[K]["parameters"]["cookie"], {}> ? T extends any ? (k: T) => void : never : never : never) | (Extract<authOperations[K]["parameters"]["header"], {}> extends infer T_1 ? T_1 extends Extract<authOperations[K]["parameters"]["header"], {}> ? T_1 extends any ? (k: T_1) => void : never : never : never) | (Extract<authOperations[K]["parameters"]["path"], {}> extends infer T_2 ? T_2 extends Extract<authOperations[K]["parameters"]["path"], {}> ? T_2 extends any ? (k: T_2) => void : never : never : never) | (Extract<authOperations[K]["parameters"]["query"], {}> extends infer T_3 ? T_3 extends Extract<authOperations[K]["parameters"]["query"], {}> ? T_3 extends any ? (k: T_3) => void : never : never : never) extends (k: infer I) => void ? I : never) extends infer O ? { [K_1 in keyof O]: O[K_1]; } : never)) | undefined, customConfiguration?: {
+    baseUrl?: string | undefined;
+    headers?: {
+        [key: string]: string;
+    } | undefined;
+} | undefined) => Promise<authOperations[K]["responses"][200]["content"]["application/json"]>;
+export declare const admin: <K extends keyof adminOperations>(operation: K, body?: ((adminOperations[K]["requestBody"] extends {} ? adminOperations[K]["requestBody"]["content"]["application/json"] : {}) & (((Extract<adminOperations[K]["parameters"]["cookie"], {}> extends infer T ? T extends Extract<adminOperations[K]["parameters"]["cookie"], {}> ? T extends any ? (k: T) => void : never : never : never) | (Extract<adminOperations[K]["parameters"]["header"], {}> extends infer T_1 ? T_1 extends Extract<adminOperations[K]["parameters"]["header"], {}> ? T_1 extends any ? (k: T_1) => void : never : never : never) | (Extract<adminOperations[K]["parameters"]["path"], {}> extends infer T_2 ? T_2 extends Extract<adminOperations[K]["parameters"]["path"], {}> ? T_2 extends any ? (k: T_2) => void : never : never : never) | (Extract<adminOperations[K]["parameters"]["query"], {}> extends infer T_3 ? T_3 extends Extract<adminOperations[K]["parameters"]["query"], {}> ? T_3 extends any ? (k: T_3) => void : never : never : never) extends (k: infer I) => void ? I : never) extends infer O ? { [K_1 in keyof O]: O[K_1]; } : never)) | undefined, customConfiguration?: {
+    baseUrl?: string | undefined;
+    headers?: {
+        [key: string]: string;
+    } | undefined;
+} | undefined) => Promise<adminOperations[K]["responses"][200]["content"]["application/json"]>;
+export declare const crud: <K extends keyof crudOperations>(operation: K, body?: ((crudOperations[K]["requestBody"] extends {} ? crudOperations[K]["requestBody"]["content"]["application/json"] : {}) & (((Extract<crudOperations[K]["parameters"]["cookie"], {}> extends infer T ? T extends Extract<crudOperations[K]["parameters"]["cookie"], {}> ? T extends any ? (k: T) => void : never : never : never) | (Extract<crudOperations[K]["parameters"]["header"], {}> extends infer T_1 ? T_1 extends Extract<crudOperations[K]["parameters"]["header"], {}> ? T_1 extends any ? (k: T_1) => void : never : never : never) | (Extract<crudOperations[K]["parameters"]["path"], {}> extends infer T_2 ? T_2 extends Extract<crudOperations[K]["parameters"]["path"], {}> ? T_2 extends any ? (k: T_2) => void : never : never : never) | (Extract<crudOperations[K]["parameters"]["query"], {}> extends infer T_3 ? T_3 extends Extract<crudOperations[K]["parameters"]["query"], {}> ? T_3 extends any ? (k: T_3) => void : never : never : never) extends (k: infer I) => void ? I : never) extends infer O ? { [K_1 in keyof O]: O[K_1]; } : never)) | undefined, customConfiguration?: {
+    baseUrl?: string | undefined;
+    headers?: {
+        [key: string]: string;
+    } | undefined;
+} | undefined) => Promise<crudOperations[K]["responses"][200]["content"]["application/json"]>;
+//# sourceMappingURL=client.d.ts.map

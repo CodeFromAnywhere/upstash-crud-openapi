@@ -1,6 +1,6 @@
 import { OpenapiDocument, OpenapiOperationObject } from "openapi-util";
-import openapi from "../src/openapi.json";
 import { JSONSchema7 } from "json-schema";
+import openapi from "../src/openapi.json";
 /** Retreives the right body from the request based on the openapi and operation */
 export declare const getRequestOperationBody: (openapi: OpenapiDocument, operation: OpenapiOperationObject, documentLocation: string, request: Request) => Promise<{
     schema: JSONSchema7;

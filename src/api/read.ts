@@ -9,10 +9,10 @@ import {
   upstashRedisGetMultiple,
   upstashRedisGetRange,
 } from "../upstashRedis.js";
-import { Endpoint } from "../client.js";
-import { Filter, Sort } from "../openapi-types.js";
+import { Sort, Filter, ReadContext } from "../sdk/crud.js";
 import { getDatabaseDetails } from "../getDatabaseDetails.js";
 import { embeddingsClient } from "../embeddings.js";
+import { getCrudOperationAuthorized } from "../getCrudOperationAuthorized.js";
 
 const sortData = (sort: Sort[] | undefined, data: { [key: string]: O }) => {
   if (!sort?.length) {
@@ -170,7 +170,9 @@ const searchData = (search: string | undefined, data: { [key: string]: O }) => {
 
 export type ModelKey = string;
 
-export const read: Endpoint<"read"> = async (context) => {
+export const read = async (
+  context: ReadContext & { Authorization?: string },
+) => {
   const {
     rowIds,
     search,
@@ -194,15 +196,13 @@ export const read: Endpoint<"read"> = async (context) => {
   if (!databaseDetails) {
     return { isSuccessful: false, message: "Couldn't find database details" };
   }
-
-  if (
-    databaseDetails.authToken !== undefined &&
-    databaseDetails.authToken !== "" &&
-    apiKey !== databaseDetails.authToken &&
-    apiKey !== databaseDetails.adminAuthToken
-  ) {
+  if (!(await getCrudOperationAuthorized(databaseDetails, Authorization))) {
     return { isSuccessful: false, message: "Unauthorized" };
   }
+  const authSuffix = databaseDetails.isUserLevelSeparationEnabled
+    ? `_${apiKey}`
+    : "";
+  const baseKey = `db_${databaseSlug}${authSuffix}_`;
 
   const result = rowIds
     ? (
@@ -210,6 +210,7 @@ export const read: Endpoint<"read"> = async (context) => {
           redisRestToken: databaseDetails.rest_token,
           redisRestUrl: databaseDetails.endpoint,
           keys: rowIds,
+          baseKey,
         })
       ).reduce(
         (previous, current, currentIndex) => {
@@ -222,7 +223,7 @@ export const read: Endpoint<"read"> = async (context) => {
     : await upstashRedisGetRange({
         redisRestToken: databaseDetails.rest_token,
         redisRestUrl: databaseDetails.endpoint,
-        baseKey: undefined,
+        baseKey,
       });
 
   if (!result) {

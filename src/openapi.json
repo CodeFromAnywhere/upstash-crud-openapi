@@ -7,9 +7,109 @@
     "version": "1.0",
     "description": ""
   },
-  "security": [{ "oauth2": [] }],
 
   "servers": [{ "url": "https://data.actionschema.com" }],
+  "security": [{ "oauth2": [] }],
+
+  "components": {
+    "securitySchemes": {
+      "oauth2": {
+        "type": "oauth2",
+        "flows": {
+          "authorizationCode": {
+            "authorizationUrl": "https://auth.actionschema.com/oauth/authorize",
+            "tokenUrl": "https://auth.actionschema.com/oauth/access_token",
+            "scopes": {
+              "admin": "Full access to all services",
+              "admin:{projectSlug}": "Access to manage a project"
+            }
+          }
+        }
+      }
+    },
+    "schemas": {
+      "UrlSlug": {
+        "type": "string",
+        "pattern": "^[a-zA-Z0-9._~-]+$",
+        "minLength": 1,
+        "maxLength": 64,
+        "description": "Slug compatible with URLs"
+      },
+
+      "CreateDatabaseResponse": {
+        "type": "object",
+        "required": ["isSuccessful"],
+        "properties": {
+          "isSuccessful": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "authToken": { "type": "string" },
+          "adminAuthToken": { "type": "string" },
+          "databaseSlug": { "type": "string" },
+          "openapiUrl": { "type": "string" }
+        }
+      },
+
+      "VectorIndexColumns": {
+        "description": "A list of vector indexes to be created for several columns in your schema",
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "propertyKey": { "type": "string" },
+            "model": {
+              "type": "string",
+              "enum": [
+                "text-embedding-ada-002",
+                "text-embedding-3-small",
+                "text-embedding-3-large"
+              ]
+            },
+
+            "region": {
+              "type": "string",
+              "enum": ["us-east-1", "eu-west-1", "us-central1"]
+            },
+
+            "dimension_count": { "type": "number" },
+
+            "similarity_function": {
+              "type": "string",
+              "enum": ["COSINE", "EUCLIDIAN", "DOT_PRODUCT"]
+            }
+          },
+          "required": [
+            "propertyKey",
+            "model",
+            "region",
+            "dimension_count",
+            "similarity_function"
+          ]
+        }
+      },
+
+      "StandardResponse": {
+        "type": "object",
+        "required": ["isSuccessful"],
+        "properties": {
+          "status": { "type": "number" },
+          "isSuccessful": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "priceCredit": {
+            "type": "number"
+          }
+        }
+      }
+    }
+  },
+
   "paths": {
     "/listDatabases": {
       "get": {
@@ -26,6 +126,10 @@
                     "isSuccessful": { "type": "boolean" },
                     "message": { "type": "string" },
                     "status": { "type": "number" },
+                    "currentProjectSlug": {
+                      "type": "string",
+                      "description": "The slug of the project these databases belong to"
+                    },
                     "databases": {
                       "type": "array",
                       "items": {
@@ -68,6 +172,7 @@
             "application/json": {
               "schema": {
                 "type": "object",
+                "required": ["schemaString", "databaseSlug"],
                 "properties": {
                   "databaseSlug": {
                     "title": "Database ID",
@@ -86,6 +191,11 @@
                     "description": "Token required to authrorize using the CRUD endpoints. Will be generated if not given.",
                     "minLength": 32,
                     "maxLength": 128
+                  },
+
+                  "isUserLevelSeparationEnabled": {
+                    "type": "boolean",
+                    "description": "If true, api will use oauth2 to authenticate, and will add key prefix to it so only the keys for the user will be able to be managed."
                   },
 
                   "region": {
@@ -107,8 +217,7 @@
                     "type": "string",
                     "description": "Needed if you use vectorIndexColumns"
                   }
-                },
-                "required": ["schemaString", "databaseSlug"]
+                }
               }
             }
           }
@@ -198,6 +307,7 @@
         }
       }
     },
+
     "/listProjects": {
       "get": {
         "summary": "List projects",
@@ -232,6 +342,7 @@
         }
       }
     },
+
     "/removeProject": {
       "post": {
         "summary": "Remove a project",
@@ -269,6 +380,7 @@
 
     "/openapi.json": {
       "get": {
+        "security": [{ "oauth2": [] }, {}],
         "summary": "Get openapi",
         "operationId": "getOpenapi",
         "responses": {
@@ -288,6 +400,7 @@
 
     "/{databaseSlug}/openapi.json": {
       "get": {
+        "security": [{ "oauth2": [] }, {}],
         "summary": "Get openapi for this database table alone",
         "operationId": "getCrudOpenapi",
         "parameters": [
@@ -331,6 +444,7 @@
 
     "/project/{projectSlug}/openapi.json": {
       "get": {
+        "security": [{ "oauth2": [] }, {}],
         "summary": "Get Project OpenAPI",
         "operationId": "getProjectOpenapi",
         "parameters": [
@@ -347,7 +461,53 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "https://raw.githubusercontent.com/CodeFromAnywhere/ActionSchema/main/schemas/openapi.schema.json"
+                  "oneOf": [
+                    {
+                      "$ref": "https://raw.githubusercontent.com/CodeFromAnywhere/ActionSchema/main/schemas/openapi.schema.json"
+                    },
+                    {
+                      "type": "object",
+                      "required": ["isSuccessful"],
+                      "properties": {
+                        "isSuccessful": {
+                          "type": "boolean"
+                        },
+                        "message": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+
+    "/project/{projectSlug}/schema.json": {
+      "get": {
+        "security": [{ "oauth2": [] }, {}],
+        "summary": "Get Project OpenAPI",
+        "operationId": "getProjectSchema",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "projectSlug",
+            "schema": { "type": "string" },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {},
+                  "additionalProperties": true
                 }
               }
             }
@@ -358,6 +518,7 @@
 
     "/{databaseSlug}/schema.json": {
       "get": {
+        "security": [{ "oauth2": [] }, {}],
         "summary": "Get schema for a database",
         "operationId": "getSchema",
         "parameters": [
@@ -380,436 +541,6 @@
                 }
               }
             }
-          }
-        }
-      }
-    },
-
-    "/read": {
-      "post": {
-        "summary": "",
-        "operationId": "read",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": { "$ref": "#/components/schemas/ReadContext" }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "OpenAPI",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ReadResponse" }
-              }
-            }
-          }
-        }
-      }
-    },
-
-    "/create": {
-      "post": {
-        "summary": "",
-        "operationId": "create",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": { "$ref": "#/components/schemas/CreateContext" }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "OpenAPI",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/CreateResponse" }
-              }
-            }
-          }
-        }
-      }
-    },
-
-    "/remove": {
-      "post": {
-        "summary": "",
-        "operationId": "remove",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": { "$ref": "#/components/schemas/RemoveContext" }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "OpenAPI",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/RemoveResponse" }
-              }
-            }
-          }
-        }
-      }
-    },
-
-    "/update": {
-      "post": {
-        "summary": "",
-        "operationId": "update",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": { "$ref": "#/components/schemas/UpdateContext" }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "OpenAPI",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/UpdateResponse" }
-              }
-            }
-          }
-        }
-      }
-    }
-  },
-
-  "components": {
-    "securitySchemes": {
-      "oauth2": {
-        "type": "oauth2",
-        "flows": {
-          "authorizationCode": {
-            "authorizationUrl": "https://auth.actionschema.com/oauth/authorize",
-            "tokenUrl": "https://auth.actionschema.com/oauth/access_token",
-            "scopes": {
-              "admin": "Full access to all services",
-              "readonly": "Only read what services are available"
-            }
-          }
-        }
-      }
-    },
-    "schemas": {
-      "UrlSlug": {
-        "type": "string",
-        "pattern": "^[a-zA-Z0-9._~-]+$",
-        "minLength": 1,
-        "maxLength": 64,
-        "description": "Slug compatible with URLs"
-      },
-      "CreateResponse": {
-        "type": "object",
-        "properties": {
-          "isSuccessful": {
-            "type": "boolean"
-          },
-          "message": {
-            "type": "string"
-          },
-          "result": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            },
-            "description": "The rowIds created"
-          }
-        },
-        "required": ["isSuccessful", "message"]
-      },
-      "CreateContext": {
-        "type": "object",
-        "properties": {
-          "databaseSlug": { "type": "string" },
-          "items": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/ModelItem",
-              "description": "If items in this array contain `__id`, it will be overwriting that item if it's already there."
-            }
-          }
-        },
-        "additionalProperties": false,
-        "required": ["items"]
-      },
-      "Sort": {
-        "type": "object",
-        "properties": {
-          "sortDirection": {
-            "type": "string",
-            "enum": ["ascending", "descending"]
-          },
-          "objectParameterKey": {
-            "type": "string"
-          }
-        },
-        "required": ["sortDirection", "objectParameterKey"]
-      },
-      "Filter": {
-        "type": "object",
-        "properties": {
-          "operator": {
-            "type": "string",
-            "enum": [
-              "equal",
-              "notEqual",
-              "endsWith",
-              "startsWith",
-              "includes",
-              "includesLetters",
-              "greaterThan",
-              "lessThan",
-              "greaterThanOrEqual",
-              "lessThanOrEqual",
-              "isIncludedIn",
-              "isFalsy",
-              "isTruthy"
-            ]
-          },
-          "value": {
-            "type": "string"
-          },
-          "objectParameterKey": {
-            "type": "string"
-          }
-        },
-        "required": ["operator", "value", "objectParameterKey"]
-      },
-      "ReadResponse": {
-        "type": "object",
-        "properties": {
-          "isSuccessful": {
-            "type": "boolean"
-          },
-
-          "message": {
-            "type": "string"
-          },
-          "$schema": {
-            "type": "string"
-          },
-          "items": {
-            "type": "object",
-            "additionalProperties": { "$ref": "#/components/schemas/ModelItem" }
-          },
-
-          "schema": {
-            "type": "object",
-            "additionalProperties": true
-          },
-
-          "canWrite": {
-            "type": "boolean"
-          },
-          "hasMore": {
-            "type": "boolean"
-          }
-        },
-        "required": ["isSuccessful", "message"]
-      },
-      "ReadContext": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "databaseSlug": { "type": "string" },
-          "search": { "type": "string" },
-          "vectorSearch": {
-            "type": "object",
-            "properties": {
-              "propertyKey": { "type": "string" },
-              "input": { "type": "string" },
-              "topK": { "type": "number" },
-              "minimumSimilarity": { "type": "number" }
-            },
-            "required": ["propertyKey", "input", "topK", "minimumSimilarity"]
-          },
-
-          "rowIds": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "startFromIndex": {
-            "type": "integer"
-          },
-          "maxRows": {
-            "type": "integer"
-          },
-          "filter": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/Filter"
-            }
-          },
-          "sort": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/Sort"
-            }
-          },
-          "objectParameterKeys": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "ignoreObjectParameterKeys": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          }
-        }
-      },
-
-      "UpdateContext": {
-        "type": "object",
-        "additionalProperties": false,
-
-        "properties": {
-          "databaseSlug": { "type": "string" },
-          "id": {
-            "type": "string",
-            "description": "The id (indexed key) of the item to update. Update that functions as upsert. If the id didn't exist, it will be created."
-          },
-          "partialItem": {
-            "$ref": "#/components/schemas/ModelItem",
-            "description": "New (partial) value of the item. Will update all keys provided here. Please note that it cannot be set to 'undefined' as this doesn't transfer over JSON, but if you set it to 'null', the value will be removed from the database."
-          }
-        },
-        "required": ["id", "partialItem"]
-      },
-
-      "UpdateResponse": {
-        "type": "object",
-        "properties": {
-          "isSuccessful": {
-            "type": "boolean"
-          },
-          "message": {
-            "type": "string"
-          }
-        },
-        "required": ["isSuccessful", "message"]
-      },
-      "ModelItem": {
-        "type": "object",
-        "properties": {},
-        "additionalProperties": true
-      },
-
-      "RemoveContext": {
-        "type": "object",
-        "properties": {
-          "databaseSlug": { "type": "string" },
-          "rowIds": {
-            "description": "Which IDs should be removed",
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          }
-        },
-        "additionalProperties": false,
-        "required": ["rowIds"]
-      },
-      "RemoveResponse": {
-        "type": "object",
-        "properties": {
-          "isSuccessful": {
-            "type": "boolean"
-          },
-          "message": {
-            "type": "string"
-          },
-          "deleteCount": {
-            "type": "integer",
-            "description": "The number of items deleted"
-          }
-        },
-        "required": ["isSuccessful", "message"]
-      },
-
-      "CreateDatabaseResponse": {
-        "type": "object",
-        "required": ["isSuccessful"],
-        "properties": {
-          "isSuccessful": {
-            "type": "boolean"
-          },
-          "message": {
-            "type": "string"
-          },
-          "authToken": { "type": "string" },
-          "adminAuthToken": { "type": "string" },
-          "databaseSlug": { "type": "string" },
-          "openapiUrl": { "type": "string" }
-        }
-      },
-
-      "VectorIndexColumns": {
-        "description": "A list of vector indexes to be created for several columns in your schema",
-        "type": "array",
-        "items": {
-          "type": "object",
-          "properties": {
-            "propertyKey": { "type": "string" },
-            "model": {
-              "type": "string",
-              "enum": [
-                "text-embedding-ada-002",
-                "text-embedding-3-small",
-                "text-embedding-3-large"
-              ]
-            },
-
-            "region": {
-              "type": "string",
-              "enum": ["us-east-1", "eu-west-1", "us-central1"]
-            },
-
-            "dimension_count": { "type": "number" },
-
-            "similarity_function": {
-              "type": "string",
-              "enum": ["COSINE", "EUCLIDIAN", "DOT_PRODUCT"]
-            }
-          },
-          "required": [
-            "propertyKey",
-            "model",
-            "region",
-            "dimension_count",
-            "similarity_function"
-          ]
-        }
-      },
-      "StandardResponse": {
-        "type": "object",
-        "required": ["isSuccessful"],
-        "properties": {
-          "status": { "type": "number" },
-          "isSuccessful": {
-            "type": "boolean"
-          },
-          "message": {
-            "type": "string"
-          },
-          "priceCredit": {
-            "type": "number"
           }
         }
       }

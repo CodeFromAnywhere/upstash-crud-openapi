@@ -1,7 +1,8 @@
 import { getSubsetFromObject, hasAllLetters, objectMapSync, removeOptionalKeysFromObjectStrings, } from "from-anywhere";
-import { upstashRedisGetRange } from "../upstashRedis.js";
+import { upstashRedisGetMultiple, upstashRedisGetRange, } from "../upstashRedis.js";
 import { getDatabaseDetails } from "../getDatabaseDetails.js";
 import { embeddingsClient } from "../embeddings.js";
+import { getCrudOperationAuthorized } from "../getCrudOperationAuthorized.js";
 const sortData = (sort, data) => {
     if (!sort?.length) {
         return data;
@@ -111,21 +112,34 @@ const searchData = (search, data) => {
 export const read = async (context) => {
     const { rowIds, search, startFromIndex, maxRows, filter, sort, objectParameterKeys, ignoreObjectParameterKeys, databaseSlug, vectorSearch, Authorization, } = context;
     const apiKey = Authorization?.slice("Bearer ".length);
+    if (!databaseSlug) {
+        return { isSuccessful: false, message: "please provide a slug" };
+    }
     const { databaseDetails } = await getDatabaseDetails(databaseSlug);
     if (!databaseDetails) {
         return { isSuccessful: false, message: "Couldn't find database details" };
     }
-    if (databaseDetails.authToken !== undefined &&
-        databaseDetails.authToken !== "" &&
-        apiKey !== databaseDetails.authToken &&
-        apiKey !== databaseDetails.adminAuthToken) {
+    if (!(await getCrudOperationAuthorized(databaseDetails, Authorization))) {
         return { isSuccessful: false, message: "Unauthorized" };
     }
-    const result = await upstashRedisGetRange({
-        redisRestToken: databaseDetails.rest_token,
-        redisRestUrl: databaseDetails.endpoint,
-        baseKey: undefined,
-    });
+    const authSuffix = databaseDetails.isUserLevelSeparationEnabled
+        ? `_${apiKey}`
+        : "";
+    const baseKey = `db_${databaseSlug}${authSuffix}_`;
+    const result = rowIds
+        ? (await upstashRedisGetMultiple({
+            redisRestToken: databaseDetails.rest_token,
+            redisRestUrl: databaseDetails.endpoint,
+            keys: rowIds,
+            baseKey,
+        })).reduce((previous, current, currentIndex) => {
+            return { ...previous, [rowIds[currentIndex]]: current };
+        }, {})
+        : await upstashRedisGetRange({
+            redisRestToken: databaseDetails.rest_token,
+            redisRestUrl: databaseDetails.endpoint,
+            baseKey,
+        });
     if (!result) {
         return { isSuccessful: false, message: "No result" };
     }

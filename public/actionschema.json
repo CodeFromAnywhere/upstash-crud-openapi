@@ -1,4 +1,14 @@
 {
   "$schema": "https://migrate.actionschema.com/migration-context.schema.json",
-  "agentConfig": { "agents": {}, "openapiUrl": "", "slugPrefix": "" }
+  "agentConfig": { "agents": {}, "openapiUrl": "", "slugPrefix": "" },
+  "useJsImportSuffix": true,
+  "openapis": [
+    {
+      "slug": "auth",
+      "openapiUrlOrPath": "https://auth.actionschema.com/openapi.json",
+      "operationIds": ["permission"]
+    },
+    { "slug": "admin", "openapiUrlOrPath": "src/openapi.json" },
+    { "slug": "crud", "openapiUrlOrPath": "src/crud-openapi.json" }
+  ]
 }

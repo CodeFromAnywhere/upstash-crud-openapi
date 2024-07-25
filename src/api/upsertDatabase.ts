@@ -21,7 +21,6 @@ export const upsertDatabase: Endpoint<"upsertDatabase"> = async (context) => {
   const {
     databaseSlug,
     schemaString,
-    authToken,
     region,
     openaiApiKey,
     vectorIndexColumns,
@@ -35,6 +34,10 @@ export const upsertDatabase: Endpoint<"upsertDatabase"> = async (context) => {
   }
 
   // comes from .env
+  const useRootDatabase = process.env["USE_ROOT_DATABASE"]
+    ? process.env["USE_ROOT_DATABASE"] !== "false"
+    : false;
+
   const rootUpstashApiKey = process.env["X_UPSTASH_API_KEY"];
   const rootUpstashEmail = process.env["X_UPSTASH_EMAIL"];
   const rootUpstashDatabaseId = process.env["X_UPSTASH_ROOT_DATABASE_ID"];
@@ -66,10 +69,22 @@ export const upsertDatabase: Endpoint<"upsertDatabase"> = async (context) => {
     token: rootDatabaseDetails.rest_token,
   });
 
-  const admin: AdminDetails | null = await root.get(
+  let admin: AdminDetails | null = await root.get(
     `admin_${apiKey}` satisfies DbKey,
   );
+
   if (!admin) {
+    const newAdmin: AdminDetails = {
+      currentProjectSlug: generateRandomString(16),
+    };
+
+    await root.set(`admin_${apiKey}`, newAdmin satisfies AdminDetails);
+
+    admin = newAdmin;
+  }
+
+  if (!admin) {
+    //should be created by now
     return { isSuccessful: false, message: "Couldn't find user" };
   }
 
@@ -131,23 +146,32 @@ export const upsertDatabase: Endpoint<"upsertDatabase"> = async (context) => {
           ).filter(notEmpty)
         : undefined;
 
-    const realAuthToken = authToken || generateId();
     //create if we couldn't find it before
-    const created = await createUpstashRedisDatabase({
-      upstashApiKey: rootUpstashApiKey,
-      upstashEmail: rootUpstashEmail,
-      name: `db_${databaseSlug}`,
-      region,
-    });
 
-    if (!created.result) {
-      return {
-        isSuccessful: false,
-        message: `Upstash result failed: ${created.message}`,
-      };
+    let created: { isSuccessful: boolean; message: string; result?: any } = {
+      result: undefined,
+      isSuccessful: true,
+      message: "Using root",
+    };
+
+    if (!useRootDatabase) {
+      created = await createUpstashRedisDatabase({
+        upstashApiKey: rootUpstashApiKey,
+        upstashEmail: rootUpstashEmail,
+        name: `db_${databaseSlug}`,
+        region,
+      });
+
+      if (!created.result) {
+        return {
+          isSuccessful: false,
+          message: `Upstash result failed: ${created.message}`,
+        };
+      }
     }
 
     const adminAuthToken = apiKey || generateRandomString(64);
+    const realAuthToken = generateRandomString(64);
 
     databaseDetails = {
       projectSlug: admin.currentProjectSlug,
@@ -157,17 +181,24 @@ export const upsertDatabase: Endpoint<"upsertDatabase"> = async (context) => {
       upstashApiKey: rootUpstashApiKey,
       upstashEmail: rootUpstashEmail,
       authToken: realAuthToken,
-      database_id: created.result.database_id,
-      endpoint: created.result.endpoint,
-      rest_token: created.result.rest_token,
       schema,
+
+      // Set the correct DB Details!
+      database_id: useRootDatabase
+        ? rootDatabaseDetails.database_id
+        : created?.result.database_id,
+      endpoint: useRootDatabase
+        ? rootDatabaseDetails.endpoint
+        : created?.result.endpoint,
+      rest_token: useRootDatabase
+        ? rootDatabaseDetails.rest_token
+        : created?.result.rest_token,
     };
 
     console.log(`creating`, { databaseDetails });
   } else {
     databaseDetails = {
       ...previousDatabaseDetails,
-      authToken: authToken || previousDatabaseDetails.authToken,
       upstashApiKey: rootUpstashApiKey,
       upstashEmail: rootUpstashEmail,
       schema,
@@ -176,22 +207,20 @@ export const upsertDatabase: Endpoint<"upsertDatabase"> = async (context) => {
 
   // re-set the database details
   await root.set(`db_${databaseSlug}` satisfies DbKey, databaseDetails);
-  // add database slug
-  await root.sadd(`dbs_${apiKey}` satisfies DbKey, databaseSlug);
+  // add database slug to project
+  await root.sadd(
+    `project_${admin.currentProjectSlug}` satisfies DbKey,
+    databaseSlug,
+  );
 
   return {
     isSuccessful: true,
     message: "Database created",
 
-    authToken: databaseDetails.authToken,
-
     adminAuthToken: databaseDetails.adminAuthToken,
-
     databaseSlug,
-
     openapiUrl:
       "https://data.actionschema.com/" + databaseSlug + "/openapi.json",
-
     projectOpenapiUrl:
       "https://data.actionschema.com/project/" +
       admin.currentProjectSlug +

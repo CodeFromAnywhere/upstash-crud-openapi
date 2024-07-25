@@ -1,4 +1,4 @@
-import { mergeObjectsArray, notEmpty, tryParseJson } from "from-anywhere";
+import { mapKeys, mergeObjectsArray, notEmpty, tryParseJson, } from "from-anywhere";
 import { Redis } from "@upstash/redis";
 export const listUpstashRedisDatabases = async (context) => {
     const { upstashApiKey, upstashEmail } = context;
@@ -127,52 +127,52 @@ export const getUpstashRedisRangeKeys = async (context) => {
     });
     let cursor = "0";
     let allKeys = [];
-    while (true) {
-        const [newCursor, newKeys] = await redis.scan(cursor, {
-            match: baseKey ? `${baseKey}.*` : "*",
+    let limit = 0;
+    // Temporarily allow max 10 pages, which is 10 api calls.
+    while (limit < 10) {
+        limit = limit + 1;
+        const result = await redis.scan(cursor, {
+            match: baseKey ? `${baseKey}*` : "*",
+            count: 1000,
         });
+        const [newCursor, newKeys] = result;
         allKeys = allKeys.concat(newKeys);
-        console.log({ newCursor });
-        if (cursor === newCursor || !newCursor) {
+        if (!newCursor || String(cursor) === String(newCursor)) {
+            console.log({ newCursor }, "same. BREAK");
             break;
         }
+        console.log(`${cursor}!==${newCursor}. Continue with ${newCursor}. Limit is ${limit}`, result);
         cursor = newCursor;
     }
     return allKeys.concat(baseKey || "");
 };
-export const deleteUpstashRedisRange = async (context) => {
-    const { redisRestToken, redisRestUrl, baseKey } = context;
-    const keys = await getUpstashRedisRangeKeys(context);
-    const redis = new Redis({
-        url: `https://${redisRestUrl}`,
-        token: redisRestToken,
-    });
-    const amountRemoved = await redis.del(...keys);
-    return amountRemoved;
-};
 export const upstashRedisSetItems = async (context) => {
-    const { redisRestToken, redisRestUrl, items } = context;
+    const { baseKey, redisRestToken, redisRestUrl, items } = context;
     const redis = new Redis({
         url: `https://${redisRestUrl}`,
         token: redisRestToken,
     });
-    const result = await redis.mset(items);
+    const realItems = await mapKeys(items, (key) => `${baseKey || ""}${key}`);
+    const result = await redis.mset(realItems);
     return result;
 };
 /** Gets a range of items from redis by first iterating over the keys (in range or all) and then efficiently getting all values */
 export const upstashRedisGetRange = async (context) => {
-    const { redisRestToken, redisRestUrl } = context;
+    const { redisRestToken, redisRestUrl, baseKey } = context;
     const redis = new Redis({
         url: `https://${redisRestUrl}`,
         token: redisRestToken,
     });
-    const allKeys = await getUpstashRedisRangeKeys(context);
-    console.log({ allKeys });
+    const allKeys = await getUpstashRedisRangeKeys({
+        redisRestToken,
+        redisRestUrl,
+        baseKey,
+    });
     if (allKeys.length === 0) {
         return;
     }
     const mgetResult = (await redis.mget(...allKeys));
-    console.log({ mgetResult });
+    // console.log({ mgetResult });
     const allValues = mergeObjectsArray(mgetResult
         .map((value, index) => {
         if (!value) {
@@ -182,5 +182,65 @@ export const upstashRedisGetRange = async (context) => {
     })
         .filter(notEmpty));
     return allValues;
+};
+/** Gets a range of items from redis by first iterating over the keys (in range or all) and then efficiently getting all values */
+export const upstashRedisGetMultiple = async (context) => {
+    const { redisRestToken, redisRestUrl, keys, baseKey } = context;
+    const redis = new Redis({
+        url: `https://${redisRestUrl}`,
+        token: redisRestToken,
+    });
+    const realKeys = baseKey ? keys.map((k) => `${baseKey}${k}`) : keys;
+    const mgetResult = (await redis.mget(...realKeys));
+    return mgetResult;
+};
+export const deleteUpstashRedisDatabases = async (context) => {
+    const { upstashEmail, upstashApiKey, excludeDatabaseName } = context;
+    console.log({ upstashApiKey, upstashEmail });
+    const baseUrl = "https://api.upstash.com/v2/redis/database";
+    const auth = `Basic ${btoa(`${upstashEmail}:${upstashApiKey}`)}`;
+    const listResult = await listUpstashRedisDatabases({
+        upstashEmail,
+        upstashApiKey,
+    });
+    if (!listResult.isSuccessful || !listResult.result) {
+        return {
+            isSuccessful: false,
+            message: "Failed to list databases",
+        };
+    }
+    console.log({ result: listResult.result });
+    const databasesToDelete = listResult.result?.filter?.((db) => db.database_name !== excludeDatabaseName);
+    console.log({
+        databasesToDelete: databasesToDelete.map((x) => x.database_name),
+    });
+    const deletedDatabases = [];
+    const errors = {};
+    for (const db of databasesToDelete) {
+        try {
+            const response = await fetch(`${baseUrl}/${db.database_id}`, {
+                method: "DELETE",
+                headers: {
+                    Authorization: auth,
+                    "Content-Type": "application/json",
+                },
+            });
+            if (response.ok) {
+                deletedDatabases.push(db.database_id);
+            }
+            else {
+                const errorText = await response.text();
+                errors[db.database_id] = `Failed to delete: ${errorText}`;
+            }
+        }
+        catch (error) {
+            errors[db.database_id] = `Error: ${error instanceof Error ? error.message : String(error)}`;
+        }
+    }
+    const isSuccessful = deletedDatabases.length === databasesToDelete.length;
+    const message = isSuccessful
+        ? `Successfully deleted all databases except '${excludeDatabaseName}'`
+        : `Deleted some databases, but encountered errors. Check the 'errors' object for details.`;
+    return { isSuccessful, message, deletedDatabases, errors };
 };
 //# sourceMappingURL=upstashRedis.js.map

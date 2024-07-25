@@ -1,11 +1,12 @@
-import { Endpoint } from "../client.js";
+import { CreateContext } from "../sdk/crud.js";
 import { getDatabaseDetails } from "../getDatabaseDetails.js";
 import { upstashRedisSetItems } from "../upstashRedis.js";
 import { generateId, mergeObjectsArray } from "from-anywhere";
 import { upsertIndexVectors } from "../embeddings.js";
+import { getCrudOperationAuthorized } from "../getCrudOperationAuthorized.js";
 
-export const create: Endpoint<"create"> = async (
-  context,
+export const create = async (
+  context: CreateContext & { Authorization?: string },
 ): Promise<{
   isSuccessful: boolean;
   message: string;
@@ -13,25 +14,25 @@ export const create: Endpoint<"create"> = async (
   result?: string[];
 }> => {
   const { items, databaseSlug, Authorization } = context;
+
   if (!databaseSlug) {
     return { isSuccessful: false, message: "please provide a slug" };
   }
 
   const { databaseDetails } = await getDatabaseDetails(databaseSlug);
-  const apiKey = Authorization?.slice("Bearer ".length);
 
   if (!databaseDetails) {
     return { isSuccessful: false, message: "Couldn't find database details" };
   }
 
   if (
-    databaseDetails.authToken !== undefined &&
-    databaseDetails.authToken !== "" &&
-    apiKey !== databaseDetails.authToken &&
-    apiKey !== databaseDetails.adminAuthToken
+    !Authorization ||
+    !(await getCrudOperationAuthorized(databaseDetails, Authorization))
   ) {
     return { isSuccessful: false, message: "Unauthorized" };
   }
+
+  const apiKey = Authorization.slice("Bearer ".length);
 
   if (!items || !Array.isArray(items) || items.length === 0) {
     return {
@@ -52,7 +53,14 @@ export const create: Endpoint<"create"> = async (
     }),
   );
 
+  const authSuffix = databaseDetails.isUserLevelSeparationEnabled
+    ? `_${apiKey}`
+    : "";
+
+  const baseKey = `db_${databaseSlug}${authSuffix}_`;
+
   await upstashRedisSetItems({
+    baseKey,
     redisRestToken: databaseDetails.rest_token,
     redisRestUrl: databaseDetails.endpoint,
     items: mappedItems,

@@ -21,8 +21,16 @@ export const getDatabaseDetails = async (databaseSlug) => {
         url: `https://${rootUpstashEndpoint}`,
         token: rootUpstashRestToken,
     });
-    const databaseDetails = await root.get(databaseSlug);
+    const databaseDetails = await root.get(`db_${databaseSlug}`);
+    if (!databaseDetails) {
+        return { databaseSlug, isSuccessful: false, message: "Not found" };
+    }
     //respond with details
-    return { databaseDetails, isSuccessful: true, message: "Got your details" };
+    return {
+        databaseSlug,
+        databaseDetails,
+        isSuccessful: true,
+        message: "Got your details",
+    };
 };
 //# sourceMappingURL=getDatabaseDetails.js.map

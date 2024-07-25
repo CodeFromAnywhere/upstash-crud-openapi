@@ -4,133 +4,131 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CRUD Admin Panel</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            line-height: 1.6;
-            margin: 0;
-            padding: 20px;
-            background-color: #f4f4f4;
-        }
-
-        .container {
-            max-width: 800px;
-            margin: auto;
-            background: white;
-            padding: 20px;
-            border-radius: 5px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        }
-
-        h1 {
-            color: #333;
-        }
-
-        input[type="text"],
-        button {
-            width: 100%;
-            padding: 10px;
-            margin: 10px 0;
-        }
-
-        button {
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            cursor: pointer;
-        }
-
-        button:hover {
-            background-color: #45a049;
-        }
-
-        ul {
-            list-style-type: none;
-            padding: 0;
-        }
-
-        li {
-            background: #f4f4f4;
-            margin: 5px 0;
-            padding: 10px;
-            border-radius: 3px;
-        }
-
-        a {
-            color: #333;
-            text-decoration: none;
-        }
-
-        a:hover {
-            color: #666;
-        }
-    </style>
+    <title>ActionSchema Data - Serverless Redis CRUD for AI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/alpinejs/3.10.3/cdn.min.js" defer></script>
 </head>
 
-<body>
-    <div class="container">
-        <h1>CRUD Admin Panel</h1>
-        <input type="text" id="adminToken" placeholder="Enter admin token">
-        <button onclick="setAdminToken()">Set Admin Token</button>
-        <ul id="databaseList"></ul>
-    </div>
+<body class="bg-gray-100 font-sans">
+    <header class="bg-indigo-600 text-white py-4">
+        <div class="container mx-auto px-4 flex justify-between items-center">
+            <h1 class="text-2xl font-bold">ActionSchema Data</h1>
+            <nav>
+                <a href="#features" class="text-white hover:text-indigo-200 mr-4">Features</a>
+                <a href="#getting-started" class="text-white hover:text-indigo-200 mr-4">Get Started</a>
+                <a href="#privacy" class="text-white hover:text-indigo-200 mr-4">Privacy</a>
+                <a href="#cta"
+                    class="bg-white text-indigo-600 px-4 py-2 rounded hover:bg-indigo-100 transition-colors">Try It
+                    Now</a>
+            </nav>
+        </div>
+    </header>
 
-    <script>
-        function setAdminToken() {
-            const token = document.getElementById('adminToken').value;
-            localStorage.setItem('adminToken', token);
-            fetchDatabases();
-        }
+    <main>
+        <section class="bg-indigo-700 text-white py-20">
+            <div class="container mx-auto px-4 text-center">
+                <h2 class="text-4xl font-bold mb-4">Serverless Redis CRUD for AI Agents</h2>
+                <p class="text-xl mb-8">Create authenticated, scalable CRUD servers with perfect OpenAPI specs - no
+                    coding required</p>
+                <a href="admin.html"
+                    class="bg-green-500 text-white px-8 py-3 rounded-full text-xl font-semibold hover:bg-green-400 transition-colors inline-block">Start
+                    Building Now</a>
+            </div>
+        </section>
 
-        async function fetchDatabases() {
-            const token = localStorage.getItem('adminToken');
-            if (!token) {
-                alert('Please set the admin token first.');
-                return;
-            }
+        <section id="features" class="py-20">
+            <div class="container mx-auto px-4">
+                <h2 class="text-3xl font-bold text-center mb-12">Key Features</h2>
+                <div class="grid md:grid-cols-3 gap-8">
+                    <div class="bg-white p-6 rounded-lg shadow-md">
+                        <svg class="w-12 h-12 text-indigo-600 mb-4" fill="none" stroke="currentColor"
+                            viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                        </svg>
+                        <h3 class="text-xl font-semibold mb-2">Serverless Redis CRUD</h3>
+                        <p>Quickly set up a scalable database without infrastructure headaches</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-md">
+                        <svg class="w-12 h-12 text-indigo-600 mb-4" fill="none" stroke="currentColor"
+                            viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z">
+                            </path>
+                        </svg>
+                        <h3 class="text-xl font-semibold mb-2">Perfect OpenAPI Specs</h3>
+                        <p>Automatically generate model-specific OpenAPI specifications</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-md">
+                        <svg class="w-12 h-12 text-indigo-600 mb-4" fill="none" stroke="currentColor"
+                            viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z">
+                            </path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                        </svg>
+                        <h3 class="text-xl font-semibold mb-2">Flexible Customization</h3>
+                        <p>Bring your own Redis or clone and modify to fit your needs</p>
+                    </div>
+                </div>
+            </div>
+        </section>
 
-            try {
-                const response = await fetch('https://data.actionschema.com/listDatabases', {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
-                const data = await response.json();
+        <section id="getting-started" class="bg-gray-200 py-20">
+            <div class="container mx-auto px-4">
+                <h2 class="text-3xl font-bold text-center mb-12">Getting Started</h2>
+                <div class="max-w-3xl mx-auto bg-white p-8 rounded-lg shadow-md">
+                    <ol class="list-decimal list-inside space-y-4">
+                        <li class="text-lg">Navigate to <a href="/admin.html"
+                                class="text-indigo-600 hover:underline">the app</a></li>
+                        <li class="text-lg">Follow the guided setup process</li>
+                        <li class="text-lg">Define your database schema</li>
+                        <li class="text-lg">Configure authentication and privacy settings</li>
+                        <li class="text-lg">Generate your OpenAPI specification</li>
+                        <li class="text-lg">Start using your serverless CRUD API!</li>
+                    </ol>
+                </div>
+            </div>
+        </section>
 
-                if (data.isSuccessful) {
-                    localStorage.setItem('databases', JSON.stringify(data.databases));
-                    displayDatabases(data.databases);
-                } else {
-                    alert('Failed to fetch databases: ' + data.message);
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                alert('An error occurred while fetching databases.');
-            }
-        }
+        <section id="privacy" class="py-20">
+            <div class="container mx-auto px-4">
+                <h2 class="text-3xl font-bold text-center mb-12">Privacy Options</h2>
+                <div class="grid md:grid-cols-2 gap-8">
+                    <div class="bg-white p-6 rounded-lg shadow-md">
+                        <h3 class="text-xl font-semibold mb-4">Default Setup</h3>
+                        <p class="mb-4">Your databases and schemas are stored in our central Upstash Redis KV database.
+                            You can choose your preferred region for data storage.</p>
+                        <p>Perfect for quick prototyping and testing.</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-md">
+                        <h3 class="text-xl font-semibold mb-4">Self-Hosted Solution</h3>
+                        <p class="mb-4">For complete privacy, clone our repository and host it on your preferred
+                            serverless platform.</p>
+                        <a href="https://github.com/CodeFromAnywhere/crud-openapi"
+                            class="text-indigo-600 hover:underline">View GitHub Repository</a>
+                    </div>
+                </div>
+            </div>
+        </section>
 
-        function displayDatabases(databases) {
-            const list = document.getElementById('databaseList');
-            list.innerHTML = '';
-            databases.forEach(db => {
-                const li = document.createElement('li');
-                const a = document.createElement('a');
-                a.href = `model.html?databaseSlug=${db.databaseSlug}`;
-                a.textContent = db.databaseSlug;
-                li.appendChild(a);
-                list.appendChild(li);
-            });
-        }
+        <section id="cta" class="bg-indigo-700 text-white py-20">
+            <div class="container mx-auto px-4 text-center">
+                <h2 class="text-3xl font-bold mb-4">Ready to Supercharge Your AI Data Layer?</h2>
+                <p class="text-xl mb-8">Join developers worldwide using ActionSchema Data for their AI projects</p>
+                <a href="/admin.html"
+                    class="bg-green-500 text-white px-8 py-3 rounded-full text-xl font-semibold hover:bg-green-400 transition-colors inline-block">Try
+                    It Now - It's Free!</a>
+            </div>
+        </section>
+    </main>
 
-        // Check if admin token exists and fetch databases on page load
-        window.onload = () => {
-            const token = localStorage.getItem('adminToken');
-            if (token) {
-                fetchDatabases();
-            }
-        };
-    </script>
+    <footer class="bg-gray-800 text-white py-8">
+        <div class="container mx-auto px-4 text-center">
+            <p>&copy; 2024 ActionSchema Data. All rights reserved.</p>
+        </div>
+    </footer>
 </body>
 
 </html>

@@ -1,0 +1,378 @@
+{
+  "x-actionschema": "0.0.1",
+  "$schema": "https://raw.githubusercontent.com/CodeFromAnywhere/ActionSchema/main/schemas/openapi.schema.json",
+  "openapi": "3.0.0",
+  "info": {
+    "title": "OpenAPI CRUD",
+    "version": "1.0",
+    "description": "To be replaced with better info about this model"
+  },
+  "security": [{ "oauth2": [] }, { "bearerAuth": [] }],
+  "servers": [
+    {
+      "url": "https://data.actionschema.com/{databaseSlug}",
+      "description": "NB: this only works with a replaced databaseSlug!"
+    }
+  ],
+  "paths": {
+    "/read": {
+      "post": {
+        "summary": "",
+        "operationId": "read",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ReadContext" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OpenAPI",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ReadResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+
+    "/create": {
+      "post": {
+        "summary": "",
+        "operationId": "create",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreateContext" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OpenAPI",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CreateResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+
+    "/remove": {
+      "post": {
+        "summary": "",
+        "operationId": "remove",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/RemoveContext" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OpenAPI",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/RemoveResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+
+    "/update": {
+      "post": {
+        "summary": "",
+        "operationId": "update",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UpdateContext" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OpenAPI",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/UpdateResponse" }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "oauth2": {
+        "type": "oauth2",
+        "flows": {
+          "authorizationCode": {
+            "authorizationUrl": "https://auth.actionschema.com/oauth/authorize",
+            "tokenUrl": "https://auth.actionschema.com/oauth/access_token",
+            "scopes": {
+              "user": "Full access to this database and rest of the project"
+            }
+          }
+        }
+      },
+
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "Bearer",
+        "description": "Hardcoded authToken, either a database-specific one, or an admin auth-token. Please note, that for dbs with `isUserLevelSeparationEnabled:true` the auth you provide will influence which rows you get back."
+      }
+    },
+    "schemas": {
+      "ModelItem": {
+        "type": "object",
+        "description": "To be replaced with the actual model item",
+        "properties": {},
+        "additionalProperties": true
+      },
+
+      "CreateContext": {
+        "type": "object",
+        "properties": {
+          "databaseSlug": { "type": "string" },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ModelItem",
+              "description": "If items in this array contain `__id`, it will be overwriting that item if it's already there."
+            }
+          }
+        },
+        "additionalProperties": false,
+        "required": ["items"]
+      },
+      "CreateResponse": {
+        "type": "object",
+        "properties": {
+          "isSuccessful": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "result": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "The rowIds created"
+          }
+        },
+        "required": ["isSuccessful", "message"]
+      },
+      "ReadResponse": {
+        "type": "object",
+        "properties": {
+          "isSuccessful": {
+            "type": "boolean"
+          },
+
+          "message": {
+            "type": "string"
+          },
+          "$schema": {
+            "type": "string"
+          },
+          "items": {
+            "type": "object",
+            "additionalProperties": { "$ref": "#/components/schemas/ModelItem" }
+          },
+
+          "schema": {
+            "type": "object",
+            "additionalProperties": true
+          },
+
+          "canWrite": {
+            "type": "boolean"
+          },
+          "hasMore": {
+            "type": "boolean"
+          }
+        },
+        "required": ["isSuccessful", "message"]
+      },
+      "ReadContext": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "databaseSlug": { "type": "string" },
+          "search": { "type": "string" },
+          "vectorSearch": {
+            "type": "object",
+            "properties": {
+              "propertyKey": { "type": "string" },
+              "input": { "type": "string" },
+              "topK": { "type": "number" },
+              "minimumSimilarity": { "type": "number" }
+            },
+            "required": ["propertyKey", "input", "topK", "minimumSimilarity"]
+          },
+
+          "rowIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "startFromIndex": {
+            "type": "integer"
+          },
+          "maxRows": {
+            "type": "integer"
+          },
+          "filter": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Filter"
+            }
+          },
+          "sort": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Sort"
+            }
+          },
+          "objectParameterKeys": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "ignoreObjectParameterKeys": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+
+      "Sort": {
+        "type": "object",
+        "properties": {
+          "sortDirection": {
+            "type": "string",
+            "enum": ["ascending", "descending"]
+          },
+          "objectParameterKey": {
+            "type": "string"
+          }
+        },
+        "required": ["sortDirection", "objectParameterKey"]
+      },
+      "Filter": {
+        "type": "object",
+        "properties": {
+          "operator": {
+            "type": "string",
+            "enum": [
+              "equal",
+              "notEqual",
+              "endsWith",
+              "startsWith",
+              "includes",
+              "includesLetters",
+              "greaterThan",
+              "lessThan",
+              "greaterThanOrEqual",
+              "lessThanOrEqual",
+              "isIncludedIn",
+              "isFalsy",
+              "isTruthy"
+            ]
+          },
+          "value": {
+            "type": "string"
+          },
+          "objectParameterKey": {
+            "type": "string"
+          }
+        },
+        "required": ["operator", "value", "objectParameterKey"]
+      },
+
+      "UpdateContext": {
+        "type": "object",
+        "additionalProperties": false,
+
+        "properties": {
+          "databaseSlug": { "type": "string" },
+          "id": {
+            "type": "string",
+            "description": "The id (indexed key) of the item to update. Update that functions as upsert. If the id didn't exist, it will be created."
+          },
+          "partialItem": {
+            "$ref": "#/components/schemas/ModelItem",
+            "description": "New (partial) value of the item. Will update all keys provided here. Please note that it cannot be set to 'undefined' as this doesn't transfer over JSON, but if you set it to 'null', the value will be removed from the database."
+          }
+        },
+        "required": ["id", "partialItem"]
+      },
+
+      "UpdateResponse": {
+        "type": "object",
+        "properties": {
+          "isSuccessful": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": ["isSuccessful", "message"]
+      },
+
+      "RemoveContext": {
+        "type": "object",
+        "properties": {
+          "databaseSlug": { "type": "string" },
+          "rowIds": {
+            "description": "Which IDs should be removed",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "additionalProperties": false,
+        "required": ["rowIds"]
+      },
+      "RemoveResponse": {
+        "type": "object",
+        "properties": {
+          "isSuccessful": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "deleteCount": {
+            "type": "integer",
+            "description": "The number of items deleted"
+          }
+        },
+        "required": ["isSuccessful", "message"]
+      }
+    }
+  }
+}

@@ -1,0 +1,1 @@
+{"version":3,"file":"getModelDefinitions.d.ts","sourceRoot":"","sources":["../../src/getModelDefinitions.ts"],"names":[],"mappings":"AACA,OAAO,EAAE,eAAe,EAAE,MAAM,SAAS,CAAC;AAC1C,OAAO,EAAE,WAAW,EAAE,MAAM,aAAa,CAAC;AAS1C,eAAO,MAAM,mBAAmB,cACnB;IACT,YAAY,EAAE,MAAM,CAAC;IACrB,OAAO,EAAE,eAAe,GAAG,IAAI,CAAC;CACjC,EAAE;;CAWJ,CAAC"}

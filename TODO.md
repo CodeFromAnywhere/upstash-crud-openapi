@@ -1,88 +1,78 @@
-🚫 BLOCKED 🚫 make oauth for admin, logging in with github via ChatGPT
+# User or group separation header
 
-## CRUDDY OAUTH2
+✅ Confirm oauth works in the GPT so it gets logged in into ActionSchema.
 
-✅ Add oauth to cruddy, so it requires admin login.
+✅ Add `isUserLevelSeparationEnabled` property to db details
 
-✅ Confirm it finds your admin auth based on the github login.
+✅ Alter the crud openapi and project openapi so they have the oauth2 scheme.
 
-## Performance
+✅ Figure out how to do Key Ranges or other way to efficiently index/separate on keys
 
-✅ In `read`, make a direct keys mget that doesn't use range incase of specified rowIds.
+# Projects Refactor
 
-✅ Test if it's fast now. **It is! Lots better**
+✅ Backup important data: especially oauth-admin info
 
-Try to see why the DB endpoints are so slow, lets log timing for calling the client endpoints. Can it be made faster somehow?
+✅ Alter `getProjectOpenapi` to include all models for the project
 
-## Reduce DB requirement
+✅ Fix other problematic errors in files.
 
-We have a limit of # of databases per user. Therefore, let's try to fit all databases in a single database by changing the key value structure. `db_{slug}_{key}` should contain a row of db {slug}
+✅ Upstash limits max databases to 100. Therefore, create option `USE_ROOT_DATABASE` to not create a database in `.env`
 
-- Figure out how the range works so I can get all items in a certain db, but nothing else
-- Change it everywhere so dbs don't need to be created but use the root-db with `db_{slug}_` prefix
-- Remove all dbs except the root one, using a simple query
-- Add limits on db-size and admin-db-count, that are sensible to the bottlenecks of upstash
+Fit all databases in a single database by changing the key value structure.
 
-## User or group separation header
+- ✅ Find row(s): If `isUserLevelSeparationEnabled` then `db_{databaseSlug}_{auth}_{id}` else `db_{databaseSlug}_{auth}_{id}`
+- ✅ Db selection: If `USE_ROOT_DATABASE`: use `root`, otherwise use `{databaseSlug}`
 
-Confirm oauth works in the GPT so it gets logged in into ActionSchema.
+✅ Apply `USE_ROOT_DATABSE` everywhere where needed.
 
-Try oauth security mechanism with the minimal way to make new admins login
+✅ Remake all admin-endpoints to support projects according to new kv-store idea.
 
-Agent-OpenAPI and CRUD-OpenAPI user oAuth
+✅ Add `ADMIN_MAX_*` on db-size and admin-db-count, that are sensible to the bottlenecks of upstash.
 
-Also admin oauth for root openapi
+✅ Remove all DBs except the root one, using a simple one-time query.
 
-Figure out how to do Key Ranges or other way to efficiently index/separate on keys (maybe 1 db per user)
+Recreate dbs for agents and for auth
+Apply `ADMIN_MAX_DB_COUNT` in `upsertDatabase`
 
-Figure out how to do oAuth properly so users can login when using the GPT
+Apply `ADMIN_MAX_DB_SIZE` in `update` and `create`
 
-Make a POC in the oAI GPT builder where the user logs in with oAuth, then it keeps track of a calendar-db for each user.
+Apply `ADMIN_MAX_REQUESTS_PER_HOUR` in all CRUD operations.
 
-# CRUDDY IDEA:
+# Auth Refactor
 
-1. remake all endpoints to support projects according to new kv-store idea
-2. serve entire openapi spec with user-based oauth2 at https://data.actionschema.com/project/{slug}/openapi.json
-3. make CRUDDY communicate this clearly
+✅ Refactor `getOpenapi, getCrudOpenapi, getProjectOpenapi` to add auth2 flows but also keep secondary options available.
+
+✅ For all CRUD endpoints, use permission endpoint of `auth` to authenticate with `admin + user` scope.
+
+🟠 Now a oauth2-user can alter any database, even if it's not user-based. How do this right?
+
+🟠 For all admin endpoints, use permission endpoint of `auth` to authenticate with `admin` scope.
+
+🟠 Ensure admin can only manage their own projects.
+
+# Test / Frontend / GPT
+
+Test CRUD OpenAPI in localhost, and ensure now it's easy to play around with it.
+
+Make a new html by applying `website.yaml`. Alter it so it logs in with github first, then renders projects and models, linking to `project.html?id=`, `model.html?id=` as well as the respective references. Take baseUrl from `window.location.origin`.
+
+Give CRUDDY the instructions to make it easy for people to try a project or model by linking to the reference of it.
 
 Now we can bypass the backend, making it super easy to serve an MVP! And I don't see why this would be insecure! Afterwards, we can use a CLI to go from openapi + problem/solution ==> sitemap.xml with description ==> html.
 
-# Bugs
+# POC: Landing Pages
 
-Read bug: it does hundreds of this: `0!==17837860735467677114`. Also it's slow and there are some other warnings.
+After that works, replace the current agent.actionschema.com with admin.html becoming index.html and remake it.
 
-Test both agents here and improve until they're good.
+Do the same for data.actionschema.com
 
-Draw out idea --> endpoint once more for homepage and see what else I need in `/message`.
+Do the same for actionschema.com but only after entering `search.html`. Ensure to use `redirectUrl` feature here.
 
-# `website.yaml`
+Document this all in some docs
 
-- ✅ Iterate on `website.yaml` source (in english)
-- Make JSON Schema for `website.yaml` and host it on dui.actionschema.com/website.schema.json
-- Make a CLI that looks into `website.yaml` or `public/website.yaml` and runs the claude3.5 prompt for all each file provided as param (or all if '.') and stores the result in the file in public.
-- Ensure it uses public/openapi.json or http://localhost:3000/openapi.json if not there and uses `pruneOpenapi` for context.
-- 🎉 Now I have an easy way to update my frontend after I change the backend
+Before login, make scopes easy to set from the frontpage
 
-# Chain
-
-- run `npx summarize-folder .`
-- prune-prompt.md -> prune_result.yaml
-- getFileHierarchyContent(prune_result.yaml) -> prune_content.yaml
-- code-prompt.md -> changes_content.yaml
-- writeFileHierarchyContent(changes_content.yaml)
-- See diff!
-
-TODO:
-
-- Make cli `npx writeprompt [promptpath] [outputpath]` that has relative filepaths and other variables as context in `{}` to create the full prompt, executes `llm.actionschema.com/claude/completion`, and writes the resulting last codeblock to the file.
-- Make cli `npx executeapi operationId [inputglob] [outputfile]` that logs in into actionschema and then has all apis and envs in one
-- After making the other stuff also CLIs I should be able to chain it using `&&`
-- This is a great ux I can probably borrow and insert my api into: https://github.com/saoudrizwan/claude-dev
-- If this can be done on a public repo for any issue, we can test it!!!! It can also be hidden and served as API this way. Don't deploy this publicly, private vercel project should do the trick and we can then serve it as `npx aiswe "paste your ticket"` and it would literally just do everything remotely and write to your fs afterwards.
-
-## Ratelimit
-
-After there's oauth, add a ratelimit for every admin and every user of every crud.
+Ensure scopes are properly passed and stored, and it all works for multiple providers.
 
 ## Improvements
 
@@ -90,8 +80,13 @@ After there's oauth, add a ratelimit for every admin and every user of every cru
 - Remove ambiguity and make search much more simple.
 - Greatly simplify the CRUD API by removing lots of stuff and use some sort of hybrid search.
 
-## Relative references
+# Demos
 
-Schemas and openapis should have ability to cross reference local relative files. This should be able to be resolved in all tools, both locally and in production, both on backend and frontend.
+Plan demos to demonstrate the ActionSchema data plugin:
 
-This will help to remove code duplication in schemas that is becoming an increasingly big problem now.
+- Make a Video
+- Demo to Maarten/Milan
+- Demo to some devs
+- Demo to Nexler
+- Demo to Upstash
+- Demo to Krijn

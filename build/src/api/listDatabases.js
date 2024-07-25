@@ -1,9 +1,15 @@
 import { Redis } from "@upstash/redis";
 import { getUpstashRedisDatabase } from "../upstashRedis.js";
 import { notEmpty } from "from-anywhere";
+import { getAdminAuthorized } from "../getAdminAuthorized.js";
+import { getProjectDetails } from "../getProjectDetails.js";
+/** Lists databases for your current project */
 export const listDatabases = async (context) => {
     const { Authorization } = context;
     const apiKey = Authorization?.slice("Bearer ".length);
+    if (!apiKey || !(await getAdminAuthorized(Authorization))) {
+        return { isSuccessful: false, message: "Unauthorized", status: 403 };
+    }
     // auth admin
     const rootUpstashApiKey = process.env["X_UPSTASH_API_KEY"];
     const rootUpstashEmail = process.env["X_UPSTASH_EMAIL"];
@@ -31,14 +37,16 @@ export const listDatabases = async (context) => {
         url: `https://${rootDatabaseDetails.endpoint}`,
         token: rootDatabaseDetails.rest_token,
     });
-    const slugs = await root.smembers(`adminslugs_${apiKey}`);
-    if (!slugs) {
+    const admin = await root.get(`admin_${apiKey}`);
+    if (!admin) {
         return { isSuccessful: false, message: "Unauthorized", status: 403 };
     }
-    if (slugs.length < 1) {
-        return { isSuccessful: true, message: "No dbs yet" };
+    const project = await getProjectDetails(admin.currentProjectSlug);
+    if (!project.projectDetails) {
+        return { isSuccessful: false, message: project.message, status: 404 };
     }
-    const details = await root.mget(...slugs);
+    const slugs = project.projectDetails.databaseSlugs;
+    const details = await root.mget(slugs.map((slug) => `db_${slug}`));
     const databases = details
         .map((x, index) => x
         ? {
@@ -49,6 +57,11 @@ export const listDatabases = async (context) => {
         }
         : null)
         .filter(notEmpty);
-    return { isSuccessful: true, message: "Found your dbs", databases };
+    return {
+        isSuccessful: true,
+        message: "Found your dbs",
+        databases,
+        currentProjectSlug: admin.currentProjectSlug,
+    };
 };
 //# sourceMappingURL=listDatabases.js.map

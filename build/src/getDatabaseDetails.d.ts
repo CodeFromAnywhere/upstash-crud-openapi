@@ -3,10 +3,7 @@ import { DatabaseDetails } from "./types.js";
 export declare const getDatabaseDetails: (databaseSlug: string) => Promise<{
     isSuccessful: boolean;
     message: string;
-    databaseDetails?: undefined;
-} | {
-    databaseDetails: DatabaseDetails | null;
-    isSuccessful: boolean;
-    message: string;
+    databaseSlug?: string | undefined;
+    databaseDetails?: DatabaseDetails | undefined;
 }>;
 //# sourceMappingURL=getDatabaseDetails.d.ts.map
