@@ -4,118 +4,131 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Project Dashboard</title>
+    <title>CRUD Admin</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.3.4/axios.min.js"></script>
 </head>
 
 <body class="bg-gray-100">
     <div id="app" class="container mx-auto p-4">
-        <h1 class="text-3xl font-bold mb-4">Project Dashboard</h1>
-        <div id="loading" class="text-center py-4">
+        <h1 class="text-3xl font-bold mb-4">CRUD Admin</h1>
+        <div id="loading" class="text-center py-4 hidden">
             <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto"></div>
             <p class="mt-2">Loading...</p>
         </div>
         <div id="projects" class="space-y-4"></div>
         <a href="reference.html"
-            class="mt-8 inline-block bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">View Reference</a>
+            class="mt-4 inline-block bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Documentation</a>
     </div>
 
     <script>
         const API_BASE_URL = 'https://data.actionschema.com';
         const AUTH_URL = 'https://auth.actionschema.com/oauth/authorize?client_id=crud_website&redirect_uri=https://data.actionschema.com/admin.html';
 
-        async function init() {
+        async function fetchWithAuth(url, options = {}) {
             const authToken = localStorage.getItem('authToken');
             if (!authToken) {
                 window.location.href = AUTH_URL;
                 return;
             }
+            return fetch(url, {
+                ...options,
+                headers: {
+                    ...options.headers,
+                    'Authorization': `Bearer ${authToken}`
+                }
+            });
+        }
 
-            try {
-                await fetchAndRenderProjects(authToken);
-            } catch (error) {
-                console.error('Error fetching projects:', error);
-                document.getElementById('loading').innerHTML = '<p class="text-red-500">Error loading projects. Please try again.</p>';
+        async function removeProject(projectSlug) {
+            const response = await fetchWithAuth(`${API_BASE_URL}/removeProject`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ projectSlug })
+            });
+            if (response.ok) {
+                loadProjects();
+            } else {
+                alert('Failed to remove project');
             }
         }
 
-        async function fetchAndRenderProjects(authToken) {
-            const response = await axios.get(`${API_BASE_URL}/listProjects`, {
-                headers: { 'Authorization': `Bearer ${authToken}` }
+        async function removeDatabase(databaseSlug) {
+            const response = await fetchWithAuth(`${API_BASE_URL}/removeDatabase`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ databaseSlug })
             });
+            if (response.ok) {
+                loadProjects();
+            } else {
+                alert('Failed to remove database');
+            }
+        }
 
-            const projects = response.data.projects;
+        function renderProjects(projects) {
             const projectsContainer = document.getElementById('projects');
             projectsContainer.innerHTML = '';
 
-            for (const project of projects) {
-                const projectElement = await createProjectElement(project, authToken);
-                projectsContainer.appendChild(projectElement);
-            }
-
-            document.getElementById('loading').style.display = 'none';
-        }
-
-        async function createProjectElement(project, authToken) {
-            const projectDiv = document.createElement('div');
-            projectDiv.className = 'bg-white p-4 rounded shadow';
-            projectDiv.innerHTML = `
-                <h2 class="text-xl font-semibold mb-2">${project.projectSlug}</h2>
-                <p class="text-gray-600 mb-4">${project.description || 'No description'}</p>
-                <h3 class="text-lg font-semibold mb-2">Databases:</h3>
-                <ul id="databases-${project.projectSlug}" class="list-disc pl-5 mb-4"></ul>
-                <button onclick="deleteProject('${project.projectSlug}')" class="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600">Delete Project</button>
-            `;
-
-            const databasesResponse = await axios.get(`${API_BASE_URL}/listDatabases`, {
-                headers: { 'Authorization': `Bearer ${authToken}` }
-            });
-
-            const databases = databasesResponse.data.databases.filter(db => db.projectSlug === project.projectSlug);
-            const databasesList = projectDiv.querySelector(`#databases-${project.projectSlug}`);
-
-            databases.forEach(database => {
-                const li = document.createElement('li');
-                li.className = 'mb-2';
-                li.innerHTML = `
-                    <span>${database.databaseSlug}</span>
-                    <button onclick="deleteDatabase('${database.databaseSlug}')" class="ml-2 text-red-500 hover:text-red-700">Delete</button>
-                    <a href="/model.html?databaseSlug=${database.databaseSlug}" class="ml-2 text-blue-500 hover:text-blue-700">View</a>
+            projects.forEach(project => {
+                const projectElement = document.createElement('div');
+                projectElement.className = 'bg-white p-4 rounded shadow';
+                projectElement.innerHTML = `
+                    <h2 class="text-xl font-semibold">${project.projectSlug}</h2>
+                    <p class="text-gray-600">${project.description || 'No description'}</p>
+                    <h3 class="text-lg font-semibold mt-2">Databases:</h3>
+                    <ul class="list-disc pl-5">
+                        ${project.databases.map(db => `
+                            <li class="flex items-center justify-between">
+                                <a href="/model.html?databaseSlug=${db.databaseSlug}" class="text-blue-500 hover:underline">${db.databaseSlug}</a>
+                                <button class="text-red-500 hover:text-red-700" onclick="removeDatabase('${db.databaseSlug}')">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
+                                    </svg>
+                                </button>
+                            </li>
+                        `).join('')}
+                    </ul>
+                    <button class="mt-2 text-red-500 hover:text-red-700" onclick="removeProject('${project.projectSlug}')">
+                        Remove Project
+                    </button>
                 `;
-                databasesList.appendChild(li);
+                projectsContainer.appendChild(projectElement);
             });
-
-            return projectDiv;
         }
 
-        async function deleteProject(projectSlug) {
-            const authToken = localStorage.getItem('authToken');
+        async function loadProjects() {
+            const loadingElement = document.getElementById('loading');
+            loadingElement.classList.remove('hidden');
+
             try {
-                await axios.post(`${API_BASE_URL}/removeProject`, { projectSlug }, {
-                    headers: { 'Authorization': `Bearer ${authToken}` }
-                });
-                await fetchAndRenderProjects(authToken);
+                const response = await fetchWithAuth(`${API_BASE_URL}/listProjects`);
+                if (response.ok) {
+                    const data = await response.json();
+                    renderProjects(data.projects);
+                } else {
+                    throw new Error('Failed to load projects');
+                }
             } catch (error) {
-                console.error('Error deleting project:', error);
-                alert('Failed to delete project. Please try again.');
+                console.error('Error loading projects:', error);
+                alert('Failed to load projects. Please try again.');
+            } finally {
+                loadingElement.classList.add('hidden');
             }
         }
 
-        async function deleteDatabase(databaseSlug) {
+        // Check for authToken and load projects on page load
+        document.addEventListener('DOMContentLoaded', () => {
             const authToken = localStorage.getItem('authToken');
-            try {
-                await axios.post(`${API_BASE_URL}/removeDatabase`, { databaseSlug }, {
-                    headers: { 'Authorization': `Bearer ${authToken}` }
-                });
-                await fetchAndRenderProjects(authToken);
-            } catch (error) {
-                console.error('Error deleting database:', error);
-                alert('Failed to delete database. Please try again.');
+            if (!authToken) {
+                window.location.href = AUTH_URL;
+            } else {
+                loadProjects();
             }
-        }
-
-        init();
+        });
     </script>
 </body>
 

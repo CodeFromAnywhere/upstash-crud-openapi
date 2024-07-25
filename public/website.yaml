@@ -7,11 +7,12 @@ index.html: make me a nice landing page in html + tailwind css CDN + js
   Think step by step
 
 admin.html:
-  Get authToken in localstorage, if it's not present, redirect to https://auth.actionschema.com/oauth/authorize?client_id=crud_website
+  Get authToken in localstorage, if it's not present, redirect to https://auth.actionschema.com/oauth/authorize?client_id=crud_website&redirect_uri=https://data.actionschema.com/admin.html
 
-  If it's present, retreive listProjects and render all projects with for each project the description and databases.
+  If authToken is present, retreive /listProjects and render all projects with for each project the description and databaseSlugs.
   - Show loading indicator while this is loading.
-  - Allow deletion of each project and database via a delete icon with the appropriate endpoints.
+  - Allow deletion of each project via /removeProject (delete icon button)
+  - Allow deletion of each database via /removeDatabase (delete icon button)
   - Allow clicking a database, leading to /model.html?databaseSlug={slug}
 
   There should be a button linking to `reference.html` at the bottom.

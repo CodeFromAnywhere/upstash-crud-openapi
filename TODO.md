@@ -28,8 +28,6 @@ Fix the client everywhere so `client.auth("permission")` allows for non-200 stat
 🎉 Confirm auth works again
 🎉 Confirm agents work again
 
-Fix oauth authorization in ChatGPT... `Missing access token, received 403 from https://auth.actionschema.com/oauth/access_token: response_data={'error': 'Unauthorized'}`. Likely, I just don't have the right linking to the client.
-
 # Feature rate limits
 
 Apply `ADMIN_MAX_DB_COUNT` in `upsertDatabase`
