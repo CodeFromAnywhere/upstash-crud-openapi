@@ -6,6 +6,10 @@
       "destination": "/reference.html"
     },
     {
+      "source": "/project/:p/reference.html",
+      "destination": "/reference.html"
+    },
+    {
       "source": "/:path*",
       "destination": "/api/index.ts"
     }

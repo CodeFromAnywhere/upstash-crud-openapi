@@ -12,17 +12,21 @@ admin.html: Make a new super cool website in HTML, Tailwind CSS CDN, and JS.
 
   If authToken is present, retreive /listProjects and render all projects with for each project the description and databaseSlugs.
   - Show loading indicator while this is loading.
+  - For each project link to /project/{projectSlug}/schema.json and /project/{projectSlug}/reference.html
   - Allow deletion of each project via /removeProject (delete icon button)
   - Allow deletion of each database via /removeDatabase (delete icon button)
   - Allow clicking a database, leading to /model.html?databaseSlug={slug}
 
-  There should be a docs button linking to `reference.html`. Besides it, an text-input prefilled with the auth-token. copyable with a button.
+  There should be a section on top with some buttons.
+  - a docs button linking to `reference.html`.
+  - Besides it, an text-input prefilled with the auth-token. copyable with a button.
+  - a button linking to `jsonschema.html`
+  - a button to create a new db, linking to new.html
 
   Use the OpenAPI as reference for your endpoints.
 
 model.html:
   Uses ?databaseSlug=xxx and the authToken from localStorage, and calls `/read` and `/getSchema` when loading, showing the results in a table.
-
 
   Every property in the schema from `/getSchema` is a column in the table. Each row has a button linking to `update.html?databaseSlug={slug}&rowId={id}`.
 
