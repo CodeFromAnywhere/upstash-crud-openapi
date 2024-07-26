@@ -152,6 +152,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/project/{projectSlug}/schema.json": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Project OpenAPI */
+        get: operations["getProjectSchema"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/{databaseSlug}/schema.json": {
         parameters: {
             query?: never;
@@ -424,6 +441,8 @@ export interface operations {
                         isSuccessful?: boolean;
                         message?: string;
                         status?: number;
+                        /** @description The slug of the project these databases belong to */
+                        currentProjectSlug?: string;
                         databases?: {
                             databaseSlug: string;
                             openapiUrl: string;
@@ -552,9 +571,12 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
+                        isSuccessful?: boolean;
+                        message?: string;
                         projects?: {
                             projectSlug?: components["schemas"]["UrlSlug"];
                             description?: string;
+                            databaseSlugs?: string[];
                         }[];
                     };
                 };
@@ -649,7 +671,34 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["openapi.schema"];
+                    "application/json": components["schemas"]["openapi.schema"] | {
+                        isSuccessful: boolean;
+                        message?: string;
+                    };
+                };
+            };
+        };
+    };
+    getProjectSchema: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                projectSlug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
                 };
             };
         };
@@ -722,6 +771,10 @@ export const operationUrlObject = {
   "getProjectOpenapi": {
     "method": "get",
     "path": "/project/{projectSlug}/openapi.json"
+  },
+  "getProjectSchema": {
+    "method": "get",
+    "path": "/project/{projectSlug}/schema.json"
   },
   "getSchema": {
     "method": "get",

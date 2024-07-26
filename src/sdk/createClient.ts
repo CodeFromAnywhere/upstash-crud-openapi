@@ -1,3 +1,5 @@
+
+
 export const createClient = <
   operations extends {
     [key: string]: {
@@ -106,7 +108,7 @@ export const createClient = <
           }
           if (!response.headers.get("Content-Type")?.includes("json")) {
             response.headers.forEach((value, key) => {
-              console.log({ key, value });
+            console.log({key,value})
             });
 
             console.log("No JSON?");
