@@ -53,6 +53,7 @@
 
     <script>
         const API_URL = 'https://data.actionschema.com';
+        const AUTH_URL = 'https://auth.actionschema.com';
         let authToken = localStorage.getItem('authToken');
 
         function copyAuthToken() {
@@ -150,14 +151,36 @@
             document.getElementById('projects').style.display = 'grid';
         }
 
-        function init() {
-            if (!authToken) {
-                window.location.href = 'https://auth.actionschema.com/client/authorize?client_id=contact-app&redirect_uri=https://data.actionschema.com/admin.html';
-                return;
+        async function exchangeCodeForToken(code) {
+            try {
+                const response = await axios.post(`${AUTH_URL}/client/exchangeCode`, { code });
+                const { access_token } = response.data;
+                localStorage.setItem('authToken', access_token);
+                authToken = access_token;
+                document.getElementById('authToken').value = authToken;
+                loadProjects();
+            } catch (error) {
+                console.error('Error exchanging code for token:', error);
+                alert('Failed to authenticate. Please try again.');
             }
+        }
 
-            document.getElementById('authToken').value = authToken;
-            loadProjects();
+        function getUrlParameter(name) {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get(name);
+        }
+
+        function init() {
+            const code = getUrlParameter('code');
+            if (code) {
+                exchangeCodeForToken(code);
+            } else if (!authToken) {
+                window.location.href = `${AUTH_URL}/client/authorize?client_id=contact-app&redirect_uri=${encodeURIComponent(window.location.href)}`;
+                return;
+            } else {
+                document.getElementById('authToken').value = authToken;
+                loadProjects();
+            }
         }
 
         init();
