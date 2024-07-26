@@ -241,3 +241,27 @@ Every permission given to actionschema:
 ✅ Remove all DBs except the root one, using a simple one-time query.
 
 ✅ Deployed openapi-util/migrate and finally crud-openapi
+
+## Deployment and production-readiness (July 25th)
+
+✅ OAuth2 needs CRUD-OpenAPI and CRUD-OpenAPI needs OAuth2. Im stuck! Let's make an admin token that always works in `.env` and deploy this.
+
+✅ Test creating a database via https://data.actionschema.com/reference.html and confirm the creation works as expected, as well as projects, and CRUD.
+
+✅ Recreate DBs for agents and for auth and also deploy the keys.
+
+✅ `"message": "Invalid method."`. Fix that I can crud at: https://data.actionschema.com/actionschema-oauth-state/reference.html#/operations/read . The endpoints aren't accessible now due to the resolver.
+
+✅ Test all CRUD operations for the above. Verify each time within upstash.
+
+✅ Now add the admin oauth values as previously under the same Auth
+
+✅ Fixed authToken bug and other keys in `upsertDatabase`. Ran migration again.
+
+✅ 🤔 Test auth locally and figure out why `permission` endpoint isn't authorized. Why does it try to authorize with `permission` in the first place? It doesn't use the adminAuthToken from the DB since it has stuff stored directly without being an admin in `auth`. That's not an issue for me... So let's remove `getAdminAuthorized` for now when it's not REALLY needed.
+
+✅ Fixed some crucial bugs in redis: mget empty set, and improper setting of keys to wrong values
+
+✅ Now test all https://data.actionschema.com/reference.html endpoints and confirm it works there without crashes.
+
+🎉 Confirm crud works again

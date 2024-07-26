@@ -45,10 +45,17 @@ export const update = async (
 
   const redisRestToken = databaseDetails.rest_token;
   const redisRestUrl = databaseDetails.endpoint;
+
+  const authSuffix = databaseDetails.isUserLevelSeparationEnabled
+    ? `_${apiKey}`
+    : "";
+  const baseKey = `db_${databaseSlug}${authSuffix}_`;
+
   const [item] = await upstashRedisGetMultiple({
     redisRestToken,
     redisRestUrl,
     keys: [id],
+    baseKey,
   });
 
   const schemaPropertyKeys = Object.keys(databaseDetails.schema.properties);
@@ -69,11 +76,6 @@ export const update = async (
   );
 
   const mergedItem = { ...(item || {}), ...castedPartialItem } as O;
-
-  const authSuffix = databaseDetails.isUserLevelSeparationEnabled
-    ? `_${apiKey}`
-    : "";
-  const baseKey = `db_${databaseSlug}${authSuffix}_`;
 
   await upstashRedisSetItems({
     baseKey,
