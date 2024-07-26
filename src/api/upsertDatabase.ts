@@ -197,7 +197,7 @@ export const upsertDatabase: Endpoint<"upsertDatabase"> = async (context) => {
       upstashEmail: rootUpstashEmail,
       authToken: realAuthToken,
       schema,
-      isUserLevelSeparationEnabled,
+      isUserLevelSeparationEnabled: isUserLevelSeparationEnabled || false,
       // Set the correct DB Details!
       database_id: useRootDatabase
         ? rootDatabaseDetails.database_id
