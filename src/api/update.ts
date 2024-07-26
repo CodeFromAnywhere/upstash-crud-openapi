@@ -58,21 +58,21 @@ export const update = async (
     baseKey,
   });
 
-  const schemaPropertyKeys = Object.keys(databaseDetails.schema.properties);
+  // todo: put this back after its really working again
+  //const schemaPropertyKeys = Object.keys(databaseDetails.schema.properties);
 
-  const validPartialItemPropertyKeys = partialItemPropertyKeys.filter((k) =>
-    schemaPropertyKeys.includes(k),
-  );
+  // const validPartialItemPropertyKeys = partialItemPropertyKeys.filter((k) =>
+  //   schemaPropertyKeys.includes(k),
+  // );
 
-  const prunedPartialItem: O = getSubsetFromObject(
-    partialItem,
-    validPartialItemPropertyKeys,
-  );
+  // const prunedPartialItem: O = getSubsetFromObject(
+  //   partialItem,
+  //   validPartialItemPropertyKeys,
+  // );
 
   // Ensure all values that are null become undefined
-  const castedPartialItem = objectMapSync(
-    prunedPartialItem as O,
-    (key, value) => (value === null ? undefined : value),
+  const castedPartialItem = objectMapSync(partialItem as O, (key, value) =>
+    value === null ? undefined : value,
   );
 
   const mergedItem = { ...(item || {}), ...castedPartialItem } as O;
