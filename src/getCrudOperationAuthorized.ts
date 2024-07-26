@@ -48,6 +48,7 @@ export const getCrudOperationAuthorized = async (
     headers: { Authorization },
   });
 
+  console.log("gethere", { permission, Authorization, databaseDetails });
   if (!permission) {
     return false;
   }
