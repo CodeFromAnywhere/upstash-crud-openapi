@@ -107,7 +107,6 @@ export const removeProject: Endpoint<"removeProject"> = async (context) => {
       { currentProjectSlug: projectSlugs[0] } satisfies AdminDetails,
     );
   }
-  ///todo : set current project to somethig else if it was this one
 
   return { isSuccessful: true, message: "Project removed successfully" };
 };
