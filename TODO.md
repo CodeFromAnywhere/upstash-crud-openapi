@@ -4,21 +4,36 @@
 
 ✅ Improve `/project/{slug}/openapi.json` so it has proper schema references, and operationIds for the duplicated operations!
 
+✅ Ensure at the `/update` endpoint "required" is removed from the type interface of each property (if it's an object).
+
+# Improved Auth client creation
+
+✅ Make `auth:upsertClient` simpler so it doesn't need clientId (Autogen it) and it has some examples in the schema definition so we know how to create one for github auth, for example.
+
+✅ As a non-admin, I should be able to make a functioning client. For this `upsertClient-->client` needs to be indexed so it can easily be found.
+
+# Improved GPTs
+
+Give `ActionSchema Data` better instructions:
+
+- Add `auth:upsertClient` action with proper oauth2
+- new conversations, ensure to check current project, and select a project first
+- make it easy for people to try a project or model by linking to the reference + api key of it at every step.
+- add action suggestions at every step: among other things, creating a client
+- ensure it knows what it can and can't do.
+
+Give `AcitonSchema Backend` better instructions:
+
+- First force to retrieve db openapi and other (pruned) openapis you want to do something with and instruct to get it first if you haven't got it.
+- Ensure it outputs:
+  - openapi with proper oauth2 spec
+  - the written endpoint in the correct typescript Request/Response style
+
+# Small improvements
+
+Apply all needed transformations in `/{databaseSlug}/openapi.json` as well (especially removing required from partialItem)
+
 Fix `/update` so it can actually find the schema again, and have a little bit of validation in create and update.
-
-# Better connection to oauth
-
-Make upsertClient simpler so it doesn't need clientId (Autogen it)
-
-For every new project, call upsertClient so it has authorization clientID+secret immediately!
-
-For every new database, call upsertClient so it has authorization clientID+secret immediately!
-
-For listDatabases, respond with clientId/clientSecret.
-
-Give CRUDDY the instructions to make it easy for people to try a project or model by linking to the reference of it.
-
-Now we can bypass the backend, making it super easy to serve an MVP! And I don't see why this would be insecure! Afterwards, we can use a CLI to go from openapi + problem/solution ==> sitemap.xml with description ==> html.
 
 # Demos
 
@@ -46,6 +61,5 @@ Apply `ADMIN_MAX_REQUESTS_PER_HOUR` in all CRUD operations.
 
 # Improvements
 
-- Ensure at the `/update` endpoint "required" is removed from the type interface of each property (if it's an object).
 - Remove ambiguity and make search much more simple.
 - Greatly simplify the CRUD API by removing lots of stuff and use some sort of hybrid search.

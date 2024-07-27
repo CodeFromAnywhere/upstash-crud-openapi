@@ -339,7 +339,8 @@
                           }
                         }
                       }
-                    }
+                    },
+                    "currentProjectSlug": { "type": "string" }
                   }
                 }
               }

@@ -1,23 +1,13 @@
-import { Endpoint, ResponseType } from "../client.js";
-import { kebabCase, mapValuesSync, pascalCase } from "from-anywhere";
+import { OpenapiPathsObject, resolveSchemaRecursive } from "openapi-util";
+import { kebabCase, pascalCase } from "from-anywhere";
 import { JSONSchema7 } from "json-schema";
+import { Endpoint, ResponseType } from "../client.js";
 import rawOpenapi from "../../src/crud-openapi.json" assert { type: "json" };
 import { getProjectDetails } from "../getProjectDetails.js";
 import { removePropertiesFromObjectSchema } from "../removePropertiesFromObjectSchema.js";
 import { getModelDefinitions } from "../getModelDefinitions.js";
-import {
-  OpenapiDocument,
-  OpenapiPathsObject,
-  resolveSchemaRecursive,
-} from "openapi-util";
-const isDev = process.env.__VERCEL_DEV_RUNNING === "1";
 
-const removeDatabaseSlugFromSchemaInPlace = (schema: JSONSchema7) => {
-  const newSchema = removePropertiesFromObjectSchema(schema as JSONSchema7, [
-    "databaseSlug",
-  ]);
-  schema = newSchema;
-};
+const isDev = process.env.__VERCEL_DEV_RUNNING === "1";
 
 /**
 Should make a project openapi from the schema fetched from projectSlug

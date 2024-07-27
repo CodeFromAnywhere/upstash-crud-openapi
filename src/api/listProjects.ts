@@ -1,7 +1,7 @@
 import { Endpoint } from "../client.js";
 import { Redis } from "@upstash/redis";
 import { getDatabaseDetails } from "../getDatabaseDetails.js";
-import { DbKey, ProjectDetails } from "../types.js";
+import { AdminDetails, DbKey, ProjectDetails } from "../types.js";
 import { notEmpty } from "from-anywhere";
 import { getUpstashRedisDatabase } from "../upstashRedis.js";
 
@@ -43,6 +43,10 @@ export const listProjects: Endpoint<"listProjects"> = async (context) => {
     token: rootDatabaseDetails.rest_token,
   });
 
+  const admin: AdminDetails | null = await root.get(
+    `admin_${apiKey}` satisfies DbKey,
+  );
+
   const projectSlugs: string[] = await root.smembers(
     `projects_${apiKey}` satisfies DbKey,
   );
@@ -76,5 +80,6 @@ export const listProjects: Endpoint<"listProjects"> = async (context) => {
     isSuccessful: true,
     message: "Projects retrieved successfully",
     projects,
+    currentProjectSlug: admin?.currentProjectSlug,
   };
 };
