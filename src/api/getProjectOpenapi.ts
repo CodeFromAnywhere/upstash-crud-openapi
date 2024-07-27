@@ -1,5 +1,5 @@
 import { Endpoint, ResponseType } from "../client.js";
-import { kebabCase, mapValuesSync } from "from-anywhere";
+import { kebabCase, mapValuesSync, pascalCase } from "from-anywhere";
 import { JSONSchema7 } from "json-schema";
 import rawOpenapi from "../../src/crud-openapi.json" assert { type: "json" };
 import { getProjectDetails } from "../getProjectDetails.js";
@@ -12,13 +12,11 @@ import {
 } from "openapi-util";
 const isDev = process.env.__VERCEL_DEV_RUNNING === "1";
 
-const removeDatabaseSlugFromSchemasInPlace = (...schemas: JSONSchema7[]) => {
-  schemas.forEach((schema) => {
-    const newSchema = removePropertiesFromObjectSchema(schema as JSONSchema7, [
-      "databaseSlug",
-    ]);
-    schema = newSchema;
-  });
+const removeDatabaseSlugFromSchemaInPlace = (schema: JSONSchema7) => {
+  const newSchema = removePropertiesFromObjectSchema(schema as JSONSchema7, [
+    "databaseSlug",
+  ]);
+  schema = newSchema;
 };
 
 /**
@@ -57,22 +55,66 @@ export const getProjectOpenapi: Endpoint<"getProjectOpenapi"> = async (
   })) as typeof rawOpenapi;
 
   const paths = databases.reduce((previous, database) => {
-    const create = { ...openapi.paths["/create"] };
-    const read = { ...openapi.paths["/read"] };
-    const update = { ...openapi.paths["/update"] };
-    const remove = { ...openapi.paths["/remove"] };
+    const read: any = { ...openapi.paths["/read"] };
+    const create: any = { ...openapi.paths["/create"] };
+    const update: any = { ...openapi.paths["/update"] };
+    const remove: any = { ...openapi.paths["/remove"] };
+
+    const modelItemSchema =
+      modelDefinitions[`${pascalCase(database.databaseSlug)}`];
 
     create.post.operationId = kebabCase(`${database.databaseSlug}-create`);
     read.post.operationId = kebabCase(`${database.databaseSlug}-create`);
     update.post.operationId = kebabCase(`${database.databaseSlug}-create`);
     remove.post.operationId = kebabCase(`${database.databaseSlug}-create`);
 
-    removeDatabaseSlugFromSchemasInPlace(
-      create.post.requestBody.content["application/json"].schema,
-      read.post.requestBody.content["application/json"].schema,
-      update.post.requestBody.content["application/json"].schema,
-      remove.post.requestBody.content["application/json"].schema,
-    );
+    // remove databaseSlug
+    read.post.requestBody.content["application/json"].schema =
+      removePropertiesFromObjectSchema(
+        read.post.requestBody.content["application/json"].schema as JSONSchema7,
+        ["databaseSlug"],
+      );
+
+    // remove databaseSlug
+    remove.post.requestBody.content["application/json"].schema =
+      removePropertiesFromObjectSchema(
+        remove.post.requestBody.content["application/json"]
+          .schema as JSONSchema7,
+        ["databaseSlug"],
+      );
+    // remove databaseSlug and replace schema.properties.items.items
+    create.post.requestBody.content[
+      "application/json"
+    ].schema.properties.items.items = modelItemSchema;
+    create.post.requestBody.content["application/json"].schema =
+      removePropertiesFromObjectSchema(
+        create.post.requestBody.content["application/json"]
+          .schema as JSONSchema7,
+        ["databaseSlug"],
+      );
+    //  replace schema.properties.partialItem
+    update.post.requestBody.content[
+      "application/json"
+    ].schema.properties.partialItem = modelItemSchema;
+
+    // remove required if object-schema has required
+    if (
+      update.post.requestBody.content["application/json"].schema.properties
+        .partialItem.type === "object" &&
+      update.post.requestBody.content["application/json"].schema.properties
+        .partialItem.required
+    ) {
+      update.post.requestBody.content[
+        "application/json"
+      ].schema.properties.partialItem.required = undefined;
+    }
+    // remove databaseSlug
+    update.post.requestBody.content["application/json"].schema =
+      removePropertiesFromObjectSchema(
+        update.post.requestBody.content["application/json"]
+          .schema as JSONSchema7,
+        ["databaseSlug"],
+      );
 
     return {
       ...previous,
@@ -88,10 +130,7 @@ export const getProjectOpenapi: Endpoint<"getProjectOpenapi"> = async (
     ...openapi,
     servers: [{ url: origin }],
     info: { title: `${projectSlug} OpenAPI`, version: "1.0", description: "" },
-    components: {
-      ...openapi.components,
-      schemas: modelDefinitions,
-    },
+    components: { ...openapi.components, schemas: undefined },
     paths,
   };
 

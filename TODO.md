@@ -2,7 +2,7 @@
 
 ✅ Improve `/{databaseSlug}/openapi.json` so it also replace ModelItem properly **seems already fine!**
 
-Improve `/project/{slug}/openapi.json` so it has proper schema references, and operationIds for the duplicated operations!
+✅ Improve `/project/{slug}/openapi.json` so it has proper schema references, and operationIds for the duplicated operations!
 
 Fix `/update` so it can actually find the schema again, and have a little bit of validation in create and update.
 
