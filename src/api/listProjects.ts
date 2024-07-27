@@ -55,7 +55,7 @@ export const listProjects: Endpoint<"listProjects"> = async (context) => {
   if (projectSlugs.length === 0) {
     return {
       isSuccessful: false,
-      status: 403,
+      projects: [],
       message: "No projects",
     };
   }

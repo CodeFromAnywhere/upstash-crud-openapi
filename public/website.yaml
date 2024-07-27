@@ -8,8 +8,6 @@ index.html: make me a nice landing page in html + tailwind css CDN + js
 
 admin.html: Make a new super cool website in HTML, Tailwind CSS CDN, and JS.
 
-  Get authToken in localstorage, if it's not present, redirect to https://auth.actionschema.com/oauth/authorize?client_id=crud_website&redirect_uri=https://data.actionschema.com/admin.html
-
   If authToken is present, retreive /listProjects and render all projects with for each project the description and databaseSlugs.
   - Show loading indicator while this is loading.
   - For each project link to /project/{projectSlug}/schema.json and /project/{projectSlug}/reference.html
@@ -24,40 +22,7 @@ admin.html: Make a new super cool website in HTML, Tailwind CSS CDN, and JS.
   - a button to create a new db, linking to new.html
   - button to GPT (https://chatgpt.com/g/g-VmL8hNaEo-data-agent)
 
-
   Use the OpenAPI as reference for your endpoints. Use the best web dev standards and design principles. Make it look enterprisegrade
-
-new.html:
-  Create an HTML page with Tailwind CSS CDN and JavaScript for creating a new database.
-
-  1. Check for authToken in localStorage. If not present, redirect to the auth page.
-
-  2. Display a form with the following fields
-  - Project selection dropdown (populated from /listProjects)
-  - Database name input
-  - Database description textarea
-  - JSON Schema editor (similar to jsonschema.html, but simplified)
-
-  3. Include a "Create Database" submit button.
-  4. On form submission
-  - Validate inputs
-  - Call the appropriate API endpoint (e.g., /createDatabase) with the form data
-  - Show loading indicator during API call
-  - Display success message or error feedback
-
-  5. Add a "Back to Admin" button linking to admin.html
-
-  6. Implement error handling and display user-friendly error messages
-
-  7. Use Tailwind CSS for styling, ensuring a clean and professional look consistent with other pages
-
-  8. Add client-side validation for form fields
-
-  9. Include helpful tooltips or info icons next to form fields to guide users
-
-  10. Optionally, add a preview section that shows a summary of the database configuration before submission
-
-  Think step by step when implementing, ensuring good UX and following web development best practices
 
 model.html:
   Uses ?databaseSlug=xxx and the authToken from localStorage, and calls `/read` and `/getSchema` when loading, showing the results in a table.
