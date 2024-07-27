@@ -54,9 +54,9 @@ export const getProjectOpenapi: Endpoint<"getProjectOpenapi"> = async (
       modelDefinitions[`${pascalCase(database.databaseSlug)}`];
 
     create.post.operationId = kebabCase(`${database.databaseSlug}-create`);
-    read.post.operationId = kebabCase(`${database.databaseSlug}-create`);
-    update.post.operationId = kebabCase(`${database.databaseSlug}-create`);
-    remove.post.operationId = kebabCase(`${database.databaseSlug}-create`);
+    read.post.operationId = kebabCase(`${database.databaseSlug}-read`);
+    update.post.operationId = kebabCase(`${database.databaseSlug}-update`);
+    remove.post.operationId = kebabCase(`${database.databaseSlug}-remove`);
 
     // remove databaseSlug
     read.post.requestBody.content["application/json"].schema =
