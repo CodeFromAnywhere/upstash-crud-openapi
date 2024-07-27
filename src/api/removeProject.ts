@@ -1,7 +1,7 @@
 import { Endpoint } from "../client.js";
 import { Redis } from "@upstash/redis";
 import { getDatabaseDetails } from "../getDatabaseDetails.js";
-import { DatabaseDetails, DbKey } from "../types.js";
+import { AdminDetails, DatabaseDetails, DbKey } from "../types.js";
 import { getProjectDetails } from "../getProjectDetails.js";
 import { removeEntireDatabase } from "../removeEntireDatabase.js";
 import { getUpstashRedisDatabase } from "../upstashRedis.js";
@@ -52,6 +52,17 @@ export const removeProject: Endpoint<"removeProject"> = async (context) => {
     token: rootDatabaseDetails.rest_token,
   });
 
+  const beforeProjectSlugs: string[] = await root.smembers(
+    `projects_${apiKey}` satisfies DbKey,
+  );
+
+  if (beforeProjectSlugs.length <= 1) {
+    return {
+      isSuccessful: false,
+      message: "Can't remove your only project",
+    };
+  }
+
   const keys = projectDetails.databaseSlugs.map(
     (databaseSlug) => `db_${databaseSlug}` satisfies DbKey,
   );
@@ -81,6 +92,22 @@ export const removeProject: Endpoint<"removeProject"> = async (context) => {
 
   await root.del(`project_${projectSlug}` satisfies DbKey);
   await root.srem(`projects_${apiKey}` satisfies DbKey, projectSlug);
+
+  const adminDetails: AdminDetails | null = await root.get(
+    `admin_${apiKey}` satisfies DbKey,
+  );
+
+  if (adminDetails?.currentProjectSlug === projectSlug) {
+    // you removed your current one. let's set the project to the first one to not get corrupt.
+    const projectSlugs: string[] = await root.smembers(
+      `projects_${apiKey}` satisfies DbKey,
+    );
+    await root.set(
+      `admin_${apiKey}` satisfies DbKey,
+      { currentProjectSlug: projectSlugs[0] } satisfies AdminDetails,
+    );
+  }
+  ///todo : set current project to somethig else if it was this one
 
   return { isSuccessful: true, message: "Project removed successfully" };
 };

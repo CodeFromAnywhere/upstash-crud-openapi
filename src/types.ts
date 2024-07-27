@@ -24,7 +24,7 @@ admin-projects:
 adminDetails
 
 - key = `admin_{auth}`
-- value = {currentProjectSlug,githubAuthToken,email}
+- value = {currentProjectSlug}
 
 databaseDetails
 
