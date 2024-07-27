@@ -171,11 +171,8 @@
         }
 
         function init() {
-            const code = getUrlParameter('code');
-            if (code) {
-                exchangeCodeForToken(code);
-            } else if (!authToken) {
-                window.location.href = `${AUTH_URL}/client/authorize?client_id=contact-app&redirect_uri=${encodeURIComponent(window.location.href)}`;
+            if (!authToken) {
+                window.location.href = `/`;
                 return;
             } else {
                 document.getElementById('authToken').value = authToken;
