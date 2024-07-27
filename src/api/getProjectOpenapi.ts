@@ -1,12 +1,25 @@
 import { Endpoint, ResponseType } from "../client.js";
-import { mapValuesSync } from "from-anywhere";
+import { kebabCase, mapValuesSync } from "from-anywhere";
 import { JSONSchema7 } from "json-schema";
-import openapi from "../../src/crud-openapi.json" assert { type: "json" };
+import rawOpenapi from "../../src/crud-openapi.json" assert { type: "json" };
 import { getProjectDetails } from "../getProjectDetails.js";
 import { removePropertiesFromObjectSchema } from "../removePropertiesFromObjectSchema.js";
 import { getModelDefinitions } from "../getModelDefinitions.js";
-import { OpenapiPathsObject } from "openapi-util";
+import {
+  OpenapiDocument,
+  OpenapiPathsObject,
+  resolveSchemaRecursive,
+} from "openapi-util";
 const isDev = process.env.__VERCEL_DEV_RUNNING === "1";
+
+const removeDatabaseSlugFromSchemasInPlace = (...schemas: JSONSchema7[]) => {
+  schemas.forEach((schema) => {
+    const newSchema = removePropertiesFromObjectSchema(schema as JSONSchema7, [
+      "databaseSlug",
+    ]);
+    schema = newSchema;
+  });
+};
 
 /**
 Should make a project openapi from the schema fetched from projectSlug
@@ -36,20 +49,31 @@ export const getProjectOpenapi: Endpoint<"getProjectOpenapi"> = async (
     ? "http://localhost:3000"
     : "https://data.actionschema.com";
 
-  const schemasWithoutDatabaseSlug = mapValuesSync(
-    openapi.components.schemas,
-    (schema) =>
-      schema.type === "object"
-        ? // TODO: replace references to `ModelItem` with `pascalCase(database.databaseSlug)`
-          removePropertiesFromObjectSchema(schema as JSONSchema7, [
-            "databaseSlug",
-          ])
-        : schema,
-  );
-
   const modelDefinitions = getModelDefinitions(databases);
 
+  const openapi = (await resolveSchemaRecursive({
+    document: rawOpenapi,
+    shouldDereference: true,
+  })) as typeof rawOpenapi;
+
   const paths = databases.reduce((previous, database) => {
+    const create = { ...openapi.paths["/create"] };
+    const read = { ...openapi.paths["/read"] };
+    const update = { ...openapi.paths["/update"] };
+    const remove = { ...openapi.paths["/remove"] };
+
+    create.post.operationId = kebabCase(`${database.databaseSlug}-create`);
+    read.post.operationId = kebabCase(`${database.databaseSlug}-create`);
+    update.post.operationId = kebabCase(`${database.databaseSlug}-create`);
+    remove.post.operationId = kebabCase(`${database.databaseSlug}-create`);
+
+    removeDatabaseSlugFromSchemasInPlace(
+      create.post.requestBody.content["application/json"].schema,
+      read.post.requestBody.content["application/json"].schema,
+      update.post.requestBody.content["application/json"].schema,
+      remove.post.requestBody.content["application/json"].schema,
+    );
+
     return {
       ...previous,
       // TODO: replace references to `ModelItem` with `pascalCase(database.databaseSlug)`
@@ -66,10 +90,7 @@ export const getProjectOpenapi: Endpoint<"getProjectOpenapi"> = async (
     info: { title: `${projectSlug} OpenAPI`, version: "1.0", description: "" },
     components: {
       ...openapi.components,
-      schemas: {
-        ...schemasWithoutDatabaseSlug,
-        ...modelDefinitions,
-      },
+      schemas: modelDefinitions,
     },
     paths,
   };

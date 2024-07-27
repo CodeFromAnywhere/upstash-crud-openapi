@@ -1,6 +1,6 @@
 # Small but important
 
-Improve /slug/openapi.json so it also replace ModelItem properly
+✅ Improve `/{databaseSlug}/openapi.json` so it also replace ModelItem properly **seems already fine!**
 
 Improve `/project/{slug}/openapi.json` so it has proper schema references, and operationIds for the duplicated operations!
 
@@ -44,7 +44,7 @@ Apply `ADMIN_MAX_DB_SIZE` in `update` and `create`
 
 Apply `ADMIN_MAX_REQUESTS_PER_HOUR` in all CRUD operations.
 
-## Improvements
+# Improvements
 
 - Ensure at the `/update` endpoint "required" is removed from the type interface of each property (if it's an object).
 - Remove ambiguity and make search much more simple.
