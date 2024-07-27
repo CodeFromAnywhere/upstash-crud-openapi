@@ -120,7 +120,7 @@ export const getProjectOpenapi: Endpoint<"getProjectOpenapi"> = async (
     ...openapi,
     servers: [{ url: origin }],
     info: { title: `${projectSlug} OpenAPI`, version: "1.0", description: "" },
-    components: { ...openapi.components, schemas: undefined },
+    components: { ...openapi.components, schemas: {} },
     paths,
   };
 

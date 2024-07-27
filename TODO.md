@@ -13,16 +13,8 @@
 - ✅ make it easy for people to try a project or model by linking to the reference + api key of it at every step.
 - ✅ add action suggestions at every step: among other things, creating a client
 - ✅ ensure it knows what it can and can't do.
-- Add endpoint `auth:admin` to the GPT and describe it with `get all auth info`
-- Instruct the GPT with details about how to add authorization for a website and for a GPT. Ensure it first looks up `auth:admin`
-
-Add links to GPT instructions:
-
-- Project Docs: https://data.actionschema/project/{projectSlug}/reference.html
-- Project OpenAPI: https://data.actionschema/project/{projectSlug}/openapi.json
-- Admin panel: https://data.actionschema.com
-- Backend Agent:
-- Frontend Agent:
+- ✅ Add endpoint `auth:admin` to the GPT and describe it with `get all auth info`
+- ✅ Instruct the GPT with details about how to add authorization for a website and for a GPT. Ensure it first looks up `auth:admin`
 
 # Improved GPTs
 
