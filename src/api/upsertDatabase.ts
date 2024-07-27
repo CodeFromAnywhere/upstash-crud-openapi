@@ -21,6 +21,7 @@ import {
 import { JSONSchema7 } from "json-schema";
 import { rootDatabaseName } from "../state.js";
 import { embeddingsClient } from "../embeddings.js";
+import { getAdminOperationApiKey } from "../getAdminOperationApiKey.js";
 
 export const upsertDatabase: Endpoint<"upsertDatabase"> = async (context) => {
   const {
@@ -34,10 +35,10 @@ export const upsertDatabase: Endpoint<"upsertDatabase"> = async (context) => {
     isUserLevelSeparationEnabled,
   } = context;
 
-  const apiKey = Authorization?.slice("Bearer ".length);
+  const apiKey = await getAdminOperationApiKey(Authorization);
 
-  if (!apiKey || apiKey.length < 64) {
-    return { isSuccessful: false, message: "Please provide your auth token" };
+  if (!apiKey) {
+    return { isSuccessful: false, message: "Unauthorized", status: 403 };
   }
 
   // comes from .env

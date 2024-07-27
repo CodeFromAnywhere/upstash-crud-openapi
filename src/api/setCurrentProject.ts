@@ -4,14 +4,15 @@ import { getDatabaseDetails } from "../getDatabaseDetails.js";
 import { AdminDetails, DbKey, ProjectDetails } from "../types.js";
 import { getProjectDetails } from "../getProjectDetails.js";
 import { getUpstashRedisDatabase } from "../upstashRedis.js";
+import { getAdminOperationApiKey } from "../getAdminOperationApiKey.js";
 
 export const setCurrentProject: Endpoint<"setCurrentProject"> = async (
   context,
 ) => {
   const { projectSlug, Authorization, description } = context;
-  const apiKey = Authorization?.slice("Bearer ".length);
+  const apiKey = await getAdminOperationApiKey(Authorization);
 
-  if (!apiKey || apiKey.length < 64) {
+  if (!apiKey) {
     return { isSuccessful: false, message: "Unauthorized", status: 403 };
   }
 

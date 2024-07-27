@@ -4,11 +4,13 @@ import { getDatabaseDetails } from "../getDatabaseDetails.js";
 import { removeEntireDatabase } from "../removeEntireDatabase.js";
 import { DatabaseDetails, DbKey } from "../types.js";
 import { getUpstashRedisDatabase } from "../upstashRedis.js";
+import { getAdminOperationApiKey } from "../getAdminOperationApiKey.js";
 
 export const removeDatabase: Endpoint<"removeDatabase"> = async (context) => {
   const { databaseSlug, Authorization } = context;
-  const apiKey = Authorization?.slice("Bearer ".length);
-  if (!apiKey || apiKey.length < 64) {
+  const apiKey = await getAdminOperationApiKey(Authorization);
+
+  if (!apiKey) {
     return { isSuccessful: false, message: "Unauthorized", status: 403 };
   }
 

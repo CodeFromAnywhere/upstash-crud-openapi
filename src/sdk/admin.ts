@@ -578,6 +578,7 @@ export interface operations {
                             description?: string;
                             databaseSlugs?: string[];
                         }[];
+                        currentProjectSlug?: string;
                     };
                 };
             };

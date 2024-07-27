@@ -44,9 +44,11 @@ export const getCrudOperationAuthorized = async (
     return true;
   }
 
-  const permission = await client.auth("permission", undefined, {
+  const permissionResult = await client.auth("permission", undefined, {
     headers: { Authorization },
   });
+
+  const permission = permissionResult.permission;
 
   console.log("gethere", { permission, Authorization, databaseDetails });
   if (!permission) {

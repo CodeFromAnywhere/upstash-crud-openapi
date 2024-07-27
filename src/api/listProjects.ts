@@ -1,14 +1,15 @@
 import { Endpoint } from "../client.js";
 import { Redis } from "@upstash/redis";
-import { getDatabaseDetails } from "../getDatabaseDetails.js";
 import { AdminDetails, DbKey, ProjectDetails } from "../types.js";
 import { notEmpty } from "from-anywhere";
 import { getUpstashRedisDatabase } from "../upstashRedis.js";
+import { getAdminOperationApiKey } from "../getAdminOperationApiKey.js";
 
 export const listProjects: Endpoint<"listProjects"> = async (context) => {
   const { Authorization } = context;
-  const apiKey = Authorization?.slice("Bearer ".length);
-  if (!apiKey || apiKey.length < 64) {
+  const apiKey = await getAdminOperationApiKey(Authorization);
+
+  if (!apiKey) {
     return { isSuccessful: false, message: "Unauthorized", status: 403 };
   }
 

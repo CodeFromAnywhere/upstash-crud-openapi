@@ -6,7 +6,7 @@
     {
       "slug": "auth",
       "openapiUrlOrPath": "https://auth.actionschema.com/openapi.json",
-      "operationIds": ["permission"]
+      "operationIds": ["permission", "authenticate"]
     },
     { "slug": "admin", "openapiUrlOrPath": "src/openapi.json" },
     { "slug": "crud", "openapiUrlOrPath": "src/crud-openapi.json" }

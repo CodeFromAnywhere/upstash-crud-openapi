@@ -6,28 +6,37 @@
 
 ✅ Ensure at the `/update` endpoint "required" is removed from the type interface of each property (if it's an object).
 
-# Improved Auth client creation
+# Give `Data Agent` better instructions:
 
-✅ Make `auth:upsertClient` simpler so it doesn't need clientId (Autogen it) and it has some examples in the schema definition so we know how to create one for github auth, for example.
+- ✅ Add `auth:upsertClient` action with proper oauth2
+- ✅ new conversations, ensure to check current project, and select a project first
+- ✅ make it easy for people to try a project or model by linking to the reference + api key of it at every step.
+- ✅ add action suggestions at every step: among other things, creating a client
+- ✅ ensure it knows what it can and can't do.
+- Add endpoint `auth:admin` to the GPT and describe it with `get all auth info`
+- Instruct the GPT with details about how to add authorization for a website and for a GPT. Ensure it first looks up `auth:admin`
 
-✅ As a non-admin, I should be able to make a functioning client. For this `upsertClient-->client` needs to be indexed so it can easily be found.
+Add links to GPT instructions:
+
+- Project Docs: https://data.actionschema/project/{projectSlug}/reference.html
+- Project OpenAPI: https://data.actionschema/project/{projectSlug}/openapi.json
+- Admin panel: https://data.actionschema.com
+- Backend Agent:
+- Frontend Agent:
 
 # Improved GPTs
 
-Give `ActionSchema Data` better instructions:
-
-- Add `auth:upsertClient` action with proper oauth2
-- new conversations, ensure to check current project, and select a project first
-- make it easy for people to try a project or model by linking to the reference + api key of it at every step.
-- add action suggestions at every step: among other things, creating a client
-- ensure it knows what it can and can't do.
-
-Give `AcitonSchema Backend` better instructions:
+Give `Backend Agent` better instructions:
 
 - First force to retrieve db openapi and other (pruned) openapis you want to do something with and instruct to get it first if you haven't got it.
 - Ensure it outputs:
   - openapi with proper oauth2 spec
   - the written endpoint in the correct typescript Request/Response style
+
+Give `Frontend Agent` good instructions:
+
+- First ask for an OpenAPI of your backend or of `Data Agent`
+- Ensure it knows the design principles (html, js, css, tailwind cdn, and some other CDN's, mobile friendly, etc)
 
 # Small improvements
 
@@ -49,7 +58,7 @@ Plan demos to demonstrate the ActionSchema data plugin:
 
 # Read-only option
 
-Dbs with `isUserLevelSeparationEnabled:true` are fine now as they're fully separated. But if this is not the case, should any user be able to alter any database? Maybe an additional read-only option would be great
+Dbs with `isUserLevelSeparationEnabled:true` are fine now as they're fully separated. But if this is not the case, should any user be able to alter any database? Maybe an additional read-only option would be great.
 
 # Feature rate limits
 
