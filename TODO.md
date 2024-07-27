@@ -15,10 +15,11 @@
 - ✅ ensure it knows what it can and can't do.
 - ✅ Add endpoint `auth:admin` to the GPT and describe it with `get all auth info`
 - ✅ Instruct the GPT with details about how to add authorization for a website and for a GPT. Ensure it first looks up `auth:admin`
+- ✅ Tested and removed some further bugs
 
 # Improved GPTs
 
-Give `Backend Agent` better instructions:
+✅ Give `Backend Agent` better instructions:
 
 - First force to retrieve db openapi and other (pruned) openapis you want to do something with and instruct to get it first if you haven't got it.
 - Ensure it outputs:

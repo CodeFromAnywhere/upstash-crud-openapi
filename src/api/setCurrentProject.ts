@@ -31,8 +31,8 @@ export const setCurrentProject: Endpoint<"setCurrentProject"> = async (
   if (projectDetails && projectDetails.adminAuthToken !== apiKey) {
     return {
       isSuccessful: false,
-      status: 403,
-      message: "Unauthorized",
+      status: 400,
+      message: "Project name already taken",
     };
   }
   const rootDatabaseDetails = await getUpstashRedisDatabase({
