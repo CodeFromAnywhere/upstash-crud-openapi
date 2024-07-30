@@ -1,3 +1,5 @@
+Bug: operationIds on project openapi aren't correct (always last model)
+
 # Feature rate limits
 
 Apply `ADMIN_MAX_DB_COUNT` in `upsertDatabase`
