@@ -3,6 +3,7 @@ import {
   upstashRedisGetMultiple,
   upstashRedisSetItems,
 } from "../upstashRedis.js";
+//@ts-ignore
 import { UpdateContext } from "../sdk.js";
 import { getDatabaseDetails } from "../getDatabaseDetails.js";
 import { upsertIndexVectors } from "../embeddings.js";

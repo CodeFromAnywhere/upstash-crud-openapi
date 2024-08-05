@@ -9,6 +9,7 @@ import {
   upstashRedisGetMultiple,
   upstashRedisGetRange,
 } from "../upstashRedis.js";
+//@ts-ignore
 import { Sort, Filter, ReadContext } from "../sdk.js";
 import { getDatabaseDetails } from "../getDatabaseDetails.js";
 import { embeddingsClient } from "../embeddings.js";

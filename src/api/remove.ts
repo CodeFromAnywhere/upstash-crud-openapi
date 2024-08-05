@@ -1,4 +1,5 @@
 import { Redis } from "@upstash/redis";
+//@ts-ignore
 import { RemoveContext } from "../sdk.js";
 import { getDatabaseDetails } from "../getDatabaseDetails.js";
 import { embeddingsClient } from "../embeddings.js";
@@ -55,7 +56,7 @@ export const remove = async (
     : "";
   const baseKey = `db_${databaseSlug}${authSuffix}_`;
 
-  const realRowIds = rowIds.map((id) => `${baseKey}${id}`);
+  const realRowIds = rowIds.map((id: string) => `${baseKey}${id}`);
   const deleteCount = await redis.del(...realRowIds);
 
   return { isSuccessful: true, message: "Row(s) deleted", deleteCount };

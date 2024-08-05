@@ -1,3 +1,4 @@
+//@ts-ignore
 import { CreateContext } from "../sdk.js";
 import { getDatabaseDetails } from "../getDatabaseDetails.js";
 import { upstashRedisSetItems } from "../upstashRedis.js";
