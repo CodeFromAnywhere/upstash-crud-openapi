@@ -4,15 +4,15 @@ import { getUpstashRedisDatabase } from "../upstashRedis.js";
 import { AdminDetails, DatabaseDetails, DbKey } from "../types.js";
 import { notEmpty } from "from-anywhere";
 import { getProjectDetails } from "../getProjectDetails.js";
-import { getAdminOperationApiKey } from "../getAdminOperationApiKey.js";
+import { getAdminUserId } from "../getAdminUserId.js";
 
 /** Lists databases for your current project */
 export const listDatabases: Endpoint<"listDatabases"> = async (context) => {
   const { Authorization } = context;
-  const apiKey = await getAdminOperationApiKey(Authorization);
+  const userId = await getAdminUserId(Authorization);
 
-  if (!apiKey) {
-    return { isSuccessful: false, message: "Unauthorized", status: 403 };
+  if (!userId) {
+    return { isSuccessful: false, message: "User unauthorized", status: 403 };
   }
 
   // auth admin
@@ -49,7 +49,7 @@ export const listDatabases: Endpoint<"listDatabases"> = async (context) => {
   });
 
   const admin: AdminDetails | null = await root.get(
-    `admin_${apiKey}` satisfies DbKey,
+    `admin_${userId}` satisfies DbKey,
   );
 
   if (!admin) {

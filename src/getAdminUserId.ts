@@ -3,7 +3,7 @@ import * as client from "./sdk.js";
 /**
  * Will check Authorizaiton token and respond with the user api key if scope is sufficient.
  */
-export const getAdminOperationApiKey = async (
+export const getAdminUserId = async (
   Authorization: string | null | undefined,
 ) => {
   if (!Authorization) {
@@ -16,16 +16,16 @@ export const getAdminOperationApiKey = async (
     Authorization === `Bearer ${process.env.ADMIN_SECRET}`
   ) {
     // allow system admin
-    return apiKey;
+    return "admin";
   }
 
-  const permissionResult = Authorization
+  const permissionResult: any = Authorization
     ? await client.authClient("permission", undefined, {
         access_token: apiKey,
       })
     : undefined;
 
-  if (!permissionResult?.userAuthToken) {
+  if (!permissionResult?.userId) {
     return;
   }
 
@@ -33,5 +33,5 @@ export const getAdminOperationApiKey = async (
     return;
   }
 
-  return permissionResult.userAuthToken;
+  return permissionResult.userId as string;
 };

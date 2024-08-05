@@ -54,7 +54,7 @@
             "type": "string"
           },
           "authToken": { "type": "string" },
-          "adminAuthToken": { "type": "string" },
+          "adminUserId": { "type": "string" },
           "databaseSlug": { "type": "string" },
           "openapiUrl": { "type": "string" }
         }

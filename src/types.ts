@@ -68,7 +68,7 @@ export type DatabaseDetails = {
   endpoint: string;
   rest_token: string;
   authToken: string;
-  adminAuthToken: string;
+  adminUserId: string;
   schema: JSONSchema7;
 
   openaiApiKey?: string;
@@ -90,7 +90,7 @@ export type DatabaseDetails = {
  * a project is a collection of dbs.
  */
 export type ProjectDetails = {
-  adminAuthToken: string;
+  adminUserId: string;
   description: string;
   databaseSlugs: string[];
 };

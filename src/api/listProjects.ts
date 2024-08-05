@@ -3,13 +3,13 @@ import { Redis } from "@upstash/redis";
 import { AdminDetails, DbKey, ProjectDetails } from "../types.js";
 import { notEmpty } from "from-anywhere";
 import { getUpstashRedisDatabase } from "../upstashRedis.js";
-import { getAdminOperationApiKey } from "../getAdminOperationApiKey.js";
+import { getAdminUserId } from "../getAdminUserId.js";
 
 export const listProjects: Endpoint<"listProjects"> = async (context) => {
   const { Authorization } = context;
-  const apiKey = await getAdminOperationApiKey(Authorization);
+  const userId = await getAdminUserId(Authorization);
 
-  if (!apiKey) {
+  if (!userId) {
     return { isSuccessful: false, message: "Unauthorized", status: 403 };
   }
 
@@ -45,11 +45,11 @@ export const listProjects: Endpoint<"listProjects"> = async (context) => {
   });
 
   const admin: AdminDetails | null = await root.get(
-    `admin_${apiKey}` satisfies DbKey,
+    `admin_${userId}` satisfies DbKey,
   );
 
   const projectSlugs: string[] = await root.smembers(
-    `projects_${apiKey}` satisfies DbKey,
+    `projects_${userId}` satisfies DbKey,
   );
 
   if (projectSlugs.length === 0) {

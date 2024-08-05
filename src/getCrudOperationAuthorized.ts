@@ -29,14 +29,6 @@ export const getCrudOperationAuthorized = async (
   }
 
   if (
-    databaseDetails.adminAuthToken &&
-    Authorization === `Bearer ${databaseDetails.adminAuthToken}`
-  ) {
-    // allow db manager admin
-    return true;
-  }
-
-  if (
     databaseDetails.authToken &&
     Authorization === `Bearer ${databaseDetails.authToken}`
   ) {
@@ -44,11 +36,23 @@ export const getCrudOperationAuthorized = async (
     return true;
   }
 
-  const permissionResult = await client.authClient("permission", undefined, {
-    access_token: Authorization.slice("Bearer ".length),
-  });
+  const permissionResult: any = await client.authClient(
+    "permission",
+    undefined,
+    {
+      access_token: Authorization.slice("Bearer ".length),
+    },
+  );
 
   const permission = permissionResult.permission;
+
+  if (
+    databaseDetails.adminUserId &&
+    permissionResult.userId === databaseDetails.adminUserId
+  ) {
+    // allow db manager admin
+    return true;
+  }
 
   console.log("gethere", { permission, Authorization, databaseDetails });
   if (!permission) {
@@ -60,7 +64,7 @@ export const getCrudOperationAuthorized = async (
 
   if (
     allowedScopes.find((scope) =>
-      permission?.scope?.split(" ").find((s) => s === scope),
+      permission?.scope?.split(" ").find((s: string) => s === scope),
     )
   ) {
     // allow oauth2 user

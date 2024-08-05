@@ -5,13 +5,13 @@ import { AdminDetails, DatabaseDetails, DbKey } from "../types.js";
 import { getProjectDetails } from "../getProjectDetails.js";
 import { removeEntireDatabase } from "../removeEntireDatabase.js";
 import { getUpstashRedisDatabase } from "../upstashRedis.js";
-import { getAdminOperationApiKey } from "../getAdminOperationApiKey.js";
+import { getAdminUserId } from "../getAdminUserId.js";
 
 export const removeProject: Endpoint<"removeProject"> = async (context) => {
   const { projectSlug, Authorization } = context;
-  const apiKey = await getAdminOperationApiKey(Authorization);
+  const userId = await getAdminUserId(Authorization);
 
-  if (!apiKey) {
+  if (!userId) {
     return { isSuccessful: false, message: "Unauthorized", status: 403 };
   }
 
@@ -27,7 +27,7 @@ export const removeProject: Endpoint<"removeProject"> = async (context) => {
   }
 
   const { projectDetails } = await getProjectDetails(projectSlug);
-  if (!projectDetails || projectDetails.adminAuthToken !== apiKey) {
+  if (!projectDetails || projectDetails.adminUserId !== userId) {
     return {
       isSuccessful: false,
       status: 403,
@@ -53,7 +53,7 @@ export const removeProject: Endpoint<"removeProject"> = async (context) => {
   });
 
   const beforeProjectSlugs: string[] = await root.smembers(
-    `projects_${apiKey}` satisfies DbKey,
+    `projects_${userId}` satisfies DbKey,
   );
 
   if (beforeProjectSlugs.length <= 1) {
@@ -80,7 +80,7 @@ export const removeProject: Endpoint<"removeProject"> = async (context) => {
   await Promise.all(
     databases
       // NB: doublecheck for correct adminAuthToken
-      .filter((item) => item.details?.adminAuthToken === apiKey)
+      .filter((item) => item.details?.adminUserId === userId)
       .map((item) =>
         removeEntireDatabase({
           databaseSlug: item.databaseSlug,
@@ -91,19 +91,19 @@ export const removeProject: Endpoint<"removeProject"> = async (context) => {
   );
 
   await root.del(`project_${projectSlug}` satisfies DbKey);
-  await root.srem(`projects_${apiKey}` satisfies DbKey, projectSlug);
+  await root.srem(`projects_${userId}` satisfies DbKey, projectSlug);
 
   const adminDetails: AdminDetails | null = await root.get(
-    `admin_${apiKey}` satisfies DbKey,
+    `admin_${userId}` satisfies DbKey,
   );
 
   if (adminDetails?.currentProjectSlug === projectSlug) {
     // you removed your current one. let's set the project to the first one to not get corrupt.
     const projectSlugs: string[] = await root.smembers(
-      `projects_${apiKey}` satisfies DbKey,
+      `projects_${userId}` satisfies DbKey,
     );
     await root.set(
-      `admin_${apiKey}` satisfies DbKey,
+      `admin_${userId}` satisfies DbKey,
       { currentProjectSlug: projectSlugs[0] } satisfies AdminDetails,
     );
   }

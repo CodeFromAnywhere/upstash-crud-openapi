@@ -4,13 +4,13 @@ import { getDatabaseDetails } from "../getDatabaseDetails.js";
 import { removeEntireDatabase } from "../removeEntireDatabase.js";
 import { DatabaseDetails, DbKey } from "../types.js";
 import { getUpstashRedisDatabase } from "../upstashRedis.js";
-import { getAdminOperationApiKey } from "../getAdminOperationApiKey.js";
+import { getAdminUserId } from "../getAdminUserId.js";
 
 export const removeDatabase: Endpoint<"removeDatabase"> = async (context) => {
   const { databaseSlug, Authorization } = context;
-  const apiKey = await getAdminOperationApiKey(Authorization);
+  const userId = await getAdminUserId(Authorization);
 
-  if (!apiKey) {
+  if (!userId) {
     return { isSuccessful: false, message: "Unauthorized", status: 403 };
   }
 
@@ -46,7 +46,7 @@ export const removeDatabase: Endpoint<"removeDatabase"> = async (context) => {
     `db_${databaseSlug}` satisfies DbKey,
   )) as DatabaseDetails | undefined;
 
-  if (!databaseDetails || databaseDetails.adminAuthToken !== apiKey) {
+  if (!databaseDetails || databaseDetails.adminUserId !== userId) {
     return {
       isSuccessful: false,
       message: "Unauthorized or database not found",

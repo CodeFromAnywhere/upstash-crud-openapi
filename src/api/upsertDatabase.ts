@@ -12,7 +12,6 @@ import {
   getUpstashRedisDatabase,
 } from "../upstashRedis.js";
 import {
-  generateId,
   generateRandomString,
   notEmpty,
   onlyUnique2,
@@ -21,7 +20,7 @@ import {
 import { JSONSchema7 } from "json-schema";
 import { rootDatabaseName } from "../state.js";
 import { embeddingsClient } from "../embeddings.js";
-import { getAdminOperationApiKey } from "../getAdminOperationApiKey.js";
+import { getAdminUserId } from "../getAdminUserId.js";
 
 export const upsertDatabase: Endpoint<"upsertDatabase"> = async (context) => {
   const {
@@ -35,9 +34,9 @@ export const upsertDatabase: Endpoint<"upsertDatabase"> = async (context) => {
     isUserLevelSeparationEnabled,
   } = context;
 
-  const apiKey = await getAdminOperationApiKey(Authorization);
+  const userId = await getAdminUserId(Authorization);
 
-  if (!apiKey) {
+  if (!userId) {
     return { isSuccessful: false, message: "Unauthorized", status: 403 };
   }
 
@@ -78,7 +77,7 @@ export const upsertDatabase: Endpoint<"upsertDatabase"> = async (context) => {
   });
 
   let admin: AdminDetails | null = await root.get(
-    `admin_${apiKey}` satisfies DbKey,
+    `admin_${userId}` satisfies DbKey,
   );
 
   if (!admin) {
@@ -87,12 +86,12 @@ export const upsertDatabase: Endpoint<"upsertDatabase"> = async (context) => {
     };
 
     await root.set(
-      `admin_${apiKey}` satisfies DbKey,
+      `admin_${userId}` satisfies DbKey,
       newAdmin satisfies AdminDetails,
     );
 
     await root.sadd(
-      `projects_${apiKey}` satisfies DbKey,
+      `projects_${userId}` satisfies DbKey,
       newAdmin.currentProjectSlug,
     );
 
@@ -117,8 +116,8 @@ export const upsertDatabase: Endpoint<"upsertDatabase"> = async (context) => {
   if (
     ["root", rootDatabaseName].includes(databaseSlug) ||
     (previousDatabaseDetails &&
-      !!previousDatabaseDetails.adminAuthToken &&
-      previousDatabaseDetails.adminAuthToken !== apiKey)
+      !!previousDatabaseDetails.adminUserId &&
+      previousDatabaseDetails.adminUserId !== userId)
   ) {
     return {
       isSuccessful: false,
@@ -186,14 +185,13 @@ export const upsertDatabase: Endpoint<"upsertDatabase"> = async (context) => {
       }
     }
 
-    const adminAuthToken = apiKey || generateRandomString(64);
     const realAuthToken = authToken || generateRandomString(64);
 
     databaseDetails = {
       projectSlug: admin.currentProjectSlug,
       openaiApiKey,
       vectorIndexColumnDetails,
-      adminAuthToken,
+      adminUserId: userId,
       upstashApiKey: rootUpstashApiKey,
       upstashEmail: rootUpstashEmail,
       authToken: realAuthToken,
@@ -231,7 +229,7 @@ export const upsertDatabase: Endpoint<"upsertDatabase"> = async (context) => {
   await root.set(projectKey, {
     ...(projectDetails || {
       description: `Project ${databaseSlug}`,
-      adminAuthToken: apiKey,
+      adminUserId: userId,
     }),
     databaseSlugs: (projectDetails?.databaseSlugs || [])
       .concat(databaseSlug)
@@ -241,15 +239,14 @@ export const upsertDatabase: Endpoint<"upsertDatabase"> = async (context) => {
   // add the project, if not already
   // TODO: can later be removed
   await root.sadd(
-    `projects_${databaseDetails.adminAuthToken}`,
+    `projects_${databaseDetails.adminUserId}`,
     admin.currentProjectSlug,
   );
 
   return {
     isSuccessful: true,
     message: "Database created",
-
-    adminAuthToken: databaseDetails.adminAuthToken,
+    adminUserId: databaseDetails.adminUserId,
     databaseSlug,
     openapiUrl:
       "https://data.actionschema.com/" + databaseSlug + "/openapi.json",

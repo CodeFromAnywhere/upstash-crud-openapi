@@ -4,15 +4,15 @@ import { getDatabaseDetails } from "../getDatabaseDetails.js";
 import { AdminDetails, DbKey, ProjectDetails } from "../types.js";
 import { getProjectDetails } from "../getProjectDetails.js";
 import { getUpstashRedisDatabase } from "../upstashRedis.js";
-import { getAdminOperationApiKey } from "../getAdminOperationApiKey.js";
+import { getAdminUserId } from "../getAdminUserId.js";
 
 export const setCurrentProject: Endpoint<"setCurrentProject"> = async (
   context,
 ) => {
   const { projectSlug, Authorization, description } = context;
-  const apiKey = await getAdminOperationApiKey(Authorization);
+  const userId = await getAdminUserId(Authorization);
 
-  if (!apiKey) {
+  if (!userId) {
     return { isSuccessful: false, message: "Unauthorized", status: 403 };
   }
 
@@ -28,7 +28,7 @@ export const setCurrentProject: Endpoint<"setCurrentProject"> = async (
   }
 
   const { projectDetails } = await getProjectDetails(projectSlug);
-  if (projectDetails && projectDetails.adminAuthToken !== apiKey) {
+  if (projectDetails && projectDetails.adminUserId !== userId) {
     return {
       isSuccessful: false,
       status: 400,
@@ -54,7 +54,7 @@ export const setCurrentProject: Endpoint<"setCurrentProject"> = async (
   });
 
   await root.set(
-    `admin_${apiKey}` satisfies DbKey,
+    `admin_${userId}` satisfies DbKey,
     { currentProjectSlug: projectSlug } satisfies AdminDetails,
   );
 
@@ -64,14 +64,14 @@ export const setCurrentProject: Endpoint<"setCurrentProject"> = async (
       `project_${projectSlug}` satisfies DbKey,
       {
         databaseSlugs: [],
-        adminAuthToken: apiKey,
+        adminUserId: userId,
         description: description || `Project ${projectSlug}`,
       } satisfies ProjectDetails,
     );
   }
 
   // add to my projects
-  await root.sadd(`projects_${apiKey}` satisfies DbKey, projectSlug);
+  await root.sadd(`projects_${userId}` satisfies DbKey, projectSlug);
 
   return { isSuccessful: true, message: "Project set successfully" };
 };
