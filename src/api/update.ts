@@ -3,8 +3,7 @@ import {
   upstashRedisGetMultiple,
   upstashRedisSetItems,
 } from "../upstashRedis.js";
-//@ts-ignore
-import { UpdateContext } from "../sdk.js";
+import { Crud } from "../sdk.js";
 import { getDatabaseDetails } from "../getDatabaseDetails.js";
 import { upsertIndexVectors } from "../embeddings.js";
 import { getCrudOperationAuthorized } from "../getCrudOperationAuthorized.js";
@@ -17,7 +16,7 @@ Update an item in a specified row in a table.
 
  */
 export const update = async (
-  context: UpdateContext & { Authorization?: string },
+  context: Crud["update"]["input"] & { Authorization?: string },
 ) => {
   const { id, databaseSlug, partialItem, Authorization } = context;
   const apiKey = Authorization?.slice("Bearer ".length);

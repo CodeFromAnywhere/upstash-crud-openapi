@@ -1,4 +1,3 @@
-
 // I put a lot of functions in one file here, including some from `from-anywhere` because it is to be added to code generation.
 
 import type { JSONSchema7 } from "json-schema";
@@ -190,7 +189,7 @@ export const resolveLocalRef = <T>(
   openapi: OpenapiDocument,
   schemaOrRef: T | OpenapiReferenceObject,
 ) => {
-  const ref = (schemaOrRef as any).$ref;
+  const ref = (schemaOrRef as any)?.$ref;
   if (ref && ref.startsWith("#")) {
     const chunks: string[] = ref.split("/").slice(1);
     const referencedSchema = chunks.reduce(
@@ -263,16 +262,16 @@ export const getOperations = (
           const servers = operation.servers?.length
             ? operation.servers
             : item.servers?.length
-              ? item.servers
-              : openapi.servers;
+            ? item.servers
+            : openapi.servers;
 
           const serversWithUrl = servers?.filter((x) => !!x.url);
           const serversWithBaseServer =
             serversWithUrl && serversWithUrl.length > 0
               ? serversWithUrl
               : openapiUrl
-                ? [{ url: openapiUrl }]
-                : [];
+              ? [{ url: openapiUrl }]
+              : [];
 
           const serversWithOrigin = serversWithBaseServer.map((server) => {
             const fullUrl =
@@ -296,7 +295,7 @@ export const getOperations = (
                 properties: {
                   [item.name]: resolveLocalRef(openapi, item.schema),
                 },
-              }) as JSONSchema7 | undefined,
+              } as JSONSchema7 | undefined),
           );
 
           const statusCodes = Object.keys(operation.responses);
@@ -381,7 +380,10 @@ export const getOperations = (
             const mediaTypeDescriptions = mediaTypes
               .map(
                 (item) =>
-                  `${item.mediaType}: ${resolveLocalRef(openapi, item.schema)?.description || "No description"}`,
+                  `${item.mediaType}: ${
+                    resolveLocalRef(openapi, item.schema)?.description ||
+                    "No description"
+                  }`,
               )
               .join("\n\n");
 
@@ -426,9 +428,12 @@ export const getOperations = (
 
           const resolvedRequestBodySchema =
             // NB: only application/json is supported now!
-            (operation.requestBody as OpenapiRequestBodyObject)?.content?.[
-              "application/json"
-            ]?.schema as JSONSchema7 | undefined;
+            resolveLocalRef(
+              openapi,
+              (operation.requestBody as OpenapiRequestBodyObject)?.content?.[
+                "application/json"
+              ]?.schema,
+            ) as JSONSchema7 | undefined;
 
           const allSchemas = [resolvedRequestBodySchema]
             .concat(parameterSchemas)
@@ -507,25 +512,22 @@ export const getOperations = (
 
           // console.log({ neededRefs });
 
-          const definitions = neededRefs.reduce(
-            (previous, refName) => {
-              const theRef = openapi.components?.schemas?.[refName] as
-                | JSONSchema7
-                | undefined;
+          const definitions = neededRefs.reduce((previous, refName) => {
+            const theRef = openapi.components?.schemas?.[refName] as
+              | JSONSchema7
+              | undefined;
 
-              const ref = theRef
-                ? renameRefs(theRef, "jsonschema")
-                : ({
-                    description: "Reference couldn't be found",
-                  } as JSONSchema7);
+            const ref = theRef
+              ? renameRefs(theRef, "jsonschema")
+              : ({
+                  description: "Reference couldn't be found",
+                } as JSONSchema7);
 
-              return {
-                ...previous,
-                [refName]: ref,
-              };
-            },
-            {} as { [key: string]: JSONSchema7 },
-          );
+            return {
+              ...previous,
+              [refName]: ref,
+            };
+          }, {} as { [key: string]: JSONSchema7 });
 
           const realMergedInputSchema =
             !mergedInputSchema.properties ||
@@ -650,11 +652,11 @@ export const getOperationRequestInit = (context: {
         Authorization: `Basic ${access_token}`,
       }
     : basicBearer
-      ? { Authorization: `Bearer ${access_token}` }
-      : apiKeySecurity && apiKeySecurity.in === "header"
-        ? // NB: not entirely sure yet how I should manage this when there are multiple auth headers or other required headers.
-          { [apiKeySecurity.name]: access_token }
-        : undefined;
+    ? { Authorization: `Bearer ${access_token}` }
+    : apiKeySecurity && apiKeySecurity.in === "header"
+    ? // NB: not entirely sure yet how I should manage this when there are multiple auth headers or other required headers.
+      { [apiKeySecurity.name]: access_token }
+    : undefined;
 
   const queryParameters = operation.parameters
     ? operation.parameters.filter((x) => x.in === "query")
@@ -906,7 +908,6 @@ export const createClient = <T>(
   return client as ClientType;
 };
 
-
 /* eslint-disable */
 /**
  * This file was automatically generated by json-schema-to-typescript.
@@ -915,7 +916,7 @@ export const createClient = <T>(
  */
 
 export interface Auth {
-  permission?: {
+  permission: {
     description?: undefined;
     externalDocs?: undefined;
     openapiUrl: "https://auth.actionschema.com/openapi.json";
@@ -970,7 +971,7 @@ export interface Auth {
     };
     input?: undefined;
   };
-  authenticate?: {
+  authenticate: {
     description?: undefined;
     externalDocs?: undefined;
     openapiUrl: "https://auth.actionschema.com/openapi.json";
@@ -1101,38 +1102,7 @@ export interface Auth {
       /**
        * Applications, Agents, Code, CLIs, or anything that has access to your account. Can also be used to create API Keys for developers.
        */
-      clientPermissions?: {
-        providerSlug: "actionschema-auth";
-        /**
-         * Can be a reference to the clientId of the client within actionschema that granted this permission. Can be a client of another user.
-         */
-        clientId?: string;
-        description?: string;
-        /**
-         * A space-separated list of scopes that the access token is valid for. Only possible combination is 'admin' for now, which means access to everything.
-         */
-        scope: "admin";
-        /**
-         * Unix timestamp in MS
-         */
-        createdAt: number;
-        /**
-         * The access token string as issued by us.
-         */
-        access_token: string;
-        /**
-         * The type of token this is. Always gives Bearer now.
-         */
-        token_type: "Bearer";
-        /**
-         * The lifetime in seconds of the access token.
-         */
-        expires_in?: number;
-        /**
-         * The refresh token, which can be used to obtain new access tokens using the same authorization grant.
-         */
-        refresh_token?: string;
-      }[];
+      clientPermissions?: Permission[];
       "text/plain"?: string;
       status: 200 | 403;
       statusDescription?: string;
@@ -1141,7 +1111,38 @@ export interface Auth {
     input?: undefined;
   };
 }
-
+export interface Permission {
+  providerSlug: "actionschema-auth";
+  /**
+   * Can be a reference to the clientId of the client within actionschema that granted this permission. Can be a client of another user.
+   */
+  clientId?: string;
+  description?: string;
+  /**
+   * A space-separated list of scopes that the access token is valid for. Only possible combination is 'admin' for now, which means access to everything.
+   */
+  scope: "admin";
+  /**
+   * Unix timestamp in MS
+   */
+  createdAt: number;
+  /**
+   * The access token string as issued by us.
+   */
+  access_token: string;
+  /**
+   * The type of token this is. Always gives Bearer now.
+   */
+  token_type: "Bearer";
+  /**
+   * The lifetime in seconds of the access token.
+   */
+  expires_in?: number;
+  /**
+   * The refresh token, which can be used to obtain new access tokens using the same authorization grant.
+   */
+  refresh_token?: string;
+}
 
 /* eslint-disable */
 /**
@@ -1163,7 +1164,10 @@ export type Schema = string;
  */
 export type VectorIndexColumns = {
   propertyKey: string;
-  model: "text-embedding-ada-002" | "text-embedding-3-small" | "text-embedding-3-large";
+  model:
+    | "text-embedding-ada-002"
+    | "text-embedding-3-small"
+    | "text-embedding-3-large";
   region: "us-east-1" | "eu-west-1" | "us-central1";
   dimension_count: number;
   similarity_function: "COSINE" | "EUCLIDIAN" | "DOT_PRODUCT";
@@ -1301,7 +1305,7 @@ export type ScopeParameters = {
 }[];
 
 export interface Admin {
-  listDatabases?: {
+  listDatabases: {
     description?: undefined;
     externalDocs?: undefined;
     openapiUrl: "https://data.actionschema.com/openapi.json";
@@ -1335,7 +1339,7 @@ export interface Admin {
     };
     input?: undefined;
   };
-  upsertDatabase?: {
+  upsertDatabase: {
     description?: undefined;
     externalDocs?: undefined;
     openapiUrl: "https://data.actionschema.com/openapi.json";
@@ -1372,7 +1376,12 @@ export interface Admin {
       /**
        * Can be set for a new database. Cannot be changed
        */
-      region?: "eu-west-1" | "us-east-1" | "us-west-1" | "ap-northeast-1" | "us-central1";
+      region?:
+        | "eu-west-1"
+        | "us-east-1"
+        | "us-west-1"
+        | "ap-northeast-1"
+        | "us-central1";
       vectorIndexColumns?: VectorIndexColumns;
       /**
        * Needed if you use vectorIndexColumns
@@ -1380,7 +1389,7 @@ export interface Admin {
       openaiApiKey?: string;
     };
   };
-  removeDatabase?: {
+  removeDatabase: {
     description?: undefined;
     externalDocs?: undefined;
     openapiUrl: "https://data.actionschema.com/openapi.json";
@@ -1404,7 +1413,7 @@ export interface Admin {
       databaseSlug: UrlSlug;
     };
   };
-  setCurrentProject?: {
+  setCurrentProject: {
     description?: undefined;
     externalDocs?: undefined;
     openapiUrl: "https://data.actionschema.com/openapi.json";
@@ -1429,7 +1438,7 @@ export interface Admin {
       description?: string;
     };
   };
-  listProjects?: {
+  listProjects: {
     description?: undefined;
     externalDocs?: undefined;
     openapiUrl: "https://data.actionschema.com/openapi.json";
@@ -1457,7 +1466,7 @@ export interface Admin {
     };
     input?: undefined;
   };
-  removeProject?: {
+  removeProject: {
     description?: undefined;
     externalDocs?: undefined;
     openapiUrl: "https://data.actionschema.com/openapi.json";
@@ -1481,7 +1490,7 @@ export interface Admin {
       projectSlug: UrlSlug;
     };
   };
-  getOpenapi?: {
+  getOpenapi: {
     description?: undefined;
     externalDocs?: undefined;
     openapiUrl: "https://data.actionschema.com/openapi.json";
@@ -1501,7 +1510,7 @@ export interface Admin {
     };
     input?: undefined;
   };
-  getCrudOpenapi?: {
+  getCrudOpenapi: {
     description?: undefined;
     externalDocs?: undefined;
     openapiUrl: "https://data.actionschema.com/openapi.json";
@@ -1529,7 +1538,7 @@ export interface Admin {
       databaseSlug: string;
     };
   };
-  getProjectOpenapi?: {
+  getProjectOpenapi: {
     description?: undefined;
     externalDocs?: undefined;
     openapiUrl: "https://data.actionschema.com/openapi.json";
@@ -1557,7 +1566,7 @@ export interface Admin {
       projectSlug: string;
     };
   };
-  getProjectSchema?: {
+  getProjectSchema: {
     description?: undefined;
     externalDocs?: undefined;
     openapiUrl: "https://data.actionschema.com/openapi.json";
@@ -1578,7 +1587,7 @@ export interface Admin {
       projectSlug: string;
     };
   };
-  getSchema?: {
+  getSchema: {
     description?: undefined;
     externalDocs?: undefined;
     openapiUrl: "https://data.actionschema.com/openapi.json";
@@ -2102,10 +2111,34 @@ export interface ActionSchema {
    */
   enum?: [unknown, ...unknown[]];
   type?:
-    | ("array" | "boolean" | "integer" | "null" | "number" | "object" | "string")
+    | (
+        | "array"
+        | "boolean"
+        | "integer"
+        | "null"
+        | "number"
+        | "object"
+        | "string"
+      )
     | [
-        "array" | "boolean" | "integer" | "null" | "number" | "object" | "string",
-        ...("array" | "boolean" | "integer" | "null" | "number" | "object" | "string")[]
+        (
+          | "array"
+          | "boolean"
+          | "integer"
+          | "null"
+          | "number"
+          | "object"
+          | "string"
+        ),
+        ...(
+          | "array"
+          | "boolean"
+          | "integer"
+          | "null"
+          | "number"
+          | "object"
+          | "string"
+        )[],
       ];
   format?: string;
   contentMediaType?: string;
@@ -2552,7 +2585,12 @@ export interface Components {
      */
     [k: string]:
       | Reference
-      | (APIKeySecurityScheme | HTTPSecurityScheme | OAuth2SecurityScheme | OpenIdConnectSecurityScheme);
+      | (
+          | APIKeySecurityScheme
+          | HTTPSecurityScheme
+          | OAuth2SecurityScheme
+          | OpenIdConnectSecurityScheme
+        );
   };
   links?: {
     /**
@@ -2670,7 +2708,6 @@ export interface OpenIdConnectSecurityScheme {
   [k: string]: unknown;
 }
 
-
 /* eslint-disable */
 /**
  * This file was automatically generated by json-schema-to-typescript.
@@ -2679,7 +2716,7 @@ export interface OpenIdConnectSecurityScheme {
  */
 
 export interface Crud {
-  read?: {
+  read: {
     description?: undefined;
     externalDocs?: undefined;
     openapiUrl: "https://data.actionschema.com/auth-admin/openapi.json";
@@ -2707,9 +2744,26 @@ export interface Crud {
       statusDescription?: string;
       statusText?: string;
     };
-    input?: undefined;
+    input: {
+      databaseSlug?: string;
+      search?: string;
+      vectorSearch?: {
+        propertyKey: string;
+        input: string;
+        topK: number;
+        minimumSimilarity: number;
+        [k: string]: unknown;
+      };
+      rowIds?: string[];
+      startFromIndex?: number;
+      maxRows?: number;
+      filter?: Filter[];
+      sort?: Sort[];
+      objectParameterKeys?: string[];
+      ignoreObjectParameterKeys?: string[];
+    };
   };
-  create?: {
+  create: {
     description?: undefined;
     externalDocs?: undefined;
     openapiUrl: "https://data.actionschema.com/auth-admin/openapi.json";
@@ -2732,9 +2786,12 @@ export interface Crud {
       statusDescription?: string;
       statusText?: string;
     };
-    input?: undefined;
+    input: {
+      databaseSlug?: string;
+      items: ModelItem1[];
+    };
   };
-  remove?: {
+  remove: {
     description?: undefined;
     externalDocs?: undefined;
     openapiUrl: "https://data.actionschema.com/auth-admin/openapi.json";
@@ -2757,9 +2814,15 @@ export interface Crud {
       statusDescription?: string;
       statusText?: string;
     };
-    input?: undefined;
+    input: {
+      databaseSlug?: string;
+      /**
+       * Which IDs should be removed
+       */
+      rowIds: string[];
+    };
   };
-  update?: {
+  update: {
     description?: undefined;
     externalDocs?: undefined;
     openapiUrl: "https://data.actionschema.com/auth-admin/openapi.json";
@@ -2778,7 +2841,14 @@ export interface Crud {
       statusDescription?: string;
       statusText?: string;
     };
-    input?: undefined;
+    input: {
+      databaseSlug?: string;
+      /**
+       * The id (indexed key) of the item to update. Update that functions as upsert. If the id didn't exist, it will be created.
+       */
+      id: string;
+      partialItem: ModelItem2;
+    };
   };
 }
 /**
@@ -2787,1420 +2857,1446 @@ export interface Crud {
 export interface ModelItem {
   [k: string]: unknown;
 }
-
-
+export interface Filter {
+  operator:
+    | "equal"
+    | "notEqual"
+    | "endsWith"
+    | "startsWith"
+    | "includes"
+    | "includesLetters"
+    | "greaterThan"
+    | "lessThan"
+    | "greaterThanOrEqual"
+    | "lessThanOrEqual"
+    | "isIncludedIn"
+    | "isFalsy"
+    | "isTruthy";
+  value: string;
+  objectParameterKey: string;
+  [k: string]: unknown;
+}
+export interface Sort {
+  sortDirection: "ascending" | "descending";
+  objectParameterKey: string;
+  [k: string]: unknown;
+}
+/**
+ * To be replaced with the actual model item
+ */
+export interface ModelItem1 {
+  [k: string]: unknown;
+}
+/**
+ * To be replaced with the actual model item
+ */
+export interface ModelItem2 {
+  [k: string]: unknown;
+}
 
 export const authOpenapi = {
-  "$schema": "https://spec.actionschema.com/openapi.json",
+  $schema: "https://spec.actionschema.com/openapi.json",
   "x-actionschema": "0.0.1",
-  "openapi": "3.1.0",
-  "info": {
-    "title": "Auth",
-    "version": "0.0.1",
-    "description": "API to keep a central place of authentication",
-    "contact": {
-      "name": "Wijnand",
-      "email": "wijnand@karsens.com",
-      "url": "https://karsens.com"
-    }
+  openapi: "3.1.0",
+  info: {
+    title: "Auth",
+    version: "0.0.1",
+    description: "API to keep a central place of authentication",
+    contact: {
+      name: "Wijnand",
+      email: "wijnand@karsens.com",
+      url: "https://karsens.com",
+    },
   },
-  "paths": {
+  paths: {
     "/permission": {
-      "get": {
-        "security": [
+      get: {
+        security: [
           {
-            "oauth2": []
-          }
+            oauth2: [],
+          },
         ],
-        "summary": "All your info",
-        "operationId": "permission",
-        "responses": {
+        summary: "All your info",
+        operationId: "permission",
+        responses: {
           "200": {
-            "description": "Success",
-            "content": {
+            description: "Success",
+            content: {
               "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "permission": {
-                      "$schema": "https://spec.actionschema.com/actionschema.json",
-                      "description": "",
-                      "type": "object",
-                      "$comment": "Model to store permissions granted to access ActionSchema Auth's API, which in turn allows access to all available access tokens of a user. NB: I think that this model doesn't store users access of other users, only of yourself granted by your own clients or by clients of other admins.",
-                      "required": [
+                schema: {
+                  type: "object",
+                  properties: {
+                    permission: {
+                      $schema:
+                        "https://spec.actionschema.com/actionschema.json",
+                      description: "",
+                      type: "object",
+                      $comment:
+                        "Model to store permissions granted to access ActionSchema Auth's API, which in turn allows access to all available access tokens of a user. NB: I think that this model doesn't store users access of other users, only of yourself granted by your own clients or by clients of other admins.",
+                      required: [
                         "providerSlug",
                         "createdAt",
                         "access_token",
                         "token_type",
-                        "scope"
+                        "scope",
                       ],
-                      "additionalProperties": false,
-                      "properties": {
-                        "providerSlug": {
-                          "type": "string",
-                          "enum": [
-                            "actionschema-auth"
-                          ]
+                      additionalProperties: false,
+                      properties: {
+                        providerSlug: {
+                          type: "string",
+                          enum: ["actionschema-auth"],
                         },
-                        "clientId": {
-                          "type": "string",
-                          "description": "Can be a reference to the clientId of the client within actionschema that granted this permission. Can be a client of another user."
+                        clientId: {
+                          type: "string",
+                          description:
+                            "Can be a reference to the clientId of the client within actionschema that granted this permission. Can be a client of another user.",
                         },
-                        "description": {
-                          "type": "string"
+                        description: {
+                          type: "string",
                         },
-                        "scope": {
-                          "type": "string",
-                          "description": "A space-separated list of scopes that the access token is valid for. Only possible combination is 'admin' for now, which means access to everything.",
-                          "enum": [
-                            "admin"
-                          ]
+                        scope: {
+                          type: "string",
+                          description:
+                            "A space-separated list of scopes that the access token is valid for. Only possible combination is 'admin' for now, which means access to everything.",
+                          enum: ["admin"],
                         },
-                        "createdAt": {
-                          "type": "number",
-                          "description": "Unix timestamp in MS"
+                        createdAt: {
+                          type: "number",
+                          description: "Unix timestamp in MS",
                         },
-                        "access_token": {
-                          "type": "string",
-                          "description": "The access token string as issued by us."
+                        access_token: {
+                          type: "string",
+                          description:
+                            "The access token string as issued by us.",
                         },
-                        "token_type": {
-                          "type": "string",
-                          "description": "The type of token this is. Always gives Bearer now.",
-                          "enum": [
-                            "Bearer"
-                          ]
+                        token_type: {
+                          type: "string",
+                          description:
+                            "The type of token this is. Always gives Bearer now.",
+                          enum: ["Bearer"],
                         },
-                        "expires_in": {
-                          "type": "integer",
-                          "description": "The lifetime in seconds of the access token.",
-                          "minimum": 1
+                        expires_in: {
+                          type: "integer",
+                          description:
+                            "The lifetime in seconds of the access token.",
+                          minimum: 1,
                         },
-                        "refresh_token": {
-                          "type": "string",
-                          "description": "The refresh token, which can be used to obtain new access tokens using the same authorization grant."
-                        }
-                      }
+                        refresh_token: {
+                          type: "string",
+                          description:
+                            "The refresh token, which can be used to obtain new access tokens using the same authorization grant.",
+                        },
+                      },
                     },
-                    "message": {
-                      "type": "string"
+                    message: {
+                      type: "string",
                     },
-                    "userAuthToken": {
-                      "type": "string"
+                    userAuthToken: {
+                      type: "string",
                     },
-                    "isAuthorized": {
-                      "type": "boolean"
-                    }
-                  }
-                }
-              }
-            }
+                    isAuthorized: {
+                      type: "boolean",
+                    },
+                  },
+                },
+              },
+            },
           },
           "403": {
-            "description": "Unauthorized",
-            "content": {
+            description: "Unauthorized",
+            content: {
               "text/plain": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            }
-          }
-        }
-      }
+                schema: {
+                  type: "string",
+                },
+              },
+            },
+          },
+        },
+      },
     },
     "/admin": {
-      "get": {
-        "security": [
+      get: {
+        security: [
           {
-            "oauth2": []
-          }
+            oauth2: [],
+          },
         ],
-        "summary": "All your info",
-        "operationId": "authenticate",
-        "responses": {
+        summary: "All your info",
+        operationId: "authenticate",
+        responses: {
           "200": {
-            "description": "Success",
-            "content": {
+            description: "Success",
+            content: {
               "application/json": {
-                "schema": {
-                  "$schema": "https://spec.actionschema.com/actionschema.json",
-                  "type": "object",
-                  "description": "Model where authorization tokens and oauth details can be stored for a user. As there is only one such setting per admin, the key of this model is the userId. This can be retrieved in several ways.",
-                  "additionalProperties": false,
-                  "properties": {
-                    "providers": {
-                      "description": "Model to connect third party oauth providers/servers so users can login with them and get access to information and actions there. You can create multiple 'provider clients' per provider because each client usually has a specific app-name and sometimes predetermined scope.\n\nIt's important to note, that, for now, this can only be defined by the auth admin, which is the person hosting the auth service. In the future, when allowing for subdomains, we could allow for more definitions of by others, but it's not secure now.",
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "additionalProperties": false,
-                        "required": [
-                          "providerSlug",
-                          "clientId",
-                          "clientSecret"
-                        ],
-                        "properties": {
-                          "providerSlug": {
-                            "type": "string",
-                            "description": "Provider slug as defined in providers.json"
+                schema: {
+                  $schema: "https://spec.actionschema.com/actionschema.json",
+                  type: "object",
+                  description:
+                    "Model where authorization tokens and oauth details can be stored for a user. As there is only one such setting per admin, the key of this model is the userId. This can be retrieved in several ways.",
+                  additionalProperties: false,
+                  properties: {
+                    providers: {
+                      description:
+                        "Model to connect third party oauth providers/servers so users can login with them and get access to information and actions there. You can create multiple 'provider clients' per provider because each client usually has a specific app-name and sometimes predetermined scope.\n\nIt's important to note, that, for now, this can only be defined by the auth admin, which is the person hosting the auth service. In the future, when allowing for subdomains, we could allow for more definitions of by others, but it's not secure now.",
+                      type: "array",
+                      items: {
+                        type: "object",
+                        additionalProperties: false,
+                        required: ["providerSlug", "clientId", "clientSecret"],
+                        properties: {
+                          providerSlug: {
+                            type: "string",
+                            description:
+                              "Provider slug as defined in providers.json",
                           },
-                          "clientId": {
-                            "type": "string",
-                            "description": "Unique identifier as defined by the provider. As we have multiple providers, we must still use the provider as an additional identifier."
+                          clientId: {
+                            type: "string",
+                            description:
+                              "Unique identifier as defined by the provider. As we have multiple providers, we must still use the provider as an additional identifier.",
                           },
-                          "description": {
-                            "type": "string",
-                            "description": "Description for this provider"
+                          description: {
+                            type: "string",
+                            description: "Description for this provider",
                           },
-                          "clientSecret": {
-                            "type": "string",
-                            "description": "Secret provided by the provider."
+                          clientSecret: {
+                            type: "string",
+                            description: "Secret provided by the provider.",
                           },
-                          "urlSlug": {
-                            "type": "string",
-                            "description": "Will be the value that replaces {slug} in URLs. Usually represents the name of your app. Needed for some providers like Slack."
-                          }
-                        }
-                      }
-                    },
-                    "providerPermissions": {
-                      "description": "List of access tokens the user is authorized for. Can be from oauth providers but also direct secrets in several formats.",
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "updatedAt": {
-                            "type": "number",
-                            "description": "Unix timestamp in ms"
+                          urlSlug: {
+                            type: "string",
+                            description:
+                              "Will be the value that replaces {slug} in URLs. Usually represents the name of your app. Needed for some providers like Slack.",
                           },
-                          "providerSlug": {
-                            "type": "string",
-                            "description": "slug representation for the API as defined in providers.json"
-                          },
-                          "name": {
-                            "type": "string",
-                            "description": "Needed in case it's of an unidentified provider"
-                          },
-                          "openapiUrl": {
-                            "type": "string",
-                            "description": "Needed in case it's of an unidentified provider"
-                          },
-                          "userId": {
-                            "type": "string",
-                            "description": "Unique user id within the system of the provider. Can be a username, email, or phone number. Used for linking accounts with trusted providers."
-                          },
-                          "access_token": {
-                            "type": "string",
-                            "description": "The access token string as issued by the authorization server."
-                          },
-                          "token_type": {
-                            "type": "string",
-                            "description": "The type of token this is, typically just the string 'Bearer'."
-                          },
-                          "expires_in": {
-                            "type": "integer",
-                            "description": "The lifetime in seconds of the access token.",
-                            "minimum": 1
-                          },
-                          "refresh_token": {
-                            "type": "string",
-                            "description": "The refresh token, which can be used to obtain new access tokens using the same authorization grant."
-                          },
-                          "scope": {
-                            "type": "string",
-                            "description": "A space-separated list of scopes that the access token is valid for."
-                          }
                         },
-                        "required": [
-                          "access_token",
-                          "token_type"
-                        ],
-                        "additionalProperties": false
-                      }
+                      },
                     },
-                    "clients": {
-                      "type": "array",
-                      "description": "Model to use ActionSchema Auth as OAuth Server, so other systems (Such as OpenAI GPTs or your own websites, CLIs, or agents) can integrate with your providerPermissions.",
-                      "items": {
-                        "type": "object",
+                    providerPermissions: {
+                      description:
+                        "List of access tokens the user is authorized for. Can be from oauth providers but also direct secrets in several formats.",
+                      type: "array",
+                      items: {
+                        type: "object",
+                        properties: {
+                          updatedAt: {
+                            type: "number",
+                            description: "Unix timestamp in ms",
+                          },
+                          providerSlug: {
+                            type: "string",
+                            description:
+                              "slug representation for the API as defined in providers.json",
+                          },
+                          name: {
+                            type: "string",
+                            description:
+                              "Needed in case it's of an unidentified provider",
+                          },
+                          openapiUrl: {
+                            type: "string",
+                            description:
+                              "Needed in case it's of an unidentified provider",
+                          },
+                          userId: {
+                            type: "string",
+                            description:
+                              "Unique user id within the system of the provider. Can be a username, email, or phone number. Used for linking accounts with trusted providers.",
+                          },
+                          access_token: {
+                            type: "string",
+                            description:
+                              "The access token string as issued by the authorization server.",
+                          },
+                          token_type: {
+                            type: "string",
+                            description:
+                              "The type of token this is, typically just the string 'Bearer'.",
+                          },
+                          expires_in: {
+                            type: "integer",
+                            description:
+                              "The lifetime in seconds of the access token.",
+                            minimum: 1,
+                          },
+                          refresh_token: {
+                            type: "string",
+                            description:
+                              "The refresh token, which can be used to obtain new access tokens using the same authorization grant.",
+                          },
+                          scope: {
+                            type: "string",
+                            description:
+                              "A space-separated list of scopes that the access token is valid for.",
+                          },
+                        },
+                        required: ["access_token", "token_type"],
+                        additionalProperties: false,
+                      },
+                    },
+                    clients: {
+                      type: "array",
+                      description:
+                        "Model to use ActionSchema Auth as OAuth Server, so other systems (Such as OpenAI GPTs or your own websites, CLIs, or agents) can integrate with your providerPermissions.",
+                      items: {
+                        type: "object",
                         "x-storage": "memory",
                         "x-storage-index": "0/clientId",
-                        "additionalProperties": false,
-                        "required": [
-                          "clientId",
-                          "clientSecret"
-                        ],
-                        "properties": {
-                          "name": {
-                            "type": "string"
+                        additionalProperties: false,
+                        required: ["clientId", "clientSecret"],
+                        properties: {
+                          name: {
+                            type: "string",
                           },
-                          "description": {
-                            "type": "string"
+                          description: {
+                            type: "string",
                           },
-                          "clientId": {
-                            "type": "string",
-                            "description": "Must be a unique clientId across the entire domain, but can be named by the user."
+                          clientId: {
+                            type: "string",
+                            description:
+                              "Must be a unique clientId across the entire domain, but can be named by the user.",
                           },
-                          "clientSecret": {
-                            "type": "string",
-                            "description": "64-character string that is the secret of this client",
-                            "minLength": 64,
-                            "maxLength": 64
+                          clientSecret: {
+                            type: "string",
+                            description:
+                              "64-character string that is the secret of this client",
+                            minLength: 64,
+                            maxLength: 64,
                           },
-                          "callbackUrl": {
-                            "type": "string",
-                            "description": "If not given, uses ?redirect_url. If given, the callbackUrl cannot be overwritten anymore by ?redirect_url."
+                          callbackUrl: {
+                            type: "string",
+                            description:
+                              "If not given, uses ?redirect_url. If given, the callbackUrl cannot be overwritten anymore by ?redirect_url.",
                           },
-                          "scope": {
-                            "type": "string",
-                            "description": "Scope provided to interact with the auth proxy or with each provider directly. Must be space-separated in which each item has the format {providerSlug}:{providerScope}. Auth Server scopes can be chosen using `actionschema-auth:*`",
-                            "examples": [
-                              "actionschema-auth:admin github:read:user"
-                            ]
+                          scope: {
+                            type: "string",
+                            description:
+                              "Scope provided to interact with the auth proxy or with each provider directly. Must be space-separated in which each item has the format {providerSlug}:{providerScope}. Auth Server scopes can be chosen using `actionschema-auth:*`",
+                            examples: [
+                              "actionschema-auth:admin github:read:user",
+                            ],
                           },
-                          "loginFlowMessage": {
-                            "type": "string",
-                            "description": "Replaces requiredProviders[*].reason with a single login flow message that is available to the user that explains why permissions are needed.",
-                            "examples": [
-                              "Access to these tools is needed for the app to function."
-                            ]
+                          loginFlowMessage: {
+                            type: "string",
+                            description:
+                              "Replaces requiredProviders[*].reason with a single login flow message that is available to the user that explains why permissions are needed.",
+                            examples: [
+                              "Access to these tools is needed for the app to function.",
+                            ],
                           },
-                          "requiredProviders": {
-                            "type": "array",
-                            "deprecated": true,
-                            "description": "To be replaced by `scope`!!!",
-                            "items": {
-                              "type": "object",
-                              "additionalProperties": false,
-                              "required": [
-                                "providerSlug",
-                                "scope"
-                              ],
-                              "properties": {
-                                "providerSlug": {
-                                  "type": "string"
+                          requiredProviders: {
+                            type: "array",
+                            deprecated: true,
+                            description: "To be replaced by `scope`!!!",
+                            items: {
+                              type: "object",
+                              additionalProperties: false,
+                              required: ["providerSlug", "scope"],
+                              properties: {
+                                providerSlug: {
+                                  type: "string",
                                 },
-                                "scope": {
-                                  "type": "string"
+                                scope: {
+                                  type: "string",
                                 },
-                                "reason": {
-                                  "type": "string",
-                                  "description": "Reason shown to the user to why access is needed."
-                                }
+                                reason: {
+                                  type: "string",
+                                  description:
+                                    "Reason shown to the user to why access is needed.",
+                                },
                               },
-                              "examples": [
+                              examples: [
                                 {
-                                  "providerSlug": "github",
-                                  "scope": "read:user",
-                                  "reason": "Prove you're a GitHub user"
-                                }
-                              ]
-                            }
+                                  providerSlug: "github",
+                                  scope: "read:user",
+                                  reason: "Prove you're a GitHub user",
+                                },
+                              ],
+                            },
                           },
-                          "retrieveDirectAccessToken": {
-                            "type": "boolean",
-                            "description": "If true, this client will provide the direct access token of the service, rather than an access_token for ActionSchema Auth.",
-                            "$comment": "Only works if the amount of requiredProviders is exactly one, due to the limitations of the oauth2 specification with code flow. In the future, the other access tokens may as well be provided via other headers, so agents can talk to providers directly, without proxy."
-                          }
-                        }
-                      }
+                          retrieveDirectAccessToken: {
+                            type: "boolean",
+                            description:
+                              "If true, this client will provide the direct access token of the service, rather than an access_token for ActionSchema Auth.",
+                            $comment:
+                              "Only works if the amount of requiredProviders is exactly one, due to the limitations of the oauth2 specification with code flow. In the future, the other access tokens may as well be provided via other headers, so agents can talk to providers directly, without proxy.",
+                          },
+                        },
+                      },
                     },
-                    "clientPermissions": {
-                      "type": "array",
-                      "description": "Applications, Agents, Code, CLIs, or anything that has access to your account. Can also be used to create API Keys for developers.",
-                      "items": {
-                        "$schema": "https://spec.actionschema.com/actionschema.json",
-                        "description": "",
-                        "type": "object",
-                        "$comment": "Model to store permissions granted to access ActionSchema Auth's API, which in turn allows access to all available access tokens of a user. NB: I think that this model doesn't store users access of other users, only of yourself granted by your own clients or by clients of other admins.",
-                        "required": [
-                          "providerSlug",
-                          "createdAt",
-                          "access_token",
-                          "token_type",
-                          "scope"
-                        ],
-                        "additionalProperties": false,
-                        "properties": {
-                          "providerSlug": {
-                            "type": "string",
-                            "enum": [
-                              "actionschema-auth"
-                            ]
-                          },
-                          "clientId": {
-                            "type": "string",
-                            "description": "Can be a reference to the clientId of the client within actionschema that granted this permission. Can be a client of another user."
-                          },
-                          "description": {
-                            "type": "string"
-                          },
-                          "scope": {
-                            "type": "string",
-                            "description": "A space-separated list of scopes that the access token is valid for. Only possible combination is 'admin' for now, which means access to everything.",
-                            "enum": [
-                              "admin"
-                            ]
-                          },
-                          "createdAt": {
-                            "type": "number",
-                            "description": "Unix timestamp in MS"
-                          },
-                          "access_token": {
-                            "type": "string",
-                            "description": "The access token string as issued by us."
-                          },
-                          "token_type": {
-                            "type": "string",
-                            "description": "The type of token this is. Always gives Bearer now.",
-                            "enum": [
-                              "Bearer"
-                            ]
-                          },
-                          "expires_in": {
-                            "type": "integer",
-                            "description": "The lifetime in seconds of the access token.",
-                            "minimum": 1
-                          },
-                          "refresh_token": {
-                            "type": "string",
-                            "description": "The refresh token, which can be used to obtain new access tokens using the same authorization grant."
-                          }
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
+                    clientPermissions: {
+                      type: "array",
+                      description:
+                        "Applications, Agents, Code, CLIs, or anything that has access to your account. Can also be used to create API Keys for developers.",
+                      items: {
+                        $ref: "#/components/schemas/Permission",
+                      },
+                    },
+                  },
+                },
+              },
+            },
           },
           "403": {
-            "description": "Unauthorized",
-            "content": {
+            description: "Unauthorized",
+            content: {
               "text/plain": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  },
-  "components": {
-    "securitySchemes": {
-      "oauth2": {
-        "type": "oauth2",
-        "flows": {
-          "authorizationCode": {
-            "authorizationUrl": "https://auth.actionschema.com/oauth/authorize",
-            "tokenUrl": "https://auth.actionschema.com/oauth/access_token",
-            "scopes": {
-              "actionschema-auth:admin": "Full access to all providers, clients, and permissions",
-              "actionschema-auth:read:user": "Access to ActionSchema Auth UserID, as well as all user IDs of all providers the user logged into.",
-              "actionschema-auth:readonly": "Only read what services are available"
-            }
-          }
-        }
-      }
+                schema: {
+                  type: "string",
+                },
+              },
+            },
+          },
+        },
+      },
     },
-    "schemas": {}
-  }
-} as OpenapiDocument;
+  },
+  components: {
+    securitySchemes: {
+      oauth2: {
+        type: "oauth2",
+        flows: {
+          authorizationCode: {
+            authorizationUrl: "https://auth.actionschema.com/oauth/authorize",
+            tokenUrl: "https://auth.actionschema.com/oauth/access_token",
+            scopes: {
+              "actionschema-auth:admin":
+                "Full access to all providers, clients, and permissions",
+              "actionschema-auth:read:user":
+                "Access to ActionSchema Auth UserID, as well as all user IDs of all providers the user logged into.",
+              "actionschema-auth:readonly":
+                "Only read what services are available",
+            },
+          },
+        },
+      },
+    },
+    schemas: {
+      Permission: {
+        $schema: "https://spec.actionschema.com/actionschema.json",
+        description: "",
+        type: "object",
+        $comment:
+          "Model to store permissions granted to access ActionSchema Auth's API, which in turn allows access to all available access tokens of a user. NB: I think that this model doesn't store users access of other users, only of yourself granted by your own clients or by clients of other admins.",
+        required: [
+          "providerSlug",
+          "createdAt",
+          "access_token",
+          "token_type",
+          "scope",
+        ],
+        additionalProperties: false,
+        properties: {
+          providerSlug: {
+            type: "string",
+            enum: ["actionschema-auth"],
+          },
+          clientId: {
+            type: "string",
+            description:
+              "Can be a reference to the clientId of the client within actionschema that granted this permission. Can be a client of another user.",
+          },
+          description: {
+            type: "string",
+          },
+          scope: {
+            type: "string",
+            description:
+              "A space-separated list of scopes that the access token is valid for. Only possible combination is 'admin' for now, which means access to everything.",
+            enum: ["admin"],
+          },
+          createdAt: {
+            type: "number",
+            description: "Unix timestamp in MS",
+          },
+          access_token: {
+            type: "string",
+            description: "The access token string as issued by us.",
+          },
+          token_type: {
+            type: "string",
+            description: "The type of token this is. Always gives Bearer now.",
+            enum: ["Bearer"],
+          },
+          expires_in: {
+            type: "integer",
+            description: "The lifetime in seconds of the access token.",
+            minimum: 1,
+          },
+          refresh_token: {
+            type: "string",
+            description:
+              "The refresh token, which can be used to obtain new access tokens using the same authorization grant.",
+          },
+        },
+      },
+    },
+  },
+} as unknown as OpenapiDocument;
 
-export const authClient =  createClient<Auth>(authOpenapi,"https://auth.actionschema.com/openapi.json",{access_token: process.env.undefined})
-
-
+export const authClient = createClient<Auth>(
+  authOpenapi,
+  "https://auth.actionschema.com/openapi.json",
+  { access_token: process.env.undefined },
+);
 
 export const adminOpenapi = {
   "x-actionschema": "0.0.1",
-  "$schema": "https://spec.actionschema.com/openapi.json",
-  "openapi": "3.1.0",
-  "info": {
-    "title": "OpenAPI CRUD",
-    "version": "1.0",
-    "description": ""
+  $schema: "https://spec.actionschema.com/openapi.json",
+  openapi: "3.1.0",
+  info: {
+    title: "OpenAPI CRUD",
+    version: "1.0",
+    description: "",
   },
-  "servers": [
+  servers: [
     {
-      "url": "https://data.actionschema.com"
-    }
+      url: "https://data.actionschema.com",
+    },
   ],
-  "security": [
+  security: [
     {
-      "oauth2": []
-    }
+      oauth2: [],
+    },
   ],
-  "components": {
-    "securitySchemes": {
-      "oauth2": {
-        "type": "oauth2",
-        "flows": {
-          "authorizationCode": {
-            "authorizationUrl": "https://auth.actionschema.com/oauth/authorize",
-            "tokenUrl": "https://auth.actionschema.com/oauth/access_token",
+  components: {
+    securitySchemes: {
+      oauth2: {
+        type: "oauth2",
+        flows: {
+          authorizationCode: {
+            authorizationUrl: "https://auth.actionschema.com/oauth/authorize",
+            tokenUrl: "https://auth.actionschema.com/oauth/access_token",
             "x-scopes-parameters": [
               {
-                "name": "projectSlug",
-                "description": "Refers to a project"
+                name: "projectSlug",
+                description: "Refers to a project",
               },
               {
-                "name": "databaseSlug",
-                "description": "Refers to a database"
-              }
+                name: "databaseSlug",
+                description: "Refers to a database",
+              },
             ],
-            "scopes": {
-              "admin": "Access to managing all projects",
-              "user:project:{projectSlug}": "Access to use all databases in a project, with or without user separation.",
-              "user:project:{projectSlug}:read": "Access to read all databases in a project, and write to all user-separated databases.",
-              "admin:project:{projectSlug}": "Access to manage an entire project",
-              "admin:db:{databaseSlug}": "Access to manage a database"
-            }
-          }
-        }
-      }
-    },
-    "schemas": {
-      "UrlSlug": {
-        "type": "string",
-        "pattern": "^[a-zA-Z0-9._~-]+$",
-        "minLength": 1,
-        "maxLength": 64,
-        "description": "Slug compatible with URLs"
-      },
-      "CreateDatabaseResponse": {
-        "type": "object",
-        "required": [
-          "isSuccessful"
-        ],
-        "properties": {
-          "isSuccessful": {
-            "type": "boolean"
-          },
-          "message": {
-            "type": "string"
-          },
-          "authToken": {
-            "type": "string"
-          },
-          "adminAuthToken": {
-            "type": "string"
-          },
-          "databaseSlug": {
-            "type": "string"
-          },
-          "openapiUrl": {
-            "type": "string"
-          }
-        }
-      },
-      "VectorIndexColumns": {
-        "description": "A list of vector indexes to be created for several columns in your schema",
-        "type": "array",
-        "items": {
-          "type": "object",
-          "properties": {
-            "propertyKey": {
-              "type": "string"
+            scopes: {
+              admin: "Access to managing all projects",
+              "user:project:{projectSlug}":
+                "Access to use all databases in a project, with or without user separation.",
+              "user:project:{projectSlug}:read":
+                "Access to read all databases in a project, and write to all user-separated databases.",
+              "admin:project:{projectSlug}":
+                "Access to manage an entire project",
+              "admin:db:{databaseSlug}": "Access to manage a database",
             },
-            "model": {
-              "type": "string",
-              "enum": [
+          },
+        },
+      },
+    },
+    schemas: {
+      UrlSlug: {
+        type: "string",
+        pattern: "^[a-zA-Z0-9._~-]+$",
+        minLength: 1,
+        maxLength: 64,
+        description: "Slug compatible with URLs",
+      },
+      CreateDatabaseResponse: {
+        type: "object",
+        required: ["isSuccessful"],
+        properties: {
+          isSuccessful: {
+            type: "boolean",
+          },
+          message: {
+            type: "string",
+          },
+          authToken: {
+            type: "string",
+          },
+          adminAuthToken: {
+            type: "string",
+          },
+          databaseSlug: {
+            type: "string",
+          },
+          openapiUrl: {
+            type: "string",
+          },
+        },
+      },
+      VectorIndexColumns: {
+        description:
+          "A list of vector indexes to be created for several columns in your schema",
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            propertyKey: {
+              type: "string",
+            },
+            model: {
+              type: "string",
+              enum: [
                 "text-embedding-ada-002",
                 "text-embedding-3-small",
-                "text-embedding-3-large"
-              ]
+                "text-embedding-3-large",
+              ],
             },
-            "region": {
-              "type": "string",
-              "enum": [
-                "us-east-1",
-                "eu-west-1",
-                "us-central1"
-              ]
+            region: {
+              type: "string",
+              enum: ["us-east-1", "eu-west-1", "us-central1"],
             },
-            "dimension_count": {
-              "type": "number"
+            dimension_count: {
+              type: "number",
             },
-            "similarity_function": {
-              "type": "string",
-              "enum": [
-                "COSINE",
-                "EUCLIDIAN",
-                "DOT_PRODUCT"
-              ]
-            }
+            similarity_function: {
+              type: "string",
+              enum: ["COSINE", "EUCLIDIAN", "DOT_PRODUCT"],
+            },
           },
-          "required": [
+          required: [
             "propertyKey",
             "model",
             "region",
             "dimension_count",
-            "similarity_function"
-          ]
-        }
+            "similarity_function",
+          ],
+        },
       },
-      "StandardResponse": {
-        "type": "object",
-        "required": [
-          "isSuccessful"
-        ],
-        "properties": {
-          "status": {
-            "type": "number"
+      StandardResponse: {
+        type: "object",
+        required: ["isSuccessful"],
+        properties: {
+          status: {
+            type: "number",
           },
-          "isSuccessful": {
-            "type": "boolean"
+          isSuccessful: {
+            type: "boolean",
           },
-          "message": {
-            "type": "string"
+          message: {
+            type: "string",
           },
-          "priceCredit": {
-            "type": "number"
-          }
-        }
-      }
-    }
+          priceCredit: {
+            type: "number",
+          },
+        },
+      },
+    },
   },
-  "paths": {
+  paths: {
     "/listDatabases": {
-      "get": {
-        "summary": "List your databases",
-        "operationId": "listDatabases",
-        "responses": {
+      get: {
+        summary: "List your databases",
+        operationId: "listDatabases",
+        responses: {
           "200": {
-            "description": "My DB List",
-            "content": {
+            description: "My DB List",
+            content: {
               "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "isSuccessful": {
-                      "type": "boolean"
+                schema: {
+                  type: "object",
+                  properties: {
+                    isSuccessful: {
+                      type: "boolean",
                     },
-                    "message": {
-                      "type": "string"
+                    message: {
+                      type: "string",
                     },
-                    "status": {
-                      "type": "number"
+                    status: {
+                      type: "number",
                     },
-                    "currentProjectSlug": {
-                      "type": "string",
-                      "description": "The slug of the project these databases belong to"
+                    currentProjectSlug: {
+                      type: "string",
+                      description:
+                        "The slug of the project these databases belong to",
                     },
-                    "databases": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "additionalProperties": false,
-                        "required": [
+                    databases: {
+                      type: "array",
+                      items: {
+                        type: "object",
+                        additionalProperties: false,
+                        required: [
                           "databaseSlug",
                           "authToken",
                           "schema",
-                          "openapiUrl"
+                          "openapiUrl",
                         ],
-                        "properties": {
-                          "databaseSlug": {
-                            "type": "string"
+                        properties: {
+                          databaseSlug: {
+                            type: "string",
                           },
-                          "openapiUrl": {
-                            "type": "string"
+                          openapiUrl: {
+                            type: "string",
                           },
-                          "authToken": {
-                            "type": "string",
-                            "description": "Bearer Authorization token to be used for the openapi of this specific database. Can be used interchangeably to the admin authtoken."
+                          authToken: {
+                            type: "string",
+                            description:
+                              "Bearer Authorization token to be used for the openapi of this specific database. Can be used interchangeably to the admin authtoken.",
                           },
-                          "schema": {
-                            "type": "string"
-                          }
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
+                          schema: {
+                            type: "string",
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
     },
     "/upsertDatabase": {
-      "post": {
-        "summary": "Create or update a database model",
-        "operationId": "upsertDatabase",
-        "requestBody": {
-          "required": true,
-          "content": {
+      post: {
+        summary: "Create or update a database model",
+        operationId: "upsertDatabase",
+        requestBody: {
+          required: true,
+          content: {
             "application/json": {
-              "schema": {
-                "type": "object",
-                "required": [
-                  "schemaString",
-                  "databaseSlug"
-                ],
-                "properties": {
-                  "databaseSlug": {
-                    "title": "Database ID",
-                    "description": "Unique slug for the database to be used as prefix to the endpoints.",
-                    "$ref": "#/components/schemas/UrlSlug"
+              schema: {
+                type: "object",
+                required: ["schemaString", "databaseSlug"],
+                properties: {
+                  databaseSlug: {
+                    title: "Database ID",
+                    description:
+                      "Unique slug for the database to be used as prefix to the endpoints.",
+                    $ref: "#/components/schemas/UrlSlug",
                   },
-                  "schemaString": {
-                    "title": "Schema",
-                    "type": "string",
-                    "description": "JSON of the schema you want the database to refer to. Should be a Object JSON Schema."
+                  schemaString: {
+                    title: "Schema",
+                    type: "string",
+                    description:
+                      "JSON of the schema you want the database to refer to. Should be a Object JSON Schema.",
                   },
-                  "authToken": {
-                    "type": "string",
-                    "description": "Token required to authrorize using the CRUD endpoints. Will be generated if not given.",
-                    "minLength": 32,
-                    "maxLength": 128
+                  authToken: {
+                    type: "string",
+                    description:
+                      "Token required to authrorize using the CRUD endpoints. Will be generated if not given.",
+                    minLength: 32,
+                    maxLength: 128,
                   },
-                  "isUserLevelSeparationEnabled": {
-                    "type": "boolean",
-                    "description": "If true, api will use oauth2 to authenticate, and will add key prefix to it so only the keys for the user will be able to be managed."
+                  isUserLevelSeparationEnabled: {
+                    type: "boolean",
+                    description:
+                      "If true, api will use oauth2 to authenticate, and will add key prefix to it so only the keys for the user will be able to be managed.",
                   },
-                  "region": {
-                    "description": "Can be set for a new database. Cannot be changed",
-                    "type": "string",
-                    "enum": [
+                  region: {
+                    description:
+                      "Can be set for a new database. Cannot be changed",
+                    type: "string",
+                    enum: [
                       "eu-west-1",
                       "us-east-1",
                       "us-west-1",
                       "ap-northeast-1",
-                      "us-central1"
-                    ]
+                      "us-central1",
+                    ],
                   },
-                  "vectorIndexColumns": {
-                    "$ref": "#/components/schemas/VectorIndexColumns"
+                  vectorIndexColumns: {
+                    $ref: "#/components/schemas/VectorIndexColumns",
                   },
-                  "openaiApiKey": {
-                    "type": "string",
-                    "description": "Needed if you use vectorIndexColumns"
-                  }
-                }
-              }
-            }
-          }
+                  openaiApiKey: {
+                    type: "string",
+                    description: "Needed if you use vectorIndexColumns",
+                  },
+                },
+              },
+            },
+          },
         },
-        "responses": {
+        responses: {
           "200": {
-            "description": "Create database response",
-            "content": {
+            description: "Create database response",
+            content: {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CreateDatabaseResponse"
-                }
-              }
-            }
-          }
-        }
-      }
+                schema: {
+                  $ref: "#/components/schemas/CreateDatabaseResponse",
+                },
+              },
+            },
+          },
+        },
+      },
     },
     "/removeDatabase": {
-      "post": {
-        "summary": "Remove a database",
-        "operationId": "removeDatabase",
-        "requestBody": {
-          "required": true,
-          "content": {
+      post: {
+        summary: "Remove a database",
+        operationId: "removeDatabase",
+        requestBody: {
+          required: true,
+          content: {
             "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "databaseSlug": {
-                    "$ref": "#/components/schemas/UrlSlug"
-                  }
+              schema: {
+                type: "object",
+                properties: {
+                  databaseSlug: {
+                    $ref: "#/components/schemas/UrlSlug",
+                  },
                 },
-                "required": [
-                  "databaseSlug"
-                ]
-              }
-            }
-          }
+                required: ["databaseSlug"],
+              },
+            },
+          },
         },
-        "responses": {
+        responses: {
           "200": {
-            "description": "Successful response",
-            "content": {
+            description: "Successful response",
+            content: {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/StandardResponse"
-                }
-              }
-            }
-          }
-        }
-      }
+                schema: {
+                  $ref: "#/components/schemas/StandardResponse",
+                },
+              },
+            },
+          },
+        },
+      },
     },
     "/setCurrentProject": {
-      "post": {
-        "summary": "Set a project",
-        "operationId": "setCurrentProject",
-        "requestBody": {
-          "required": true,
-          "content": {
+      post: {
+        summary: "Set a project",
+        operationId: "setCurrentProject",
+        requestBody: {
+          required: true,
+          content: {
             "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "projectSlug": {
-                    "$ref": "#/components/schemas/UrlSlug"
+              schema: {
+                type: "object",
+                properties: {
+                  projectSlug: {
+                    $ref: "#/components/schemas/UrlSlug",
                   },
-                  "description": {
-                    "type": "string"
-                  }
+                  description: {
+                    type: "string",
+                  },
                 },
-                "required": [
-                  "projectSlug"
-                ]
-              }
-            }
-          }
+                required: ["projectSlug"],
+              },
+            },
+          },
         },
-        "responses": {
+        responses: {
           "200": {
-            "description": "Successful response",
-            "content": {
+            description: "Successful response",
+            content: {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/StandardResponse"
-                }
-              }
-            }
-          }
-        }
-      }
+                schema: {
+                  $ref: "#/components/schemas/StandardResponse",
+                },
+              },
+            },
+          },
+        },
+      },
     },
     "/listProjects": {
-      "get": {
-        "summary": "List projects",
-        "operationId": "listProjects",
-        "responses": {
+      get: {
+        summary: "List projects",
+        operationId: "listProjects",
+        responses: {
           "200": {
-            "description": "Successful response",
-            "content": {
+            description: "Successful response",
+            content: {
               "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "isSuccessful": {
-                      "type": "boolean"
+                schema: {
+                  type: "object",
+                  properties: {
+                    isSuccessful: {
+                      type: "boolean",
                     },
-                    "message": {
-                      "type": "string"
+                    message: {
+                      type: "string",
                     },
-                    "projects": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "projectSlug": {
-                            "$ref": "#/components/schemas/UrlSlug"
+                    projects: {
+                      type: "array",
+                      items: {
+                        type: "object",
+                        properties: {
+                          projectSlug: {
+                            $ref: "#/components/schemas/UrlSlug",
                           },
-                          "description": {
-                            "type": "string"
+                          description: {
+                            type: "string",
                           },
-                          "databaseSlugs": {
-                            "type": "array",
-                            "items": {
-                              "type": "string"
-                            }
-                          }
-                        }
-                      }
+                          databaseSlugs: {
+                            type: "array",
+                            items: {
+                              type: "string",
+                            },
+                          },
+                        },
+                      },
                     },
-                    "currentProjectSlug": {
-                      "type": "string"
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
+                    currentProjectSlug: {
+                      type: "string",
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
     },
     "/removeProject": {
-      "post": {
-        "summary": "Remove a project",
-        "operationId": "removeProject",
-        "requestBody": {
-          "required": true,
-          "content": {
+      post: {
+        summary: "Remove a project",
+        operationId: "removeProject",
+        requestBody: {
+          required: true,
+          content: {
             "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "projectSlug": {
-                    "$ref": "#/components/schemas/UrlSlug"
-                  }
+              schema: {
+                type: "object",
+                properties: {
+                  projectSlug: {
+                    $ref: "#/components/schemas/UrlSlug",
+                  },
                 },
-                "required": [
-                  "projectSlug"
-                ]
-              }
-            }
-          }
+                required: ["projectSlug"],
+              },
+            },
+          },
         },
-        "responses": {
+        responses: {
           "200": {
-            "description": "Successful response",
-            "content": {
+            description: "Successful response",
+            content: {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/StandardResponse"
-                }
-              }
-            }
-          }
-        }
-      }
+                schema: {
+                  $ref: "#/components/schemas/StandardResponse",
+                },
+              },
+            },
+          },
+        },
+      },
     },
     "/openapi.json": {
-      "get": {
-        "security": [
+      get: {
+        security: [
           {
-            "oauth2": []
+            oauth2: [],
           },
-          {}
+          {},
         ],
-        "summary": "Get openapi",
-        "operationId": "getOpenapi",
-        "responses": {
+        summary: "Get openapi",
+        operationId: "getOpenapi",
+        responses: {
           "200": {
-            "description": "OpenAPI",
-            "content": {
+            description: "OpenAPI",
+            content: {
               "application/json": {
-                "schema": {
-                  "$ref": "https://spec.actionschema.com/openapi.json"
-                }
-              }
-            }
-          }
-        }
-      }
+                schema: {
+                  $ref: "https://spec.actionschema.com/openapi.json",
+                },
+              },
+            },
+          },
+        },
+      },
     },
     "/{databaseSlug}/openapi.json": {
-      "get": {
-        "security": [
+      get: {
+        security: [
           {
-            "oauth2": []
+            oauth2: [],
           },
-          {}
+          {},
         ],
-        "summary": "Get openapi for this database table alone",
-        "operationId": "getCrudOpenapi",
-        "parameters": [
+        summary: "Get openapi for this database table alone",
+        operationId: "getCrudOpenapi",
+        parameters: [
           {
-            "in": "path",
-            "name": "databaseSlug",
-            "schema": {
-              "type": "string"
+            in: "path",
+            name: "databaseSlug",
+            schema: {
+              type: "string",
             },
-            "required": true
-          }
+            required: true,
+          },
         ],
-        "responses": {
+        responses: {
           "200": {
-            "description": "OpenAPI",
-            "content": {
+            description: "OpenAPI",
+            content: {
               "application/json": {
-                "schema": {
-                  "oneOf": [
+                schema: {
+                  oneOf: [
                     {
-                      "$ref": "https://spec.actionschema.com/openapi.json"
+                      $ref: "https://spec.actionschema.com/openapi.json",
                     },
                     {
-                      "type": "object",
-                      "required": [
-                        "isSuccessful"
-                      ],
-                      "properties": {
-                        "isSuccessful": {
-                          "type": "boolean"
+                      type: "object",
+                      required: ["isSuccessful"],
+                      properties: {
+                        isSuccessful: {
+                          type: "boolean",
                         },
-                        "message": {
-                          "type": "string"
-                        }
-                      }
-                    }
-                  ]
-                }
-              }
-            }
-          }
-        }
-      }
+                        message: {
+                          type: "string",
+                        },
+                      },
+                    },
+                  ],
+                },
+              },
+            },
+          },
+        },
+      },
     },
     "/project/{projectSlug}/openapi.json": {
-      "get": {
-        "security": [
+      get: {
+        security: [
           {
-            "oauth2": []
+            oauth2: [],
           },
-          {}
+          {},
         ],
-        "summary": "Get Project OpenAPI",
-        "operationId": "getProjectOpenapi",
-        "parameters": [
+        summary: "Get Project OpenAPI",
+        operationId: "getProjectOpenapi",
+        parameters: [
           {
-            "in": "path",
-            "name": "projectSlug",
-            "schema": {
-              "type": "string"
+            in: "path",
+            name: "projectSlug",
+            schema: {
+              type: "string",
             },
-            "required": true
-          }
+            required: true,
+          },
         ],
-        "responses": {
+        responses: {
           "200": {
-            "description": "Successful response",
-            "content": {
+            description: "Successful response",
+            content: {
               "application/json": {
-                "schema": {
-                  "oneOf": [
+                schema: {
+                  oneOf: [
                     {
-                      "$ref": "https://spec.actionschema.com/openapi.json"
+                      $ref: "https://spec.actionschema.com/openapi.json",
                     },
                     {
-                      "type": "object",
-                      "required": [
-                        "isSuccessful"
-                      ],
-                      "properties": {
-                        "isSuccessful": {
-                          "type": "boolean"
+                      type: "object",
+                      required: ["isSuccessful"],
+                      properties: {
+                        isSuccessful: {
+                          type: "boolean",
                         },
-                        "message": {
-                          "type": "string"
-                        }
-                      }
-                    }
-                  ]
-                }
-              }
-            }
-          }
-        }
-      }
+                        message: {
+                          type: "string",
+                        },
+                      },
+                    },
+                  ],
+                },
+              },
+            },
+          },
+        },
+      },
     },
     "/project/{projectSlug}/schema.json": {
-      "get": {
-        "security": [
+      get: {
+        security: [
           {
-            "oauth2": []
+            oauth2: [],
           },
-          {}
+          {},
         ],
-        "summary": "Get Project OpenAPI",
-        "operationId": "getProjectSchema",
-        "parameters": [
+        summary: "Get Project OpenAPI",
+        operationId: "getProjectSchema",
+        parameters: [
           {
-            "in": "path",
-            "name": "projectSlug",
-            "schema": {
-              "type": "string"
+            in: "path",
+            name: "projectSlug",
+            schema: {
+              type: "string",
             },
-            "required": true
-          }
+            required: true,
+          },
         ],
-        "responses": {
+        responses: {
           "200": {
-            "description": "Successful response",
-            "content": {
+            description: "Successful response",
+            content: {
               "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {},
-                  "additionalProperties": true
-                }
-              }
-            }
-          }
-        }
-      }
+                schema: {
+                  type: "object",
+                  properties: {},
+                  additionalProperties: true,
+                },
+              },
+            },
+          },
+        },
+      },
     },
     "/{databaseSlug}/schema.json": {
-      "get": {
-        "security": [
+      get: {
+        security: [
           {
-            "oauth2": []
+            oauth2: [],
           },
-          {}
+          {},
         ],
-        "summary": "Get schema for a database",
-        "operationId": "getSchema",
-        "parameters": [
+        summary: "Get schema for a database",
+        operationId: "getSchema",
+        parameters: [
           {
-            "in": "path",
-            "name": "databaseSlug",
-            "schema": {
-              "type": "string"
+            in: "path",
+            name: "databaseSlug",
+            schema: {
+              type: "string",
             },
-            "required": true
-          }
+            required: true,
+          },
         ],
-        "responses": {
+        responses: {
           "200": {
-            "description": "Schema",
-            "content": {
+            description: "Schema",
+            content: {
               "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {},
-                  "additionalProperties": true
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-} as OpenapiDocument;
+                schema: {
+                  type: "object",
+                  properties: {},
+                  additionalProperties: true,
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+} as unknown as OpenapiDocument;
 
-export const adminClient =  createClient<Admin>(adminOpenapi,"https://data.actionschema.com/openapi.json",{access_token: process.env.undefined})
-
-
+export const adminClient = createClient<Admin>(
+  adminOpenapi,
+  "https://data.actionschema.com/openapi.json",
+  { access_token: process.env.undefined },
+);
 
 export const crudOpenapi = {
   "x-actionschema": "0.0.1",
-  "$schema": "https://spec.actionschema.com/openapi.json",
-  "openapi": "3.1.0",
-  "info": {
-    "title": "OpenAPI CRUD",
-    "version": "1.0",
-    "description": "To be replaced with better info about this model"
+  $schema: "https://spec.actionschema.com/openapi.json",
+  openapi: "3.1.0",
+  info: {
+    title: "OpenAPI CRUD",
+    version: "1.0",
+    description: "To be replaced with better info about this model",
   },
-  "security": [
+  security: [
     {
-      "oauth2": []
+      oauth2: [],
     },
     {
-      "bearerAuth": []
-    }
+      bearerAuth: [],
+    },
   ],
-  "servers": [
+  servers: [
     {
-      "url": "https://data.actionschema.com/{databaseSlug}",
-      "description": "NB: this only works with a replaced databaseSlug!"
-    }
+      url: "https://data.actionschema.com/{databaseSlug}",
+      description: "NB: this only works with a replaced databaseSlug!",
+    },
   ],
-  "paths": {
+  paths: {
     "/read": {
-      "post": {
-        "summary": "",
-        "operationId": "read",
-        "requestBody": {
-          "required": true,
-          "content": {
+      post: {
+        summary: "",
+        operationId: "read",
+        requestBody: {
+          required: true,
+          content: {
             "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ReadContext"
-              }
-            }
-          }
+              schema: {
+                $ref: "#/components/schemas/ReadContext",
+              },
+            },
+          },
         },
-        "responses": {
+        responses: {
           "200": {
-            "description": "OpenAPI",
-            "content": {
+            description: "OpenAPI",
+            content: {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ReadResponse"
-                }
-              }
-            }
-          }
-        }
-      }
+                schema: {
+                  $ref: "#/components/schemas/ReadResponse",
+                },
+              },
+            },
+          },
+        },
+      },
     },
     "/create": {
-      "post": {
-        "summary": "",
-        "operationId": "create",
-        "requestBody": {
-          "required": true,
-          "content": {
+      post: {
+        summary: "",
+        operationId: "create",
+        requestBody: {
+          required: true,
+          content: {
             "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateContext"
-              }
-            }
-          }
+              schema: {
+                $ref: "#/components/schemas/CreateContext",
+              },
+            },
+          },
         },
-        "responses": {
+        responses: {
           "200": {
-            "description": "OpenAPI",
-            "content": {
+            description: "OpenAPI",
+            content: {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CreateResponse"
-                }
-              }
-            }
-          }
-        }
-      }
+                schema: {
+                  $ref: "#/components/schemas/CreateResponse",
+                },
+              },
+            },
+          },
+        },
+      },
     },
     "/remove": {
-      "post": {
-        "summary": "",
-        "operationId": "remove",
-        "requestBody": {
-          "required": true,
-          "content": {
+      post: {
+        summary: "",
+        operationId: "remove",
+        requestBody: {
+          required: true,
+          content: {
             "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/RemoveContext"
-              }
-            }
-          }
+              schema: {
+                $ref: "#/components/schemas/RemoveContext",
+              },
+            },
+          },
         },
-        "responses": {
+        responses: {
           "200": {
-            "description": "OpenAPI",
-            "content": {
+            description: "OpenAPI",
+            content: {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/RemoveResponse"
-                }
-              }
-            }
-          }
-        }
-      }
+                schema: {
+                  $ref: "#/components/schemas/RemoveResponse",
+                },
+              },
+            },
+          },
+        },
+      },
     },
     "/update": {
-      "post": {
-        "summary": "",
-        "operationId": "update",
-        "requestBody": {
-          "required": true,
-          "content": {
+      post: {
+        summary: "",
+        operationId: "update",
+        requestBody: {
+          required: true,
+          content: {
             "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateContext"
-              }
-            }
-          }
+              schema: {
+                $ref: "#/components/schemas/UpdateContext",
+              },
+            },
+          },
         },
-        "responses": {
+        responses: {
           "200": {
-            "description": "OpenAPI",
-            "content": {
+            description: "OpenAPI",
+            content: {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/UpdateResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  },
-  "components": {
-    "securitySchemes": {
-      "oauth2": {
-        "type": "oauth2",
-        "flows": {
-          "authorizationCode": {
-            "authorizationUrl": "https://auth.actionschema.com/oauth/authorize",
-            "tokenUrl": "https://auth.actionschema.com/oauth/access_token",
-            "scopes": {
-              "user": "Full access to this database and rest of the project"
-            }
-          }
-        }
+                schema: {
+                  $ref: "#/components/schemas/UpdateResponse",
+                },
+              },
+            },
+          },
+        },
       },
-      "bearerAuth": {
-        "type": "http",
-        "scheme": "bearer",
-        "bearerFormat": "Bearer",
-        "description": "Hardcoded authToken, either a database-specific one, or an admin auth-token. Please note, that for dbs with `isUserLevelSeparationEnabled:true` the auth you provide will influence which rows you get back."
-      }
     },
-    "schemas": {
-      "ModelItem": {
-        "type": "object",
-        "description": "To be replaced with the actual model item",
-        "properties": {},
-        "additionalProperties": true
-      },
-      "CreateContext": {
-        "type": "object",
-        "properties": {
-          "databaseSlug": {
-            "type": "string"
-          },
-          "items": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/ModelItem",
-              "description": "If items in this array contain `__id`, it will be overwriting that item if it's already there."
-            }
-          }
-        },
-        "additionalProperties": false,
-        "required": [
-          "items"
-        ]
-      },
-      "CreateResponse": {
-        "type": "object",
-        "properties": {
-          "isSuccessful": {
-            "type": "boolean"
-          },
-          "message": {
-            "type": "string"
-          },
-          "result": {
-            "type": "array",
-            "items": {
-              "type": "string"
+  },
+  components: {
+    securitySchemes: {
+      oauth2: {
+        type: "oauth2",
+        flows: {
+          authorizationCode: {
+            authorizationUrl: "https://auth.actionschema.com/oauth/authorize",
+            tokenUrl: "https://auth.actionschema.com/oauth/access_token",
+            scopes: {
+              user: "Full access to this database and rest of the project",
             },
-            "description": "The rowIds created"
-          }
+          },
         },
-        "required": [
-          "isSuccessful",
-          "message"
-        ]
       },
-      "ReadResponse": {
-        "type": "object",
-        "properties": {
-          "isSuccessful": {
-            "type": "boolean"
-          },
-          "message": {
-            "type": "string"
-          },
-          "$schema": {
-            "type": "string"
-          },
-          "items": {
-            "type": "object",
-            "additionalProperties": {
-              "$ref": "#/components/schemas/ModelItem"
-            }
-          },
-          "schema": {
-            "type": "object",
-            "additionalProperties": true
-          },
-          "canWrite": {
-            "type": "boolean"
-          },
-          "hasMore": {
-            "type": "boolean"
-          }
-        },
-        "required": [
-          "isSuccessful",
-          "message"
-        ]
+      bearerAuth: {
+        type: "http",
+        scheme: "bearer",
+        bearerFormat: "Bearer",
+        description:
+          "Hardcoded authToken, either a database-specific one, or an admin auth-token. Please note, that for dbs with `isUserLevelSeparationEnabled:true` the auth you provide will influence which rows you get back.",
       },
-      "ReadContext": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "databaseSlug": {
-            "type": "string"
+    },
+    schemas: {
+      ModelItem: {
+        type: "object",
+        description: "To be replaced with the actual model item",
+        properties: {},
+        additionalProperties: true,
+      },
+      CreateContext: {
+        type: "object",
+        properties: {
+          databaseSlug: {
+            type: "string",
           },
-          "search": {
-            "type": "string"
-          },
-          "vectorSearch": {
-            "type": "object",
-            "properties": {
-              "propertyKey": {
-                "type": "string"
-              },
-              "input": {
-                "type": "string"
-              },
-              "topK": {
-                "type": "number"
-              },
-              "minimumSimilarity": {
-                "type": "number"
-              }
+          items: {
+            type: "array",
+            items: {
+              $ref: "#/components/schemas/ModelItem",
+              description:
+                "If items in this array contain `__id`, it will be overwriting that item if it's already there.",
             },
-            "required": [
-              "propertyKey",
-              "input",
-              "topK",
-              "minimumSimilarity"
-            ]
           },
-          "rowIds": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "startFromIndex": {
-            "type": "integer"
-          },
-          "maxRows": {
-            "type": "integer"
-          },
-          "filter": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/Filter"
-            }
-          },
-          "sort": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/Sort"
-            }
-          },
-          "objectParameterKeys": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "ignoreObjectParameterKeys": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          }
-        }
-      },
-      "Sort": {
-        "type": "object",
-        "properties": {
-          "sortDirection": {
-            "type": "string",
-            "enum": [
-              "ascending",
-              "descending"
-            ]
-          },
-          "objectParameterKey": {
-            "type": "string"
-          }
         },
-        "required": [
-          "sortDirection",
-          "objectParameterKey"
-        ]
+        additionalProperties: false,
+        required: ["items"],
       },
-      "Filter": {
-        "type": "object",
-        "properties": {
-          "operator": {
-            "type": "string",
-            "enum": [
+      CreateResponse: {
+        type: "object",
+        properties: {
+          isSuccessful: {
+            type: "boolean",
+          },
+          message: {
+            type: "string",
+          },
+          result: {
+            type: "array",
+            items: {
+              type: "string",
+            },
+            description: "The rowIds created",
+          },
+        },
+        required: ["isSuccessful", "message"],
+      },
+      ReadResponse: {
+        type: "object",
+        properties: {
+          isSuccessful: {
+            type: "boolean",
+          },
+          message: {
+            type: "string",
+          },
+          $schema: {
+            type: "string",
+          },
+          items: {
+            type: "object",
+            additionalProperties: {
+              $ref: "#/components/schemas/ModelItem",
+            },
+          },
+          schema: {
+            type: "object",
+            additionalProperties: true,
+          },
+          canWrite: {
+            type: "boolean",
+          },
+          hasMore: {
+            type: "boolean",
+          },
+        },
+        required: ["isSuccessful", "message"],
+      },
+      ReadContext: {
+        type: "object",
+        additionalProperties: false,
+        properties: {
+          databaseSlug: {
+            type: "string",
+          },
+          search: {
+            type: "string",
+          },
+          vectorSearch: {
+            type: "object",
+            properties: {
+              propertyKey: {
+                type: "string",
+              },
+              input: {
+                type: "string",
+              },
+              topK: {
+                type: "number",
+              },
+              minimumSimilarity: {
+                type: "number",
+              },
+            },
+            required: ["propertyKey", "input", "topK", "minimumSimilarity"],
+          },
+          rowIds: {
+            type: "array",
+            items: {
+              type: "string",
+            },
+          },
+          startFromIndex: {
+            type: "integer",
+          },
+          maxRows: {
+            type: "integer",
+          },
+          filter: {
+            type: "array",
+            items: {
+              $ref: "#/components/schemas/Filter",
+            },
+          },
+          sort: {
+            type: "array",
+            items: {
+              $ref: "#/components/schemas/Sort",
+            },
+          },
+          objectParameterKeys: {
+            type: "array",
+            items: {
+              type: "string",
+            },
+          },
+          ignoreObjectParameterKeys: {
+            type: "array",
+            items: {
+              type: "string",
+            },
+          },
+        },
+      },
+      Sort: {
+        type: "object",
+        properties: {
+          sortDirection: {
+            type: "string",
+            enum: ["ascending", "descending"],
+          },
+          objectParameterKey: {
+            type: "string",
+          },
+        },
+        required: ["sortDirection", "objectParameterKey"],
+      },
+      Filter: {
+        type: "object",
+        properties: {
+          operator: {
+            type: "string",
+            enum: [
               "equal",
               "notEqual",
               "endsWith",
@@ -4213,98 +4309,89 @@ export const crudOpenapi = {
               "lessThanOrEqual",
               "isIncludedIn",
               "isFalsy",
-              "isTruthy"
-            ]
+              "isTruthy",
+            ],
           },
-          "value": {
-            "type": "string"
+          value: {
+            type: "string",
           },
-          "objectParameterKey": {
-            "type": "string"
-          }
+          objectParameterKey: {
+            type: "string",
+          },
         },
-        "required": [
-          "operator",
-          "value",
-          "objectParameterKey"
-        ]
+        required: ["operator", "value", "objectParameterKey"],
       },
-      "UpdateContext": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "databaseSlug": {
-            "type": "string"
+      UpdateContext: {
+        type: "object",
+        additionalProperties: false,
+        properties: {
+          databaseSlug: {
+            type: "string",
           },
-          "id": {
-            "type": "string",
-            "description": "The id (indexed key) of the item to update. Update that functions as upsert. If the id didn't exist, it will be created."
+          id: {
+            type: "string",
+            description:
+              "The id (indexed key) of the item to update. Update that functions as upsert. If the id didn't exist, it will be created.",
           },
-          "partialItem": {
-            "$ref": "#/components/schemas/ModelItem",
-            "description": "New (partial) value of the item. Will update all keys provided here. Please note that it cannot be set to 'undefined' as this doesn't transfer over JSON, but if you set it to 'null', the value will be removed from the database."
-          }
+          partialItem: {
+            $ref: "#/components/schemas/ModelItem",
+            description:
+              "New (partial) value of the item. Will update all keys provided here. Please note that it cannot be set to 'undefined' as this doesn't transfer over JSON, but if you set it to 'null', the value will be removed from the database.",
+          },
         },
-        "required": [
-          "id",
-          "partialItem"
-        ]
+        required: ["id", "partialItem"],
       },
-      "UpdateResponse": {
-        "type": "object",
-        "properties": {
-          "isSuccessful": {
-            "type": "boolean"
+      UpdateResponse: {
+        type: "object",
+        properties: {
+          isSuccessful: {
+            type: "boolean",
           },
-          "message": {
-            "type": "string"
-          }
+          message: {
+            type: "string",
+          },
         },
-        "required": [
-          "isSuccessful",
-          "message"
-        ]
+        required: ["isSuccessful", "message"],
       },
-      "RemoveContext": {
-        "type": "object",
-        "properties": {
-          "databaseSlug": {
-            "type": "string"
+      RemoveContext: {
+        type: "object",
+        properties: {
+          databaseSlug: {
+            type: "string",
           },
-          "rowIds": {
-            "description": "Which IDs should be removed",
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          }
+          rowIds: {
+            description: "Which IDs should be removed",
+            type: "array",
+            items: {
+              type: "string",
+            },
+          },
         },
-        "additionalProperties": false,
-        "required": [
-          "rowIds"
-        ]
+        additionalProperties: false,
+        required: ["rowIds"],
       },
-      "RemoveResponse": {
-        "type": "object",
-        "properties": {
-          "isSuccessful": {
-            "type": "boolean"
+      RemoveResponse: {
+        type: "object",
+        properties: {
+          isSuccessful: {
+            type: "boolean",
           },
-          "message": {
-            "type": "string"
+          message: {
+            type: "string",
           },
-          "deleteCount": {
-            "type": "integer",
-            "description": "The number of items deleted"
-          }
+          deleteCount: {
+            type: "integer",
+            description: "The number of items deleted",
+          },
         },
-        "required": [
-          "isSuccessful",
-          "message"
-        ]
-      }
-    }
-  }
-} as OpenapiDocument;
+        required: ["isSuccessful", "message"],
+      },
+    },
+  },
+} as unknown as OpenapiDocument;
 
-export const crudClient =  createClient<Crud>(crudOpenapi,"https://data.actionschema.com/auth-admin/openapi.json",{access_token: process.env.undefined})
+export const crudClient = createClient<Crud>(
+  crudOpenapi,
+  "https://data.actionschema.com/auth-admin/openapi.json",
+  { access_token: process.env.undefined },
+);

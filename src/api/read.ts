@@ -9,8 +9,7 @@ import {
   upstashRedisGetMultiple,
   upstashRedisGetRange,
 } from "../upstashRedis.js";
-//@ts-ignore
-import { Sort, Filter, ReadContext } from "../sdk.js";
+import { Sort, Filter, Crud } from "../sdk.js";
 import { getDatabaseDetails } from "../getDatabaseDetails.js";
 import { embeddingsClient } from "../embeddings.js";
 import { getCrudOperationAuthorized } from "../getCrudOperationAuthorized.js";
@@ -176,7 +175,7 @@ const searchData = (search: string | undefined, data: { [key: string]: O }) => {
 export type ModelKey = string;
 
 export const read = async (
-  context: ReadContext & { Authorization?: string },
+  context: Crud["read"]["input"] & { Authorization?: string },
 ) => {
   const {
     rowIds,

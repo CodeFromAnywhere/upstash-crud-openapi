@@ -1,9 +1,8 @@
 import { Redis } from "@upstash/redis";
-//@ts-ignore
-import { RemoveContext } from "../sdk.js";
 import { getDatabaseDetails } from "../getDatabaseDetails.js";
 import { embeddingsClient } from "../embeddings.js";
 import { getCrudOperationAuthorized } from "../getCrudOperationAuthorized.js";
+import { Crud } from "../sdk.js";
 
 export type ActionSchemaDeleteResponse = {
   isSuccessful: boolean;
@@ -12,7 +11,7 @@ export type ActionSchemaDeleteResponse = {
 };
 
 export const remove = async (
-  context: RemoveContext & { Authorization?: string },
+  context: Crud["remove"]["input"] & { Authorization?: string },
 ) => {
   const { rowIds, databaseSlug, Authorization } = context;
 
