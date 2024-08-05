@@ -2,13 +2,22 @@
   "$schema": "https://migrate.actionschema.com/migration-context.schema.json",
   "agentConfig": { "agents": {}, "openapiUrl": "", "slugPrefix": "" },
   "useJsImportSuffix": true,
+  "relativeOutputPath": "src",
   "openapis": [
     {
       "slug": "auth",
-      "openapiUrlOrPath": "https://auth.actionschema.com/openapi.json",
+      "openapiUrl": "https://auth.actionschema.com/openapi.json",
       "operationIds": ["permission", "authenticate"]
     },
-    { "slug": "admin", "openapiUrlOrPath": "src/openapi.json" },
-    { "slug": "crud", "openapiUrlOrPath": "src/crud-openapi.json" }
+    {
+      "slug": "admin",
+      "openapiPath": "src/openapi.json",
+      "openapiUrl": "https://data.actionschema.com/openapi.json"
+    },
+    {
+      "slug": "crud",
+      "openapiPath": "src/crud-openapi.json",
+      "openapiUrl": "https://data.actionschema.com/auth-admin/openapi.json"
+    }
   ]
 }

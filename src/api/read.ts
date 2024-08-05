@@ -9,7 +9,7 @@ import {
   upstashRedisGetMultiple,
   upstashRedisGetRange,
 } from "../upstashRedis.js";
-import { Sort, Filter, ReadContext } from "../sdk/crud.js";
+import { Sort, Filter, ReadContext } from "../sdk.js";
 import { getDatabaseDetails } from "../getDatabaseDetails.js";
 import { embeddingsClient } from "../embeddings.js";
 import { getCrudOperationAuthorized } from "../getCrudOperationAuthorized.js";

@@ -1,5 +1,5 @@
 import { Redis } from "@upstash/redis";
-import { RemoveContext } from "../sdk/crud.js";
+import { RemoveContext } from "../sdk.js";
 import { getDatabaseDetails } from "../getDatabaseDetails.js";
 import { embeddingsClient } from "../embeddings.js";
 import { getCrudOperationAuthorized } from "../getCrudOperationAuthorized.js";

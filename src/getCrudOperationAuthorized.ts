@@ -1,5 +1,5 @@
 import { DatabaseDetails } from "./types.js";
-import * as client from "./sdk/client.js";
+import * as client from "./sdk.js";
 
 /** 
  Auth can be gained either from:
@@ -44,8 +44,8 @@ export const getCrudOperationAuthorized = async (
     return true;
   }
 
-  const permissionResult = await client.auth("permission", undefined, {
-    headers: { Authorization },
+  const permissionResult = await client.authClient("permission", undefined, {
+    access_token: Authorization.slice("Bearer ".length),
   });
 
   const permission = permissionResult.permission;

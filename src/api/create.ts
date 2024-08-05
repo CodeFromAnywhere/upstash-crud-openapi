@@ -1,4 +1,4 @@
-import { CreateContext } from "../sdk/crud.js";
+import { CreateContext } from "../sdk.js";
 import { getDatabaseDetails } from "../getDatabaseDetails.js";
 import { upstashRedisSetItems } from "../upstashRedis.js";
 import { generateId, mergeObjectsArray } from "from-anywhere";

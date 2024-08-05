@@ -3,7 +3,7 @@ import {
   upstashRedisGetMultiple,
   upstashRedisSetItems,
 } from "../upstashRedis.js";
-import { UpdateContext } from "../sdk/crud.js";
+import { UpdateContext } from "../sdk.js";
 import { getDatabaseDetails } from "../getDatabaseDetails.js";
 import { upsertIndexVectors } from "../embeddings.js";
 import { getCrudOperationAuthorized } from "../getCrudOperationAuthorized.js";

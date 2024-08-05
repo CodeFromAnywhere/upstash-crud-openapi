@@ -1,4 +1,4 @@
-import * as client from "./sdk/client.js";
+import * as client from "./sdk.js";
 
 /**
  * Will check Authorizaiton token and respond with the user api key if scope is sufficient.
@@ -20,8 +20,8 @@ export const getAdminOperationApiKey = async (
   }
 
   const permissionResult = Authorization
-    ? await client.auth("permission", undefined, {
-        headers: { Authorization },
+    ? await client.authClient("permission", undefined, {
+        access_token: apiKey,
       })
     : undefined;
 
