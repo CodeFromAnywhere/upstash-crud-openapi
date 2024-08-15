@@ -1,5 +1,5 @@
 {
-  "name": "crud-openapi",
+  "name": "upstash-crud-openapi",
   "type": "module",
   "version": "0.0.73",
   "scripts": {

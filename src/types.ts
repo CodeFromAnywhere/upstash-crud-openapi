@@ -18,12 +18,12 @@ KEYS
 
 admin-projects:
 
-- key = `projects_{auth}`
+- key = `projects_{userId}`
 - value = slug[]
 
 adminDetails
 
-- key = `admin_{auth}`
+- key = `admin_{userId}`
 - value = {currentProjectSlug}
 
 databaseDetails
@@ -38,7 +38,7 @@ projectDetails
 
 DB key-value:
 
-- key = `db_{databaseSlug}_{auth}_{key}`
+- key = `db_{databaseSlug}_{userId}_{key}`
 - value = the content of the row (according to its schema)
 
 

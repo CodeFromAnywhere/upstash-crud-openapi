@@ -2,12 +2,12 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "rewrites": [
     {
-      "source": "/:p/reference.html",
-      "destination": "/reference.html"
+      "source": "/:p/openapi.html",
+      "destination": "/openapi.html"
     },
     {
-      "source": "/project/:p/reference.html",
-      "destination": "/reference.html"
+      "source": "/project/:p/openapi.html",
+      "destination": "/openapi.html"
     },
     {
       "source": "/:path*",
