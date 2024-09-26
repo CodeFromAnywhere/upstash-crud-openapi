@@ -2156,7 +2156,7 @@ export interface ActionSchema {
  */
 export interface ActionschemaPlugin {
   /**
-   * JSON Schema $ref that resolves to a semantic operation as defined in https://spec.actionschema.com/semantic-operation.json
+   * JSON Schema $ref that resolves to a semantic operation as defined in https://ref.actionschema.com/semantic-operation.json
    */
   $operation?: string;
   summary?: string;
@@ -2273,7 +2273,7 @@ export interface OpenAPIDetails {
  */
 export interface ActionschemaPlugin1 {
   /**
-   * JSON Schema $ref that resolves to a semantic operation as defined in https://spec.actionschema.com/semantic-operation.json
+   * JSON Schema $ref that resolves to a semantic operation as defined in https://ref.actionschema.com/semantic-operation.json
    */
   $operation?: string;
   summary?: string;
@@ -2895,7 +2895,7 @@ export interface ModelItem2 {
 }
 
 export const authOpenapi = {
-  $schema: "https://spec.actionschema.com/openapi.json",
+  $schema: "https://ref.actionschema.com/openapi.json",
   "x-actionschema": "0.0.1",
   openapi: "3.1.0",
   info: {
@@ -2927,8 +2927,7 @@ export const authOpenapi = {
                   type: "object",
                   properties: {
                     permission: {
-                      $schema:
-                        "https://spec.actionschema.com/actionschema.json",
+                      $schema: "https://ref.actionschema.com/actionschema.json",
                       description: "",
                       type: "object",
                       $comment:
@@ -3030,7 +3029,7 @@ export const authOpenapi = {
             content: {
               "application/json": {
                 schema: {
-                  $schema: "https://spec.actionschema.com/actionschema.json",
+                  $schema: "https://ref.actionschema.com/actionschema.json",
                   type: "object",
                   description:
                     "Model where authorization tokens and oauth details can be stored for a user. As there is only one such setting per admin, the key of this model is the userId. This can be retrieved in several ways.",
@@ -3272,7 +3271,7 @@ export const authOpenapi = {
     },
     schemas: {
       Permission: {
-        $schema: "https://spec.actionschema.com/actionschema.json",
+        $schema: "https://ref.actionschema.com/actionschema.json",
         description: "",
         type: "object",
         $comment:
@@ -3341,7 +3340,7 @@ export const authClient = createClient<Auth>(
 
 export const adminOpenapi = {
   "x-actionschema": "0.0.1",
-  $schema: "https://spec.actionschema.com/openapi.json",
+  $schema: "https://ref.actionschema.com/openapi.json",
   openapi: "3.1.0",
   info: {
     title: "OpenAPI CRUD",
@@ -3789,7 +3788,7 @@ export const adminOpenapi = {
             content: {
               "application/json": {
                 schema: {
-                  $ref: "https://spec.actionschema.com/openapi.json",
+                  $ref: "https://ref.actionschema.com/openapi.json",
                 },
               },
             },
@@ -3825,7 +3824,7 @@ export const adminOpenapi = {
                 schema: {
                   oneOf: [
                     {
-                      $ref: "https://spec.actionschema.com/openapi.json",
+                      $ref: "https://ref.actionschema.com/openapi.json",
                     },
                     {
                       type: "object",
@@ -3875,7 +3874,7 @@ export const adminOpenapi = {
                 schema: {
                   oneOf: [
                     {
-                      $ref: "https://spec.actionschema.com/openapi.json",
+                      $ref: "https://ref.actionschema.com/openapi.json",
                     },
                     {
                       type: "object",
@@ -3980,7 +3979,7 @@ export const adminClient = createClient<Admin>(
 
 export const crudOpenapi = {
   "x-actionschema": "0.0.1",
-  $schema: "https://spec.actionschema.com/openapi.json",
+  $schema: "https://ref.actionschema.com/openapi.json",
   openapi: "3.1.0",
   info: {
     title: "OpenAPI CRUD",

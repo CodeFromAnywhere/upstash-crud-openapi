@@ -2,7 +2,7 @@ import { JSONSchemaType } from "ajv";
 
 import path from "path";
 import fs from "fs";
-import { tryParseJson } from "from-anywhere";
+import { tryParseJson } from "edge-util";
 import { OpenapiDocument } from "openapi-util";
 
 /**

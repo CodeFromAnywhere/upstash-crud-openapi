@@ -4,7 +4,7 @@ import {
   hasAllLetters,
   objectMapSync,
   removeOptionalKeysFromObjectStrings,
-} from "from-anywhere";
+} from "edge-util";
 import {
   upstashRedisGetMultiple,
   upstashRedisGetRange,

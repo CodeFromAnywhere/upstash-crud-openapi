@@ -1,5 +1,5 @@
 import { OpenapiPathsObject, resolveSchemaRecursive } from "openapi-util";
-import { kebabCase, pascalCase } from "from-anywhere";
+import { kebabCase, pascalCase } from "edge-util";
 import { JSONSchema7 } from "json-schema";
 import { Endpoint, ResponseType } from "../client.js";
 import rawOpenapi from "../../src/crud-openapi.json" assert { type: "json" };

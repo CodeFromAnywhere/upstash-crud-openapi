@@ -16,7 +16,7 @@ import {
   notEmpty,
   onlyUnique2,
   tryParseJson,
-} from "from-anywhere";
+} from "edge-util";
 import { JSONSchema7 } from "json-schema";
 import { rootDatabaseName } from "../state.js";
 import { embeddingsClient } from "../embeddings.js";

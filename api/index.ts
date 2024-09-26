@@ -5,7 +5,7 @@ import {
   ReferenceObject,
   resolveReferenceBrowser,
 } from "openapi-util";
-import { Json, mergeObjectsArray, notEmpty, onlyUnique2 } from "from-anywhere";
+import { Json, mergeObjectsArray, notEmpty, onlyUnique2 } from "edge-util";
 import { tryValidateSchema, makeOpenapiPathRouter } from "openapi-util";
 import { JSONSchemaType } from "ajv";
 import { JSONSchema7 } from "json-schema";

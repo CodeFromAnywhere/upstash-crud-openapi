@@ -1,6 +1,6 @@
 import { getDatabaseDetails } from "../getDatabaseDetails.js";
 import { upstashRedisSetItems } from "../upstashRedis.js";
-import { generateId, mergeObjectsArray } from "from-anywhere";
+import { generateId, mergeObjectsArray } from "edge-util";
 import { upsertIndexVectors } from "../embeddings.js";
 import { getCrudOperationAuthorized } from "../getCrudOperationAuthorized.js";
 import { Crud } from "../sdk.js";

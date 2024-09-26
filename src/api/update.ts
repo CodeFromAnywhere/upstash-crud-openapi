@@ -1,4 +1,4 @@
-import { O, getSubsetFromObject, objectMapSync } from "from-anywhere";
+import { O, getSubsetFromObject, objectMapSync } from "edge-util";
 import {
   upstashRedisGetMultiple,
   upstashRedisSetItems,

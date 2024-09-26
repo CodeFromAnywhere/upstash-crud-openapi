@@ -4,7 +4,7 @@ import {
   mergeObjectsArray,
   notEmpty,
   tryParseJson,
-} from "from-anywhere";
+} from "edge-util";
 import { Redis } from "@upstash/redis";
 
 /**

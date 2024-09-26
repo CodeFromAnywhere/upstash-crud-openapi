@@ -1,4 +1,4 @@
-import { tryParseJson } from "from-anywhere";
+import { tryParseJson } from "edge-util";
 import { JSONSchema7 } from "json-schema";
 
 export const setSchema = async (context: {

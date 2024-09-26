@@ -1,6 +1,6 @@
 {
   "x-actionschema": "0.0.1",
-  "$schema": "https://spec.actionschema.com/openapi.json",
+  "$schema": "https://ref.actionschema.com/openapi.json",
   "openapi": "3.1.0",
   "info": {
     "title": "OpenAPI CRUD",
@@ -403,7 +403,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "https://spec.actionschema.com/openapi.json"
+                  "$ref": "https://ref.actionschema.com/openapi.json"
                 }
               }
             }
@@ -433,7 +433,7 @@
                 "schema": {
                   "oneOf": [
                     {
-                      "$ref": "https://spec.actionschema.com/openapi.json"
+                      "$ref": "https://ref.actionschema.com/openapi.json"
                     },
                     {
                       "type": "object",
@@ -477,7 +477,7 @@
                 "schema": {
                   "oneOf": [
                     {
-                      "$ref": "https://spec.actionschema.com/openapi.json"
+                      "$ref": "https://ref.actionschema.com/openapi.json"
                     },
                     {
                       "type": "object",

@@ -1,4 +1,4 @@
-import { removeOptionalKeysFromObjectStrings } from "from-anywhere";
+import { removeOptionalKeysFromObjectStrings } from "edge-util";
 import { JSONSchema7 } from "json-schema";
 
 /** Removes one or more properties from an object json schema */

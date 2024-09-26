@@ -1,7 +1,7 @@
 import { Endpoint } from "../client.js";
 import { Redis } from "@upstash/redis";
 import { AdminDetails, DbKey, ProjectDetails } from "../types.js";
-import { notEmpty } from "from-anywhere";
+import { notEmpty } from "edge-util";
 import { getUpstashRedisDatabase } from "../upstashRedis.js";
 import { getAdminUserId } from "../getAdminUserId.js";
 

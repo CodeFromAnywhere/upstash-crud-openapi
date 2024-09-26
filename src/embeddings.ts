@@ -36,7 +36,7 @@ import OpenAI from "openai";
 import { Index } from "@upstash/vector";
 import type { EmbeddingCreateParams } from "openai/resources/embeddings";
 import { DatabaseDetails, OpenaiEmbeddingModelEnum } from "./types.js";
-import { O } from "from-anywhere";
+import { O } from "edge-util";
 
 /**
 https://upstash.com/docs/vector

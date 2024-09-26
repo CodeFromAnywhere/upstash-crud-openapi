@@ -1,4 +1,4 @@
-import { mapValuesSync } from "from-anywhere";
+import { mapValuesSync } from "edge-util";
 import { JSONSchema7 } from "json-schema";
 import crudOpenapi from "../../src/crud-openapi.json" assert { type: "json" };
 import { Endpoint, ResponseType } from "../client.js";

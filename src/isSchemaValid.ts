@@ -1,4 +1,4 @@
-import { O, getSubsetFromObject } from "from-anywhere";
+import { O, getSubsetFromObject } from "edge-util";
 import { JSONSchema7 } from "json-schema";
 import Ajv from "ajv";
 

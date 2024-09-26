@@ -1,4 +1,4 @@
-import { pascalCase } from "from-anywhere";
+import { pascalCase } from "edge-util";
 import { DatabaseDetails } from "./types";
 import { JSONSchema7 } from "json-schema";
 
